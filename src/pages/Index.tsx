@@ -1,11 +1,23 @@
 
 import { Link } from 'react-router-dom';
 import { 
-  Search, ChevronRight, MapPin, Calendar, Users, 
-  Compass, HeartPulse, Award, Coffee, ShieldCheck
+  Search, ChevronRight, MapPin, Calendar, Phone, 
+  Compass, HeartPulse, Award, Coffee, ShieldCheck,
+  Plane
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const travelDestinations = [
   {
@@ -82,6 +94,44 @@ const categories = [
 ];
 
 const Index = () => {
+  const [destination, setDestination] = useState('');
+  const [date, setDate] = useState<Date | undefined>(undefined);
+  const [contactNo, setContactNo] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+
+  const handleStartJourney = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!destination || !date || !contactNo) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all fields before starting your journey.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    // Simulate backend storage with timeout
+    setTimeout(() => {
+      console.log('Journey data:', { destination, date, contactNo });
+      
+      // Show success toast
+      toast({
+        title: "Journey Initiated!",
+        description: "Your travel details have been saved. We'll contact you soon!",
+      });
+      
+      // Reset form and loading state
+      setDestination('');
+      setDate(undefined);
+      setContactNo('');
+      setIsSubmitting(false);
+    }, 1500);
+  };
+
   return (
     <div className="opacity-100">
       {/* Hero Section */}
@@ -115,37 +165,73 @@ const Index = () => {
 
             {/* Search Box */}
             <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-                  <input
-                    type="text"
-                    placeholder="Where to?"
-                    className="w-full bg-transparent border border-input rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
+              <form onSubmit={handleStartJourney}>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                    <Input
+                      type="text"
+                      placeholder="Where to?"
+                      value={destination}
+                      onChange={(e) => setDestination(e.target.value)}
+                      className="w-full bg-transparent border border-input rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div className="relative">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal bg-transparent border border-input rounded-lg py-6 pl-10 pr-4 h-auto",
+                            !date && "text-muted-foreground"
+                          )}
+                        >
+                          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                          {date ? format(date, "PP") : <span>When?</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarComponent
+                          mode="single"
+                          selected={date}
+                          onSelect={setDate}
+                          initialFocus
+                          className="p-3 pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                    <Input
+                      type="tel"
+                      placeholder="Contact Number"
+                      value={contactNo}
+                      onChange={(e) => setContactNo(e.target.value)}
+                      className="w-full bg-transparent border border-input rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
                 </div>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-                  <input
-                    type="text"
-                    placeholder="When?"
-                    className="w-full bg-transparent border border-input rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
+                <div className="mt-4 flex justify-end">
+                  <Button 
+                    type="submit" 
+                    className="rounded-lg"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <Plane className="mr-2 h-4 w-4" /> Start Journey
+                      </>
+                    )}
+                  </Button>
                 </div>
-                <div className="relative">
-                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-                  <input
-                    type="text"
-                    placeholder="Travelers"
-                    className="w-full bg-transparent border border-input rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-              </div>
-              <div className="mt-4 flex justify-end">
-                <Button className="rounded-lg">
-                  <Search className="mr-2 h-4 w-4" /> Search
-                </Button>
-              </div>
+              </form>
             </div>
 
             {/* Quiz CTA */}
