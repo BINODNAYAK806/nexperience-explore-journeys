@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Search, Filter, MapPin, ChevronRight, ArrowDownAZ,
@@ -117,7 +116,6 @@ const allDestinations = [
   }
 ];
 
-// Filter categories
 const categories = ["All", "Luxury", "Beach", "Adventure", "Nature", "Cultural"];
 const activities = [
   { name: "Sightseeing", icon: <Landmark size={18} /> },
@@ -129,69 +127,19 @@ const activities = [
 ];
 
 const Destinations = () => {
-  const [isLoaded, setIsLoaded] = useState(false);
   const [filteredDestinations, setFilteredDestinations] = useState(allDestinations);
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("trending");
   const [isFiltersVisible, setIsFiltersVisible] = useState(false);
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const animatedElements = useRef<HTMLElement[]>([]);
 
   useEffect(() => {
-    // Simulate content loading
-    const timer = setTimeout(() => {
-      setIsLoaded(true);
-    }, 300);
-
-    // Set up intersection observer for animations
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('animate-enter');
-            observerRef.current?.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-
-    return () => {
-      clearTimeout(timer);
-      observerRef.current?.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (isLoaded && observerRef.current) {
-      // Get all elements to animate
-      const elements = document.querySelectorAll('.animate-on-scroll');
-      elements.forEach((el) => {
-        observerRef.current?.observe(el);
-        animatedElements.current.push(el as HTMLElement);
-      });
-    }
-
-    return () => {
-      if (observerRef.current) {
-        animatedElements.current.forEach((el) => {
-          observerRef.current?.unobserve(el);
-        });
-      }
-    };
-  }, [isLoaded]);
-
-  useEffect(() => {
-    // Filter and sort destinations
     let results = [...allDestinations];
     
-    // Apply category filter
     if (activeCategory !== "All") {
       results = results.filter(destination => destination.category === activeCategory);
     }
     
-    // Apply search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       results = results.filter(
@@ -202,7 +150,6 @@ const Destinations = () => {
       );
     }
     
-    // Apply sorting
     if (sortBy === "trending") {
       results.sort((a, b) => b.bookings - a.bookings);
     } else if (sortBy === "priceAsc") {
@@ -221,8 +168,7 @@ const Destinations = () => {
   };
 
   return (
-    <div className={`transition-opacity duration-1000 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
-      {/* Hero Section */}
+    <div className="opacity-100">
       <section className="relative py-32 flex items-center overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-700">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-blue-900/70"></div>
@@ -235,15 +181,14 @@ const Destinations = () => {
 
         <div className="container-custom relative z-10">
           <div className="max-w-2xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 animate-fade-in">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
               Explore Extraordinary Destinations
             </h1>
-            <p className="text-lg text-white/90 mb-8 animate-fade-in" style={{ animationDelay: '200ms' }}>
+            <p className="text-lg text-white/90 mb-8">
               Discover handpicked experiences and create unforgettable memories around the world.
             </p>
 
-            {/* Search Box */}
-            <div className="relative max-w-xl mx-auto animate-fade-in" style={{ animationDelay: '400ms' }}>
+            <div className="relative max-w-xl mx-auto">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
               <input
                 type="text"
@@ -257,18 +202,16 @@ const Destinations = () => {
         </div>
       </section>
 
-      {/* Main Content */}
       <section className="py-16">
         <div className="container-custom">
-          {/* Tabs and Filters */}
           <div className="mb-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-              <h2 className="text-2xl font-bold animate-on-scroll opacity-0">
+              <h2 className="text-2xl font-bold">
                 {filteredDestinations.length} Destinations{' '}
                 {activeCategory !== 'All' && <span>in {activeCategory}</span>}
               </h2>
               
-              <div className="flex items-center space-x-3 animate-on-scroll opacity-0" style={{ animationDelay: '100ms' }}>
+              <div className="flex items-center space-x-3">
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -292,8 +235,7 @@ const Destinations = () => {
               </div>
             </div>
             
-            {/* Categories Tabs */}
-            <Tabs defaultValue="All" className="w-full animate-on-scroll opacity-0" style={{ animationDelay: '200ms' }}>
+            <Tabs defaultValue="All" className="w-full">
               <TabsList className="flex overflow-x-auto pb-1 max-w-full hide-scrollbar">
                 {categories.map((category) => (
                   <TabsTrigger 
@@ -308,12 +250,10 @@ const Destinations = () => {
               </TabsList>
             </Tabs>
 
-            {/* Expanded Filters */}
             <div 
-              className={`mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-border transition-all duration-300 overflow-hidden animate-on-scroll opacity-0 ${
+              className={`mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-border transition-all duration-300 overflow-hidden ${
                 isFiltersVisible ? 'max-h-96' : 'max-h-0 p-0 mt-0 border-transparent'
               }`}
-              style={{ animationDelay: '300ms' }}
             >
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 {activities.map((activity) => (
@@ -384,15 +324,13 @@ const Destinations = () => {
             </div>
           </div>
           
-          {/* Destinations Grid */}
           {filteredDestinations.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredDestinations.map((destination, index) => (
                 <Link
                   key={destination.id}
                   to={`/destinations/${destination.id}`}
-                  className="animate-on-scroll opacity-0 group"
-                  style={{ animationDelay: `${index * 100}ms` }}
+                  className="group"
                 >
                   <Card className="overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 hover:translate-y-[-8px] h-full">
                     <div className="relative h-56 overflow-hidden">
@@ -478,7 +416,7 @@ const Destinations = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 animate-on-scroll opacity-0">
+            <div className="text-center py-12">
               <div className="mb-4 flex justify-center">
                 <Search size={48} className="text-muted-foreground/40" />
               </div>
@@ -499,10 +437,9 @@ const Destinations = () => {
         </div>
       </section>
 
-      {/* Newsletter */}
       <section className="bg-gray-50 dark:bg-gray-900 py-16">
         <div className="container-custom">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 md:p-12 shadow-lg overflow-hidden relative animate-on-scroll opacity-0">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 md:p-12 shadow-lg overflow-hidden relative">
             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1488441770602-aed21fc49bd5?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80')] opacity-20 bg-cover bg-center"></div>
             <div className="relative z-10 flex flex-col md:flex-row items-center md:justify-between gap-8">
               <div className="text-white md:max-w-md">
