@@ -1,5 +1,4 @@
 
-import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Search, ChevronRight, MapPin, Calendar, Users, 
@@ -83,56 +82,8 @@ const categories = [
 ];
 
 const Index = () => {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const animatedElements = useRef<HTMLElement[]>([]);
-
-  useEffect(() => {
-    // Simulate content loading
-    const timer = setTimeout(() => {
-      setIsLoaded(true);
-    }, 500);
-
-    // Set up intersection observer for animations
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('animate-enter');
-            observerRef.current?.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-
-    return () => {
-      clearTimeout(timer);
-      observerRef.current?.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (isLoaded && observerRef.current) {
-      // Get all elements to animate
-      const elements = document.querySelectorAll('.animate-on-scroll');
-      elements.forEach((el) => {
-        observerRef.current?.observe(el);
-        animatedElements.current.push(el as HTMLElement);
-      });
-    }
-
-    return () => {
-      if (observerRef.current) {
-        animatedElements.current.forEach((el) => {
-          observerRef.current?.unobserve(el);
-        });
-      }
-    };
-  }, [isLoaded]);
-
   return (
-    <div className={`transition-opacity duration-1000 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
+    <div className="opacity-100">
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center pt-16 overflow-hidden">
         <div className="absolute inset-0 z-0">
@@ -152,18 +103,18 @@ const Index = () => {
 
         <div className="container-custom relative z-10 py-20">
           <div className="max-w-3xl">
-            <span className="inline-block px-3 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full mb-4 animate-fade-in">
+            <span className="inline-block px-3 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full mb-4">
               Next-level Travel Experiences
             </span>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight animate-fade-in" style={{ animationDelay: '200ms' }}>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
               Discover Your Perfect <span className="text-primary">Journey</span>
             </h1>
-            <p className="text-lg md:text-xl text-white/90 mb-8 animate-fade-in" style={{ animationDelay: '400ms' }}>
+            <p className="text-lg md:text-xl text-white/90 mb-8">
               Immersive, personalized travel experiences tailored to your unique travel personality.
             </p>
 
             {/* Search Box */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg animate-fade-in" style={{ animationDelay: '600ms' }}>
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
@@ -198,7 +149,7 @@ const Index = () => {
             </div>
 
             {/* Quiz CTA */}
-            <div className="mt-8 flex items-center animate-fade-in" style={{ animationDelay: '800ms' }}>
+            <div className="mt-8 flex items-center">
               <Link to="/quiz" className="text-white hover:text-primary transition-colors flex items-center group">
                 <span className="mr-2">Discover your travel personality</span>
                 <span className="bg-white/20 rounded-full p-1 group-hover:bg-primary/20 transition-colors">
@@ -210,9 +161,9 @@ const Index = () => {
         </div>
 
         {/* Scroll Indicator */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce">
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
           <div className="w-8 h-12 rounded-full border-2 border-white flex items-center justify-center">
-            <div className="w-1 h-3 bg-white rounded-full animate-pulse-slow"></div>
+            <div className="w-1 h-3 bg-white rounded-full"></div>
           </div>
         </div>
       </section>
@@ -220,7 +171,7 @@ const Index = () => {
       {/* Travel Categories */}
       <section className="py-20 bg-gray-50 dark:bg-gray-900">
         <div className="container-custom">
-          <div className="text-center max-w-2xl mx-auto mb-12 animate-on-scroll opacity-0">
+          <div className="text-center max-w-2xl mx-auto mb-12">
             <span className="inline-block px-3 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full mb-4">
               Tailored Experiences
             </span>
@@ -234,8 +185,7 @@ const Index = () => {
             {categories.map((category, index) => (
               <div 
                 key={category.name}
-                className="animate-on-scroll opacity-0 group"
-                style={{ animationDelay: `${index * 100}ms` }}
+                className="group"
               >
                 <div className="bg-white dark:bg-gray-800 rounded-xl p-6 text-center shadow-sm hover:shadow-md transition-all duration-300 hover:translate-y-[-4px]">
                   <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 text-primary mb-4 group-hover:bg-primary group-hover:text-white transition-all duration-300">
@@ -255,7 +205,7 @@ const Index = () => {
       {/* Featured Destinations */}
       <section className="py-20">
         <div className="container-custom">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 animate-on-scroll opacity-0">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
             <div>
               <span className="inline-block px-3 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full mb-4">
                 Featured Destinations
@@ -279,8 +229,7 @@ const Index = () => {
               <Link
                 key={destination.id}
                 to={`/destinations/${destination.id}`}
-                className="animate-on-scroll opacity-0 group"
-                style={{ animationDelay: `${index * 100}ms` }}
+                className="group"
               >
                 <Card className="overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 hover:translate-y-[-8px]">
                   <div className="relative h-60 overflow-hidden">
@@ -343,7 +292,7 @@ const Index = () => {
       <section className="py-20 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
         <div className="container-custom">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="animate-on-scroll opacity-0">
+            <div>
               <span className="inline-block px-3 py-1 text-xs font-medium bg-white/20 text-white rounded-full mb-4">
                 Personalized Travel
               </span>
@@ -381,7 +330,7 @@ const Index = () => {
                 </Button>
               </Link>
             </div>
-            <div className="lg:pl-10 animate-on-scroll opacity-0" style={{ animationDelay: '200ms' }}>
+            <div className="lg:pl-10">
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-1.5 shadow-xl">
                 <div className="bg-white/10 rounded-xl p-6 border border-white/20">
                   <div className="text-center mb-8">
@@ -424,7 +373,7 @@ const Index = () => {
       {/* Testimonials */}
       <section className="py-20 bg-gray-50 dark:bg-gray-900">
         <div className="container-custom">
-          <div className="text-center max-w-2xl mx-auto mb-12 animate-on-scroll opacity-0">
+          <div className="text-center max-w-2xl mx-auto mb-12">
             <span className="inline-block px-3 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full mb-4">
               Traveler Stories
             </span>
@@ -436,11 +385,7 @@ const Index = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {testimonials.map((testimonial, index) => (
-              <div 
-                key={testimonial.id}
-                className="animate-on-scroll opacity-0"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
+              <div key={testimonial.id}>
                 <Card className="h-full bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-all">
                   <CardContent className="p-6">
                     <div className="flex items-center mb-4">
@@ -485,7 +430,7 @@ const Index = () => {
       <section className="py-24 bg-gradient-to-br from-blue-600 to-indigo-700 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1493246507139-91e8fad9978e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2940&q=80')] bg-no-repeat bg-cover opacity-20"></div>
         <div className="container-custom relative z-10">
-          <div className="max-w-3xl mx-auto text-center text-white animate-on-scroll opacity-0">
+          <div className="max-w-3xl mx-auto text-center text-white">
             <span className="inline-block px-3 py-1 text-xs font-medium bg-white/20 text-white rounded-full mb-4">
               Begin Your Journey
             </span>
