@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import { 
   Search, ChevronRight, MapPin, Calendar, Phone, 
@@ -163,11 +162,11 @@ const Index = () => {
               Immersive, personalized travel experiences tailored to your unique travel personality.
             </p>
 
-            {/* Search Box */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg">
+            {/* Search Box - Updated with horizontal alignment */}
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg">
               <form onSubmit={handleStartJourney}>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="relative">
+                <div className="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-4 md:space-y-0">
+                  <div className="relative flex-1">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                     <Input
                       type="text"
@@ -177,7 +176,7 @@ const Index = () => {
                       className="w-full bg-transparent border border-input rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
-                  <div className="relative">
+                  <div className="relative flex-1">
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
@@ -202,7 +201,7 @@ const Index = () => {
                       </PopoverContent>
                     </Popover>
                   </div>
-                  <div className="relative">
+                  <div className="relative flex-1">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                     <Input
                       type="tel"
@@ -212,11 +211,9 @@ const Index = () => {
                       className="w-full bg-transparent border border-input rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
-                </div>
-                <div className="mt-4 flex justify-end">
                   <Button 
                     type="submit" 
-                    className="rounded-lg"
+                    className="rounded-lg md:self-stretch md:flex-initial flex-1 py-3 min-h-[50px]"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? (
