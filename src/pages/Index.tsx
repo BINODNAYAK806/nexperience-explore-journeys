@@ -18,6 +18,7 @@ import {
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 const travelDestinations = [
   {
@@ -114,22 +115,48 @@ const Index = () => {
 
     setIsSubmitting(true);
 
-    // Simulate backend storage with timeout
-    setTimeout(() => {
-      console.log('Journey data:', { destination, date, contactNo });
-      
-      // Show success toast
+    try {
+      // Store data in Supabase
+      const { data, error } = await supabase
+        .from('journey_requests')
+        .insert([
+          { 
+            destination, 
+            travel_date: date.toISOString().split('T')[0], 
+            contact_number: contactNo 
+          }
+        ])
+        .select();
+
+      if (error) {
+        console.error('Error storing journey data:', error);
+        toast({
+          title: "Something went wrong",
+          description: "Unable to save your journey details. Please try again.",
+          variant: "destructive",
+        });
+      } else {
+        console.log('Journey data stored successfully:', data);
+        toast({
+          title: "Journey Initiated!",
+          description: "Your travel details have been saved. We'll contact you soon!",
+        });
+        
+        // Reset form
+        setDestination('');
+        setDate(undefined);
+        setContactNo('');
+      }
+    } catch (error) {
+      console.error('Exception storing journey data:', error);
       toast({
-        title: "Journey Initiated!",
-        description: "Your travel details have been saved. We'll contact you soon!",
+        title: "Something went wrong",
+        description: "Unable to save your journey details. Please try again.",
+        variant: "destructive",
       });
-      
-      // Reset form and loading state
-      setDestination('');
-      setDate(undefined);
-      setContactNo('');
+    } finally {
       setIsSubmitting(false);
-    }, 1500);
+    }
   };
 
   return (
