@@ -1,3 +1,4 @@
+
 import { Link } from 'react-router-dom';
 import { 
   Search, ChevronRight, MapPin, Calendar, Phone, 
@@ -162,27 +163,27 @@ const Index = () => {
               Immersive, personalized travel experiences tailored to your unique travel personality.
             </p>
 
-            {/* Search Box - Updated with horizontal alignment */}
+            {/* Search Box - Updated with equal sized components */}
             <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg">
               <form onSubmit={handleStartJourney}>
-                <div className="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-4 md:space-y-0">
-                  <div className="relative flex-1">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                     <Input
                       type="text"
                       placeholder="Where to?"
                       value={destination}
                       onChange={(e) => setDestination(e.target.value)}
-                      className="w-full bg-transparent border border-input rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full bg-transparent border border-input rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary h-[50px]"
                     />
                   </div>
-                  <div className="relative flex-1">
+                  <div className="relative">
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-full justify-start text-left font-normal bg-transparent border border-input rounded-lg py-6 pl-10 pr-4 h-auto",
+                            "w-full justify-start text-left font-normal bg-transparent border border-input rounded-lg py-6 pl-10 pr-4 h-[50px]",
                             !date && "text-muted-foreground"
                           )}
                         >
@@ -201,19 +202,19 @@ const Index = () => {
                       </PopoverContent>
                     </Popover>
                   </div>
-                  <div className="relative flex-1">
+                  <div className="relative">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                     <Input
                       type="tel"
                       placeholder="Contact Number"
                       value={contactNo}
                       onChange={(e) => setContactNo(e.target.value)}
-                      className="w-full bg-transparent border border-input rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full bg-transparent border border-input rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary h-[50px]"
                     />
                   </div>
                   <Button 
                     type="submit" 
-                    className="rounded-lg md:self-stretch md:flex-initial flex-1 py-3 min-h-[50px]"
+                    className="rounded-lg h-[50px]"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? (
