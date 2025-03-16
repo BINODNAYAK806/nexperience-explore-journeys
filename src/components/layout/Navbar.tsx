@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, Menu, X, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,6 +31,10 @@ const Navbar = () => {
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const handleSignIn = () => {
+    navigate('/admin');
   };
 
   const navLinks = [
@@ -76,7 +81,12 @@ const Navbar = () => {
           <button className="p-2 rounded-full hover:bg-accent transition-colors">
             <Search size={20} />
           </button>
-          <Button variant="default" size="sm" className="rounded-full">
+          <Button 
+            variant="default" 
+            size="sm" 
+            className="rounded-full"
+            onClick={handleSignIn}
+          >
             Sign In
           </Button>
         </div>
@@ -128,7 +138,11 @@ const Navbar = () => {
 
             {/* Auth - Mobile */}
             <div className="pt-4 border-t border-border">
-              <Button variant="default" className="w-full">
+              <Button 
+                variant="default" 
+                className="w-full"
+                onClick={handleSignIn}
+              >
                 Sign In
               </Button>
             </div>
