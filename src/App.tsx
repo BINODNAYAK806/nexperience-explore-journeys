@@ -9,7 +9,10 @@ import NotFound from "./pages/NotFound";
 import Destinations from "./pages/Destinations";
 import DestinationDetail from "./pages/DestinationDetail";
 import PersonalityQuiz from "./pages/PersonalityQuiz";
+import AdminLogin from "./pages/AdminLogin";
+import Dashboard from "./pages/Dashboard";
 import Layout from "./components/layout/Layout";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +27,12 @@ const App = () => (
           <Route path="/destinations" element={<Layout><Destinations /></Layout>} />
           <Route path="/destinations/:id" element={<Layout><DestinationDetail /></Layout>} />
           <Route path="/quiz" element={<Layout><PersonalityQuiz /></Layout>} />
+          <Route path="/admin" element={<AdminLogin />} />
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

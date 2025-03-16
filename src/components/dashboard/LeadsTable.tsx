@@ -1,0 +1,114 @@
+
+import React from "react";
+import { format } from "date-fns";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+
+export interface Lead {
+  id: string;
+  destination: string;
+  travel_date: string;
+  created_at: string;
+  contact_number: string;
+  status: string;
+}
+
+interface LeadsTableProps {
+  leads: Lead[];
+  onDataChange: () => void;
+}
+
+const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
+  const { toast } = useToast();
+
+  const handleStatusChange = async (leadId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from("journey_requests")
+        .update({ status: newStatus })
+        .eq("id", leadId);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Status updated",
+        description: "The lead status has been successfully updated.",
+      });
+      
+      onDataChange();
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast({
+        title: "Update failed",
+        description: "Failed to update the lead status. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return format(date, "dd/MM/yyyy");
+    } catch (error) {
+      return "Invalid date";
+    }
+  };
+
+  return (
+    <div className="overflow-x-auto border rounded-md">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Destination</TableHead>
+            <TableHead>Travel Date</TableHead>
+            <TableHead>Lead Created Date</TableHead>
+            <TableHead>Mobile Number</TableHead>
+            <TableHead>Status</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {leads.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                No leads found. Try adjusting your filters or add new leads.
+              </TableCell>
+            </TableRow>
+          ) : (
+            leads.map((lead) => (
+              <TableRow key={lead.id}>
+                <TableCell className="font-medium">{lead.destination}</TableCell>
+                <TableCell>{formatDate(lead.travel_date)}</TableCell>
+                <TableCell>{formatDate(lead.created_at)}</TableCell>
+                <TableCell>{lead.contact_number}</TableCell>
+                <TableCell>
+                  <Select
+                    defaultValue={lead.status}
+                    onValueChange={(value) => handleStatusChange(lead.id, value)}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="done">Done</SelectItem>
+                      <SelectItem value="talk_done">Talk Done</SelectItem>
+                      <SelectItem value="deal_final">Deal Final</SelectItem>
+                      <SelectItem value="quotation_sent">Quotation Sent</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  );
+};
+
+export default LeadsTable;
