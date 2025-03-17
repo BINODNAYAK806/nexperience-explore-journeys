@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
@@ -46,7 +46,7 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
       // Log the update request for debugging
       console.log(`Updating lead ${leadId} status to ${newStatus}`);
       
-      // Make sure we're using the correct table name and field names
+      // Make the Supabase update request
       const { error } = await supabase
         .from("journey_requests")
         .update({ status: newStatus })
@@ -61,7 +61,7 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
       
       toast({
         title: "Status updated",
-        description: "The lead status has been successfully updated.",
+        description: `Lead status has been updated to ${newStatus}.`,
       });
       
       // Force refresh of parent data
@@ -70,10 +70,8 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
       console.error("Error updating status:", error);
       
       // Revert local state on error
-      setLocalLeadStatus(prev => ({ 
-        ...prev, 
-        [leadId]: leads.find(lead => lead.id === leadId)?.status || 'pending'
-      }));
+      const originalStatus = leads.find(lead => lead.id === leadId)?.status || 'pending';
+      setLocalLeadStatus(prev => ({ ...prev, [leadId]: originalStatus }));
       
       toast({
         title: "Update failed",

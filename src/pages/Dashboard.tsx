@@ -1,9 +1,9 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { LogOutIcon } from "lucide-react";
 import DateRangeFilter from "@/components/dashboard/DateRangeFilter";
 import LeadsTable, { Lead } from "@/components/dashboard/LeadsTable";
@@ -16,11 +16,11 @@ const Dashboard: React.FC = () => {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [loading, setLoading] = useState(true);
-  const [refreshCounter, setRefreshCounter] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const fetchLeads = async () => {
+  // Function to fetch leads from Supabase
+  const fetchLeads = useCallback(async () => {
     setLoading(true);
     try {
       console.log("Fetching leads from Supabase...");
@@ -40,7 +40,7 @@ const Dashboard: React.FC = () => {
         setLeads(data as Lead[]);
         // If we have active filters, apply them, otherwise show all leads
         if (startDate && endDate) {
-          applyDateFilter(data, startDate, endDate);
+          applyDateFilter(data as Lead[], startDate, endDate);
         } else {
           setFilteredLeads(data as Lead[]);
         }
@@ -55,7 +55,7 @@ const Dashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [startDate, endDate, toast]);
 
   // Helper function to apply date filter
   const applyDateFilter = (data: Lead[], start: Date, end: Date) => {
@@ -75,19 +75,20 @@ const Dashboard: React.FC = () => {
     setFilteredLeads(filtered);
   };
 
+  // Fetch leads on component mount and when refreshCounter changes
   useEffect(() => {
     fetchLeads();
-  }, [refreshCounter]);
+  }, [fetchLeads]);
 
   const handleLogout = () => {
     localStorage.removeItem("adminLoggedIn");
     navigate("/admin");
   };
 
-  const handleDataChange = () => {
+  const handleDataChange = useCallback(() => {
     console.log("Data change detected, refreshing leads...");
-    setRefreshCounter(prev => prev + 1);
-  };
+    fetchLeads();
+  }, [fetchLeads]);
 
   const handleFilterApply = () => {
     if (!startDate || !endDate) {
@@ -99,12 +100,14 @@ const Dashboard: React.FC = () => {
       return;
     }
 
-    applyDateFilter(leads, startDate, endDate);
-    
-    toast({
-      title: "Filter applied",
-      description: `Showing ${filteredLeads.length} leads in the selected date range.`,
-    });
+    if (leads.length > 0) {
+      applyDateFilter(leads, startDate, endDate);
+      
+      toast({
+        title: "Filter applied",
+        description: "Showing leads in the selected date range.",
+      });
+    }
   };
 
   const handleShowAllLeads = () => {
@@ -151,7 +154,10 @@ const Dashboard: React.FC = () => {
                 <p className="text-muted-foreground">Loading leads...</p>
               </div>
             ) : (
-              <LeadsTable leads={filteredLeads} onDataChange={handleDataChange} />
+              <LeadsTable 
+                leads={filteredLeads} 
+                onDataChange={handleDataChange} 
+              />
             )}
           </div>
         </div>
