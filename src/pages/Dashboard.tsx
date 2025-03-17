@@ -16,21 +16,25 @@ const Dashboard: React.FC = () => {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  const [refreshCounter, setRefreshCounter] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const fetchLeads = async () => {
     setLoading(true);
     try {
+      console.log("Fetching leads from Supabase...");
       const { data, error } = await supabase
         .from("journey_requests")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) {
+        console.error("Supabase fetch error:", error);
         throw error;
       }
 
+      console.log("Fetched lead data:", data);
       setLeads(data as Lead[]);
       setFilteredLeads(data as Lead[]);
     } catch (error) {
@@ -47,11 +51,16 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     fetchLeads();
-  }, []);
+  }, [refreshCounter]);
 
   const handleLogout = () => {
     localStorage.removeItem("adminLoggedIn");
     navigate("/admin");
+  };
+
+  const handleDataChange = () => {
+    console.log("Data change detected, refreshing leads...");
+    setRefreshCounter(prev => prev + 1);
   };
 
   const handleFilterApply = () => {
@@ -129,7 +138,7 @@ const Dashboard: React.FC = () => {
                 <p className="text-muted-foreground">Loading leads...</p>
               </div>
             ) : (
-              <LeadsTable leads={filteredLeads} onDataChange={fetchLeads} />
+              <LeadsTable leads={filteredLeads} onDataChange={handleDataChange} />
             )}
           </div>
         </div>

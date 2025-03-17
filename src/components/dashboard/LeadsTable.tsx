@@ -23,6 +23,7 @@ interface LeadsTableProps {
 const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
   const { toast } = useToast();
   const [localLeadStatus, setLocalLeadStatus] = useState<Record<string, string>>({});
+  const [updatingStatus, setUpdatingStatus] = useState<Record<string, boolean>>({});
 
   // Initialize local state with current lead statuses
   React.useEffect(() => {
@@ -34,24 +35,35 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
   }, [leads]);
 
   const handleStatusChange = async (leadId: string, newStatus: string) => {
+    // Set this lead as currently updating
+    setUpdatingStatus(prev => ({ ...prev, [leadId]: true }));
+    
     try {
       // Update local state immediately for responsive UI
       setLocalLeadStatus(prev => ({ ...prev, [leadId]: newStatus }));
       
-      const { error } = await supabase
+      // Log the update request for debugging
+      console.log(`Updating lead ${leadId} status to ${newStatus}`);
+      
+      const { error, data } = await supabase
         .from("journey_requests")
         .update({ status: newStatus })
-        .eq("id", leadId);
+        .eq("id", leadId)
+        .select();
 
       if (error) {
+        console.error("Supabase update error:", error);
         throw error;
       }
 
+      console.log("Update successful, returned data:", data);
+      
       toast({
         title: "Status updated",
         description: "The lead status has been successfully updated.",
       });
       
+      // Force refresh of parent data
       onDataChange();
     } catch (error) {
       console.error("Error updating status:", error);
@@ -67,6 +79,9 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
         description: "Failed to update the lead status. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      // Mark this lead as no longer updating
+      setUpdatingStatus(prev => ({ ...prev, [leadId]: false }));
     }
   };
 
@@ -109,6 +124,7 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
                   <Select
                     value={localLeadStatus[lead.id] || lead.status}
                     onValueChange={(value) => handleStatusChange(lead.id, value)}
+                    disabled={updatingStatus[lead.id]}
                   >
                     <SelectTrigger className="w-[180px]">
                       <SelectValue placeholder="Select status" />
