@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -22,9 +22,22 @@ interface LeadsTableProps {
 
 const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
   const { toast } = useToast();
+  const [localLeadStatus, setLocalLeadStatus] = useState<Record<string, string>>({});
+
+  // Initialize local state with current lead statuses
+  React.useEffect(() => {
+    const initialStatuses: Record<string, string> = {};
+    leads.forEach(lead => {
+      initialStatuses[lead.id] = lead.status;
+    });
+    setLocalLeadStatus(initialStatuses);
+  }, [leads]);
 
   const handleStatusChange = async (leadId: string, newStatus: string) => {
     try {
+      // Update local state immediately for responsive UI
+      setLocalLeadStatus(prev => ({ ...prev, [leadId]: newStatus }));
+      
       const { error } = await supabase
         .from("journey_requests")
         .update({ status: newStatus })
@@ -42,6 +55,13 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
       onDataChange();
     } catch (error) {
       console.error("Error updating status:", error);
+      
+      // Revert local state on error
+      setLocalLeadStatus(prev => ({ 
+        ...prev, 
+        [leadId]: leads.find(lead => lead.id === leadId)?.status || 'pending'
+      }));
+      
       toast({
         title: "Update failed",
         description: "Failed to update the lead status. Please try again.",
@@ -87,7 +107,7 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
                 <TableCell>{lead.contact_number}</TableCell>
                 <TableCell>
                   <Select
-                    defaultValue={lead.status}
+                    value={localLeadStatus[lead.id] || lead.status}
                     onValueChange={(value) => handleStatusChange(lead.id, value)}
                   >
                     <SelectTrigger className="w-[180px]">
