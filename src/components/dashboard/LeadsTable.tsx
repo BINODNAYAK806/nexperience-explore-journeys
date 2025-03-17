@@ -45,18 +45,18 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
       // Log the update request for debugging
       console.log(`Updating lead ${leadId} status to ${newStatus}`);
       
-      const { error, data } = await supabase
+      // Make sure we're using the correct table name and field names
+      const { error } = await supabase
         .from("journey_requests")
         .update({ status: newStatus })
-        .eq("id", leadId)
-        .select();
+        .eq("id", leadId);
 
       if (error) {
         console.error("Supabase update error:", error);
         throw error;
       }
 
-      console.log("Update successful, returned data:", data);
+      console.log(`Status successfully updated to ${newStatus}`);
       
       toast({
         title: "Status updated",

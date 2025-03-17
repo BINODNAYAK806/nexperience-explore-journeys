@@ -35,8 +35,16 @@ const Dashboard: React.FC = () => {
       }
 
       console.log("Fetched lead data:", data);
-      setLeads(data as Lead[]);
-      setFilteredLeads(data as Lead[]);
+      
+      if (data) {
+        setLeads(data as Lead[]);
+        // If we have active filters, apply them, otherwise show all leads
+        if (startDate && endDate) {
+          handleFilterApply();
+        } else {
+          setFilteredLeads(data as Lead[]);
+        }
+      }
     } catch (error) {
       console.error("Error fetching leads:", error);
       toast({
