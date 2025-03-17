@@ -40,7 +40,7 @@ const Dashboard: React.FC = () => {
         setLeads(data as Lead[]);
         // If we have active filters, apply them, otherwise show all leads
         if (startDate && endDate) {
-          handleFilterApply();
+          applyDateFilter(data, startDate, endDate);
         } else {
           setFilteredLeads(data as Lead[]);
         }
@@ -55,6 +55,24 @@ const Dashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to apply date filter
+  const applyDateFilter = (data: Lead[], start: Date, end: Date) => {
+    // Set time to start of day for startDate
+    const startCopy = new Date(start);
+    startCopy.setHours(0, 0, 0, 0);
+    
+    // Set time to end of day for endDate
+    const endCopy = new Date(end);
+    endCopy.setHours(23, 59, 59, 999);
+    
+    const filtered = data.filter((lead) => {
+      const leadDate = new Date(lead.created_at);
+      return leadDate >= startCopy && leadDate <= endCopy;
+    });
+    
+    setFilteredLeads(filtered);
   };
 
   useEffect(() => {
@@ -81,24 +99,11 @@ const Dashboard: React.FC = () => {
       return;
     }
 
-    const filtered = leads.filter((lead) => {
-      const leadDate = new Date(lead.created_at);
-      // Set time to start of day for startDate
-      const start = new Date(startDate);
-      start.setHours(0, 0, 0, 0);
-      
-      // Set time to end of day for endDate
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
-      
-      return leadDate >= start && leadDate <= end;
-    });
-
-    setFilteredLeads(filtered);
+    applyDateFilter(leads, startDate, endDate);
     
     toast({
       title: "Filter applied",
-      description: `Showing ${filtered.length} leads in the selected date range.`,
+      description: `Showing ${filteredLeads.length} leads in the selected date range.`,
     });
   };
 

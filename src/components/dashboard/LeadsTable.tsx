@@ -1,10 +1,11 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
 export interface Lead {
   id: string;
@@ -26,7 +27,7 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
   const [updatingStatus, setUpdatingStatus] = useState<Record<string, boolean>>({});
 
   // Initialize local state with current lead statuses
-  React.useEffect(() => {
+  useEffect(() => {
     const initialStatuses: Record<string, string> = {};
     leads.forEach(lead => {
       initialStatuses[lead.id] = lead.status;
@@ -121,22 +122,27 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
                 <TableCell>{formatDate(lead.created_at)}</TableCell>
                 <TableCell>{lead.contact_number}</TableCell>
                 <TableCell>
-                  <Select
-                    value={localLeadStatus[lead.id] || lead.status}
-                    onValueChange={(value) => handleStatusChange(lead.id, value)}
-                    disabled={updatingStatus[lead.id]}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="done">Done</SelectItem>
-                      <SelectItem value="talk_done">Talk Done</SelectItem>
-                      <SelectItem value="deal_final">Deal Final</SelectItem>
-                      <SelectItem value="quotation_sent">Quotation Sent</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex items-center space-x-2">
+                    <Select
+                      value={localLeadStatus[lead.id] || lead.status}
+                      onValueChange={(value) => handleStatusChange(lead.id, value)}
+                      disabled={updatingStatus[lead.id]}
+                    >
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="done">Done</SelectItem>
+                        <SelectItem value="talk_done">Talk Done</SelectItem>
+                        <SelectItem value="deal_final">Deal Final</SelectItem>
+                        <SelectItem value="quotation_sent">Quotation Sent</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {updatingStatus[lead.id] && (
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             ))
