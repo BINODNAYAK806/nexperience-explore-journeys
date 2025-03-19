@@ -9,45 +9,93 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      destinations: {
+        Row: {
+          activities: Json | null
+          category: string | null
+          country: string | null
+          created_at: string
+          description: string
+          gallery: Json | null
+          highlights: string | null
+          id: string
+          image_url: string | null
+          location: string
+          name: string
+          overview: string | null
+          price: number | null
+          rating: number | null
+          updated_at: string
+        }
+        Insert: {
+          activities?: Json | null
+          category?: string | null
+          country?: string | null
+          created_at?: string
+          description: string
+          gallery?: Json | null
+          highlights?: string | null
+          id?: string
+          image_url?: string | null
+          location: string
+          name: string
+          overview?: string | null
+          price?: number | null
+          rating?: number | null
+          updated_at?: string
+        }
+        Update: {
+          activities?: Json | null
+          category?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string
+          gallery?: Json | null
+          highlights?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string
+          name?: string
+          overview?: string | null
+          price?: number | null
+          rating?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       journey_requests: {
         Row: {
           contact_number: string
           created_at: string
           destination: string
           id: string
+          next_call_date: string | null
+          remark: string | null
           status: string
           travel_date: string
+          updated_at: string | null
         }
         Insert: {
           contact_number: string
           created_at?: string
           destination: string
           id?: string
+          next_call_date?: string | null
+          remark?: string | null
           status?: string
           travel_date: string
+          updated_at?: string | null
         }
         Update: {
           contact_number?: string
           created_at?: string
           destination?: string
           id?: string
+          next_call_date?: string | null
+          remark?: string | null
           status?: string
           travel_date?: string
-        }
-        Relationships: []
-      }
-      nex: {
-        Row: {
-          created_at: string
-          id: number
-        }
-        Insert: {
-          created_at?: string
-          id?: number
-        }
-        Update: {
-          created_at?: string
-          id?: number
+          updated_at?: string | null
         }
         Relationships: []
       }
