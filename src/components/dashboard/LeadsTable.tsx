@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Calendar, Edit, Search } from "lucide-react";
+import { Loader2, Calendar, Edit, Search, X } from "lucide-react";
 import { 
   Dialog, 
   DialogContent, 
@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Badge } from "@/components/ui/badge";
 
 export interface Lead {
   id: string;
@@ -47,10 +48,13 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
   const [remarkCharCount, setRemarkCharCount] = useState(0);
   const [remarkFilter, setRemarkFilter] = useState("");
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>(leads);
+  
+  const [nextCallDateStart, setNextCallDateStart] = useState<Date | undefined>(undefined);
+  const [nextCallDateEnd, setNextCallDateEnd] = useState<Date | undefined>(undefined);
+  const [isNextCallDateFilterOpen, setIsNextCallDateFilterOpen] = useState(false);
 
   const MAX_REMARK_LENGTH = 500;
   
-  // Initialize local state with current lead statuses
   useEffect(() => {
     const initialStatuses: Record<string, string> = {};
     leads.forEach(lead => {
@@ -59,30 +63,39 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
     setLocalLeadStatus(initialStatuses);
   }, [leads]);
 
-  // Filter leads when remarks filter changes
   useEffect(() => {
-    if (remarkFilter.trim() === "") {
-      setFilteredLeads(leads);
-    } else {
-      const filtered = leads.filter(lead => 
+    let filtered = leads;
+    
+    if (remarkFilter.trim() !== "") {
+      filtered = filtered.filter(lead => 
         lead.remark?.toLowerCase().includes(remarkFilter.toLowerCase())
       );
-      setFilteredLeads(filtered);
     }
-  }, [remarkFilter, leads]);
+    
+    if (nextCallDateStart && nextCallDateEnd) {
+      const startDate = new Date(nextCallDateStart);
+      startDate.setHours(0, 0, 0, 0);
+      
+      const endDate = new Date(nextCallDateEnd);
+      endDate.setHours(23, 59, 59, 999);
+      
+      filtered = filtered.filter(lead => {
+        if (!lead.next_call_date) return false;
+        const callDate = new Date(lead.next_call_date);
+        return callDate >= startDate && callDate <= endDate;
+      });
+    }
+    
+    setFilteredLeads(filtered);
+  }, [remarkFilter, nextCallDateStart, nextCallDateEnd, leads]);
 
   const handleStatusChange = async (leadId: string, newStatus: string) => {
-    // Set this lead as currently updating
     setUpdatingStatus(prev => ({ ...prev, [leadId]: true }));
     
     try {
-      // Update local state immediately for responsive UI
       setLocalLeadStatus(prev => ({ ...prev, [leadId]: newStatus }));
-      
-      // Log the update request for debugging
       console.log(`Updating lead ${leadId} status to ${newStatus}`);
       
-      // Make the Supabase update request
       const { error } = await supabase
         .from("journey_requests")
         .update({ status: newStatus })
@@ -100,12 +113,10 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
         description: `Lead status has been updated to ${newStatus}.`,
       });
       
-      // Force refresh of parent data
       onDataChange();
     } catch (error) {
       console.error("Error updating status:", error);
       
-      // Revert local state on error
       const originalStatus = leads.find(lead => lead.id === leadId)?.status || 'pending';
       setLocalLeadStatus(prev => ({ ...prev, [leadId]: originalStatus }));
       
@@ -115,7 +126,6 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
         variant: "destructive",
       });
     } finally {
-      // Mark this lead as no longer updating
       setUpdatingStatus(prev => ({ ...prev, [leadId]: false }));
     }
   };
@@ -167,7 +177,6 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
   const handleSaveChanges = async () => {
     if (!currentLead) return;
 
-    // Validate next call date
     if (editFormData.next_call_date && isDateInPast(editFormData.next_call_date)) {
       toast({
         title: "Invalid Date",
@@ -178,7 +187,6 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
     }
 
     try {
-      // Convert Date object to ISO string if it exists
       const next_call_date = editFormData.next_call_date 
         ? editFormData.next_call_date.toISOString() 
         : null;
@@ -203,7 +211,7 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
       });
       
       setIsEditDialogOpen(false);
-      onDataChange(); // Refresh the table
+      onDataChange();
     } catch (error) {
       console.error("Error updating lead:", error);
       
@@ -223,23 +231,157 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
     today.setHours(0, 0, 0, 0);
     
     if (date < today) {
-      return "text-red-500 font-medium"; // Overdue
+      return "text-red-500 font-medium";
     } else {
-      return "text-green-500 font-medium"; // Upcoming
+      return "text-green-500 font-medium";
     }
+  };
+
+  const applyNextCallDateFilter = () => {
+    if (!nextCallDateStart || !nextCallDateEnd) {
+      toast({
+        title: "Missing date range",
+        description: "Please select both start and end dates for the next call date filter.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsNextCallDateFilterOpen(false);
+    
+    toast({
+      title: "Filter applied",
+      description: "Showing leads with next call dates in the selected range.",
+    });
+  };
+
+  const clearNextCallDateFilter = () => {
+    setNextCallDateStart(undefined);
+    setNextCallDateEnd(undefined);
+    
+    toast({
+      description: "Next call date filter cleared.",
+    });
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search by remarks..."
-          value={remarkFilter}
-          onChange={(e) => setRemarkFilter(e.target.value)}
-          className="max-w-sm"
-        />
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by remarks..."
+            value={remarkFilter}
+            onChange={(e) => setRemarkFilter(e.target.value)}
+            className="max-w-sm"
+          />
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Popover open={isNextCallDateFilterOpen} onOpenChange={setIsNextCallDateFilterOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                <span>Filter Next Call Date</span>
+                {nextCallDateStart && nextCallDateEnd && (
+                  <Badge variant="secondary" className="ml-1">
+                    Active
+                  </Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-4" align="start">
+              <div className="space-y-4">
+                <h4 className="text-sm font-medium">Next Call Date Range</h4>
+                
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">Start Date</p>
+                  <div className="flex items-center gap-2">
+                    <CalendarComponent
+                      mode="single"
+                      selected={nextCallDateStart}
+                      onSelect={setNextCallDateStart}
+                      initialFocus
+                      className="rounded border max-w-[240px]"
+                    />
+                    {nextCallDateStart && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => setNextCallDateStart(undefined)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">End Date</p>
+                  <div className="flex items-center gap-2">
+                    <CalendarComponent
+                      mode="single"
+                      selected={nextCallDateEnd}
+                      onSelect={setNextCallDateEnd}
+                      initialFocus
+                      className="rounded border max-w-[240px]"
+                    />
+                    {nextCallDateEnd && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => setNextCallDateEnd(undefined)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex justify-between pt-2">
+                  <Button variant="outline" size="sm" onClick={clearNextCallDateFilter}>
+                    Clear
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    onClick={applyNextCallDateFilter}
+                    disabled={!nextCallDateStart || !nextCallDateEnd}
+                  >
+                    Apply Filter
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+          
+          {nextCallDateStart && nextCallDateEnd && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={clearNextCallDateFilter}
+              title="Clear next call date filter"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
+      
+      {nextCallDateStart && nextCallDateEnd && (
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">
+            Next Call Date Filter: {nextCallDateStart.toLocaleDateString()} - {nextCallDateEnd.toLocaleDateString()}
+          </span>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-6 p-0 px-2"
+            onClick={clearNextCallDateFilter}
+          >
+            Clear
+          </Button>
+        </div>
+      )}
       
       <div className="overflow-x-auto border rounded-md">
         <Table>
