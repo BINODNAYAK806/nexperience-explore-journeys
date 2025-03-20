@@ -1,42 +1,64 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { LockIcon, MailIcon } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminLogin: React.FC = () => {
+  const [email, setEmail] = useState("hello@nexyatra.com");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        navigate("/dashboard");
+      }
+    };
+    
+    checkSession();
+  }, [navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // Fixed credentials validation
-    if (password === "Asd@1234") {
-      // Set session in localStorage to maintain login state
-      localStorage.setItem("adminLoggedIn", "true");
-      
+    try {
+      // Sign in with Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        throw error;
+      }
+
       toast({
         title: "Login successful",
         description: "Welcome to the admin dashboard",
       });
       
       navigate("/dashboard");
-    } else {
+    } catch (error: any) {
+      console.error("Login error:", error);
+      
       toast({
         title: "Login failed",
-        description: "Incorrect password. Please try again.",
+        description: error.message || "Incorrect email or password. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   return (
@@ -55,14 +77,13 @@ const AdminLogin: React.FC = () => {
                 <MailIcon className="h-4 w-4 opacity-70" />
                 <span className="text-sm font-medium">Email</span>
               </div>
-              <div className="flex items-center border rounded-md bg-gray-100">
-                <Input 
-                  type="email" 
-                  value="hello@nexyatra.com" 
-                  readOnly 
-                  className="border-0 bg-transparent" 
-                />
-              </div>
+              <Input 
+                type="email" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)}
+                className="border bg-background" 
+                required
+              />
             </div>
             <div className="space-y-2">
               <div className="flex items-center space-x-2">

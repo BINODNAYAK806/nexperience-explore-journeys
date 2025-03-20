@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -19,7 +18,6 @@ const Dashboard: React.FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Function to fetch leads from Supabase
   const fetchLeads = useCallback(async () => {
     setLoading(true);
     try {
@@ -38,7 +36,6 @@ const Dashboard: React.FC = () => {
       
       if (data) {
         setLeads(data as Lead[]);
-        // If we have active filters, apply them, otherwise show all leads
         if (startDate && endDate) {
           applyDateFilter(data as Lead[], startDate, endDate);
         } else {
@@ -57,13 +54,10 @@ const Dashboard: React.FC = () => {
     }
   }, [startDate, endDate, toast]);
 
-  // Helper function to apply date filter
   const applyDateFilter = (data: Lead[], start: Date, end: Date) => {
-    // Set time to start of day for startDate
     const startCopy = new Date(start);
     startCopy.setHours(0, 0, 0, 0);
     
-    // Set time to end of day for endDate
     const endCopy = new Date(end);
     endCopy.setHours(23, 59, 59, 999);
     
@@ -75,14 +69,32 @@ const Dashboard: React.FC = () => {
     setFilteredLeads(filtered);
   };
 
-  // Fetch leads on component mount and when refreshCounter changes
   useEffect(() => {
     fetchLeads();
   }, [fetchLeads]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("adminLoggedIn");
-    navigate("/admin");
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of the dashboard",
+      });
+      
+      navigate("/admin");
+    } catch (error: any) {
+      console.error("Logout error:", error);
+      toast({
+        title: "Logout failed",
+        description: error.message || "There was an error logging out.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDataChange = useCallback(() => {
