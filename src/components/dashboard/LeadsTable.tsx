@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -290,49 +291,51 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-4" align="start">
-              <div className="space-y-4">
+            <PopoverContent className="w-auto p-0" align="start">
+              <div className="space-y-4 p-4">
                 <h4 className="text-sm font-medium">Next Call Date Range</h4>
                 
                 <div className="space-y-2">
                   <p className="text-xs text-muted-foreground">Start Date</p>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col items-start gap-2">
                     <CalendarComponent
                       mode="single"
                       selected={nextCallDateStart}
                       onSelect={setNextCallDateStart}
                       initialFocus
-                      className="rounded border max-w-[240px]"
+                      className="border rounded-md"
                     />
                     {nextCallDateStart && (
                       <Button 
                         variant="ghost" 
-                        size="icon" 
+                        size="sm"
                         onClick={() => setNextCallDateStart(undefined)}
+                        className="mt-1"
                       >
-                        <X className="h-4 w-4" />
+                        <X className="h-4 w-4 mr-1" /> Clear
                       </Button>
                     )}
                   </div>
                 </div>
                 
-                <div className="space-y-2">
+                <div className="space-y-2 mt-4">
                   <p className="text-xs text-muted-foreground">End Date</p>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col items-start gap-2">
                     <CalendarComponent
                       mode="single"
                       selected={nextCallDateEnd}
                       onSelect={setNextCallDateEnd}
                       initialFocus
-                      className="rounded border max-w-[240px]"
+                      className="border rounded-md"
                     />
                     {nextCallDateEnd && (
                       <Button 
                         variant="ghost" 
-                        size="icon" 
+                        size="sm"
                         onClick={() => setNextCallDateEnd(undefined)}
+                        className="mt-1"
                       >
-                        <X className="h-4 w-4" />
+                        <X className="h-4 w-4 mr-1" /> Clear
                       </Button>
                     )}
                   </div>
@@ -340,7 +343,7 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
                 
                 <div className="flex justify-between pt-2">
                   <Button variant="outline" size="sm" onClick={clearNextCallDateFilter}>
-                    Clear
+                    Clear All
                   </Button>
                   <Button 
                     size="sm" 
