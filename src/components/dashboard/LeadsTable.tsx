@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -179,11 +178,16 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
     }
 
     try {
+      // Convert Date object to ISO string if it exists
+      const next_call_date = editFormData.next_call_date 
+        ? editFormData.next_call_date.toISOString() 
+        : null;
+      
       const { error } = await supabase
         .from("journey_requests")
         .update({
           remark: editFormData.remark,
-          next_call_date: editFormData.next_call_date,
+          next_call_date: next_call_date,
           updated_at: new Date().toISOString()
         })
         .eq("id", currentLead.id);
