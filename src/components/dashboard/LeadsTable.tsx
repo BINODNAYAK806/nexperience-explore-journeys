@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -295,49 +294,51 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
               <div className="space-y-4 p-4">
                 <h4 className="text-sm font-medium">Next Call Date Range</h4>
                 
-                <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">Start Date</p>
-                  <div className="flex flex-col items-start gap-2">
-                    <CalendarComponent
-                      mode="single"
-                      selected={nextCallDateStart}
-                      onSelect={setNextCallDateStart}
-                      initialFocus
-                      className="border rounded-md"
-                    />
-                    {nextCallDateStart && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => setNextCallDateStart(undefined)}
-                        className="mt-1"
-                      >
-                        <X className="h-4 w-4 mr-1" /> Clear
-                      </Button>
-                    )}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground">Start Date</p>
+                    <div className="flex flex-col items-start gap-2">
+                      <CalendarComponent
+                        mode="single"
+                        selected={nextCallDateStart}
+                        onSelect={setNextCallDateStart}
+                        initialFocus
+                        className="border rounded-md"
+                      />
+                      {nextCallDateStart && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => setNextCallDateStart(undefined)}
+                          className="mt-1"
+                        >
+                          <X className="h-4 w-4 mr-1" /> Clear
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                </div>
-                
-                <div className="space-y-2 mt-4">
-                  <p className="text-xs text-muted-foreground">End Date</p>
-                  <div className="flex flex-col items-start gap-2">
-                    <CalendarComponent
-                      mode="single"
-                      selected={nextCallDateEnd}
-                      onSelect={setNextCallDateEnd}
-                      initialFocus
-                      className="border rounded-md"
-                    />
-                    {nextCallDateEnd && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => setNextCallDateEnd(undefined)}
-                        className="mt-1"
-                      >
-                        <X className="h-4 w-4 mr-1" /> Clear
-                      </Button>
-                    )}
+                  
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground">End Date</p>
+                    <div className="flex flex-col items-start gap-2">
+                      <CalendarComponent
+                        mode="single"
+                        selected={nextCallDateEnd}
+                        onSelect={setNextCallDateEnd}
+                        initialFocus
+                        className="border rounded-md"
+                      />
+                      {nextCallDateEnd && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => setNextCallDateEnd(undefined)}
+                          className="mt-1"
+                        >
+                          <X className="h-4 w-4 mr-1" /> Clear
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
                 
