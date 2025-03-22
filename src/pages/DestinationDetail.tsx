@@ -132,7 +132,7 @@ const allDestinations = [
     name: "Manali",
     country: "India",
     description: "Enjoy breathtaking Himalayan views, adventure activities, and serene landscapes. Perfect for thrill-seekers and nature lovers looking for mountain escapades.",
-    image: "https://images.unsplash.com/photo-1626621341517-0f5b809f3a4a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
+    image: "https://images.unsplash.com/photo-1593181629936-11c609b8db9b?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     price: "₹25,000",
     rating: 4.6,
     category: "Adventure",
@@ -319,20 +319,39 @@ const allDestinations = [
   }
 ];
 
+// Add this interface at the top of the file
+interface Destination {
+  id: string;
+  name: string;
+  country: string;
+  description: string;
+  image: string;
+  price: string;
+  rating: number;
+  category: string;
+  activities: string[];
+  trending: boolean;
+  bookings: number;
+  duration: string;
+  bestTime: string;
+  highlights: string[];
+  inclusions: string[];
+  gallery: string[];
+}
+
+// Update the component with proper typing
 const DestinationDetail = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const [isLoading, setIsLoading] = useState(true);
-  const [destination, setDestination] = useState<any>(null);
+  const [destination, setDestination] = useState<Destination | null>(null);
 
   useEffect(() => {
-    // Find the destination based on the ID
-    const found = allDestinations.find(dest => dest.id === id);
+    const found = allDestinations.find(dest => dest.id === id) as Destination | undefined;
     
     if (found) {
       setDestination(found);
     }
-    
-    // Simulate short loading time
+
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 500);
@@ -340,6 +359,7 @@ const DestinationDetail = () => {
     return () => clearTimeout(timer);
   }, [id]);
 
+  // ... rest of the component remains the same ...
   if (isLoading) {
     return (
       <div className="container-custom py-12">

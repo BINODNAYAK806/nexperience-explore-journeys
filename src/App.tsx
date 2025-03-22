@@ -13,7 +13,7 @@ import AdminLogin from "./pages/AdminLogin";
 import Dashboard from "./pages/Dashboard";
 import Layout from "./components/layout/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
-
+import AboutUs from "./pages/AboutUs";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -28,6 +28,7 @@ const App = () => (
           <Route path="/destinations/:id" element={<Layout><DestinationDetail /></Layout>} />
           <Route path="/quiz" element={<Layout><PersonalityQuiz /></Layout>} />
           <Route path="/admin" element={<AdminLogin />} />
+          <Route path="/about" element={<AboutUs />} />
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <Dashboard />

@@ -48,7 +48,7 @@ const AdminLogin: React.FC = () => {
       });
       
       navigate("/dashboard");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Login error:", error);
       
       toast({

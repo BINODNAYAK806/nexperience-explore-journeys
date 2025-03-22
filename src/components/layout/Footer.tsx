@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } from "lucide-react";
-
+import AboutUs from "@/pages/AboutUs";
 const Footer = () => {
   return (
     <footer className="bg-gray-50 dark:bg-gray-900 pt-16 pb-8">
@@ -16,16 +16,16 @@ const Footer = () => {
               Redefining travel experiences with immersive storytelling and personalized journeys.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-500 hover:text-primary transition-colors">
+              <a href="https://www.facebook.com/nexyatra.2025" className="text-gray-500 hover:text-primary transition-colors">
                 <Facebook size={20} />
               </a>
-              <a href="#" className="text-gray-500 hover:text-primary transition-colors">
+              <a href="https://x.com/NexYatra89312" className="text-gray-500 hover:text-primary transition-colors">
                 <Twitter size={20} />
               </a>
-              <a href="#" className="text-gray-500 hover:text-primary transition-colors">
+              <a href="https://www.instagram.com/nexyatra" className="text-gray-500 hover:text-primary transition-colors">
                 <Instagram size={20} />
               </a>
-              <a href="#" className="text-gray-500 hover:text-primary transition-colors">
+              <a href="https://www.youtube.com/@nexyatra" className="text-gray-500 hover:text-primary transition-colors">
                 <Youtube size={20} />
               </a>
             </div>
@@ -91,15 +91,20 @@ const Footer = () => {
             <ul className="space-y-4">
               <li className="flex items-start space-x-3">
                 <MapPin size={20} className="text-primary shrink-0 mt-0.5" />
-                <span className="text-muted-foreground">123 Travel Plaza, Mumbai, India 400001</span>
+                <span className="text-muted-foreground">U1, Mahalaxmi Market,  Udhana, Surat, Gujarat 394210</span>
               </li>
               <li className="flex items-center space-x-3">
                 <Phone size={20} className="text-primary" />
-                <span className="text-muted-foreground">+91 1234 567890</span>
+                <span className="text-muted-foreground">+91 8347015725 (India) </span>
+              </li>
+              
+              <li className="flex items-center space-x-3">
+                <Phone size={20} className="text-primary" />
+                <span className="text-muted-foreground">+971 523273730 (Dubai)</span>
               </li>
               <li className="flex items-center space-x-3">
                 <Mail size={20} className="text-primary" />
-                <span className="text-muted-foreground">hello@nexyatra.com</span>
+                <span className="text-muted-foreground">book@nexyatra.in</span>
               </li>
             </ul>
           </div>

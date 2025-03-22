@@ -54,7 +54,7 @@ const allDestinations = [
     name: "Manali",
     country: "India",
     description: "Enjoy breathtaking Himalayan views, adventure activities, and serene landscapes. Perfect for thrill-seekers and nature lovers looking for mountain escapades.",
-    image: "https://images.unsplash.com/photo-1626621341517-0f5b809f3a4a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
+    image: "https://images.unsplash.com/photo-1593181629936-11c609b8db9b?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     price: "₹25,000",
     rating: 4.6,
     category: "Adventure",
