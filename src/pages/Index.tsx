@@ -173,7 +173,7 @@ const Index = () => {
             className="w-full h-full object-cover"
             style={{ objectPosition: 'center 30%' }}
           >
-            <source src="https://videocdn.cdnpk.net/videos/d881af8f-c9f9-4499-952e-cd1219ba494c/horizontal/previews/clear/large.mp4?token=exp=1742743844~hmac=b6b00b4f24f562c9f231017c0594e629bbe2e60f220d064d4ec158789a267880" type="video/webm" />
+            <source src="https://videocdn.cdnpk.net/videos/d881af8f-c9f9-4499-952e-cd1219ba494c/horizontal/previews/clear/large.mp4?token=exp=1742751370~hmac=9222d9f0efff105c82b8a190af79bd2fb68f2c45f8ba96822fc1b4fbdcea2f10" type="video/webm" />
             Your browser does not support the video tag.
           </video>
         </div>
