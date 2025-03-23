@@ -173,7 +173,7 @@ const Index = () => {
             className="w-full h-full object-cover"
             style={{ objectPosition: 'center 30%' }}
           >
-            <source src="https://mazwai.com/videvo_files/video/free/2019-01/small_watermarked/190111_07_Mauritius_Drone_18_preview.webm" type="video/webm" />
+            <source src="https://videocdn.cdnpk.net/videos/d881af8f-c9f9-4499-952e-cd1219ba494c/horizontal/previews/clear/large.mp4?token=exp=1742743844~hmac=b6b00b4f24f562c9f231017c0594e629bbe2e60f220d064d4ec158789a267880" type="video/webm" />
             Your browser does not support the video tag.
           </video>
         </div>
