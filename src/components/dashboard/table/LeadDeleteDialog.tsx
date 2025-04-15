@@ -39,21 +39,25 @@ const LeadDeleteDialog: React.FC<LeadDeleteDialogProps> = ({
     try {
       console.log("Deleting lead with ID:", lead.id);
       
-      const { error } = await supabase
+      const { error, count } = await supabase
         .from("journey_requests")
         .delete()
-        .eq("id", lead.id);
+        .eq("id", lead.id)
+        .select("count");
 
       if (error) {
         console.error("Supabase delete error:", error);
         throw error;
       }
 
+      console.log("Delete operation completed, affected rows:", count);
+      
       toast({
         title: "Lead deleted",
         description: "The lead has been successfully deleted.",
       });
       
+      // Ensure we call onLeadDelete before closing the dialog
       onLeadDelete();
     } catch (error) {
       console.error("Error deleting lead:", error);
