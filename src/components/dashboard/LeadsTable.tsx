@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Calendar, Edit, Search, X } from "lucide-react";
+import { Loader2, Calendar, Edit, Search, X, Trash2 } from "lucide-react";
 import { 
   Dialog, 
   DialogContent, 
@@ -12,6 +12,16 @@ import {
   DialogTitle, 
   DialogFooter 
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -52,6 +62,8 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
   const [nextCallDateStart, setNextCallDateStart] = useState<Date | undefined>(undefined);
   const [nextCallDateEnd, setNextCallDateEnd] = useState<Date | undefined>(undefined);
   const [isNextCallDateFilterOpen, setIsNextCallDateFilterOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
 
   const MAX_REMARK_LENGTH = 500;
   
@@ -264,6 +276,45 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
     });
   };
 
+  const handleDeleteClick = (lead: Lead) => {
+    setLeadToDelete(lead);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!leadToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from("journey_requests")
+        .delete()
+        .eq("id", leadToDelete.id);
+
+      if (error) {
+        console.error("Error deleting lead:", error);
+        throw error;
+      }
+
+      toast({
+        title: "Lead deleted",
+        description: "The lead has been successfully deleted.",
+      });
+      
+      onDataChange();
+    } catch (error) {
+      console.error("Error deleting lead:", error);
+      
+      toast({
+        title: "Delete failed",
+        description: "Failed to delete the lead. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setLeadToDelete(null);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
@@ -458,14 +509,25 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => handleEditClick(lead)}
-                      title="Edit Remarks & Next Call Date"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleEditClick(lead)}
+                        title="Edit Remarks & Next Call Date"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleDeleteClick(lead)}
+                        className="text-destructive hover:text-destructive"
+                        title="Delete Lead"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -544,6 +606,29 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the lead for{' '}
+              <span className="font-medium">
+                {leadToDelete?.destination}
+              </span>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
