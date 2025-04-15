@@ -1,33 +1,16 @@
+
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Calendar, Edit, Search, X, Trash2 } from "lucide-react";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter 
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Loader2, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Badge } from "@/components/ui/badge";
+import LeadsTableFilters from "./table/LeadsTableFilters";
+import LeadEditDialog from "./table/LeadEditDialog";
+import LeadDeleteDialog from "./table/LeadDeleteDialog";
 
 export interface Lead {
   id: string;
@@ -50,22 +33,13 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
   const [localLeadStatus, setLocalLeadStatus] = useState<Record<string, string>>({});
   const [updatingStatus, setUpdatingStatus] = useState<Record<string, boolean>>({});
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentLead, setCurrentLead] = useState<Lead | null>(null);
-  const [editFormData, setEditFormData] = useState({
-    remark: "",
-    next_call_date: undefined as Date | undefined
-  });
-  const [remarkCharCount, setRemarkCharCount] = useState(0);
   const [remarkFilter, setRemarkFilter] = useState("");
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>(leads);
-  
   const [nextCallDateStart, setNextCallDateStart] = useState<Date | undefined>(undefined);
   const [nextCallDateEnd, setNextCallDateEnd] = useState<Date | undefined>(undefined);
   const [isNextCallDateFilterOpen, setIsNextCallDateFilterOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
-
-  const MAX_REMARK_LENGTH = 500;
   
   useEffect(() => {
     const initialStatuses: Record<string, string> = {};
@@ -106,19 +80,13 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
     
     try {
       setLocalLeadStatus(prev => ({ ...prev, [leadId]: newStatus }));
-      console.log(`Updating lead ${leadId} status to ${newStatus}`);
       
       const { error } = await supabase
         .from("journey_requests")
         .update({ status: newStatus })
         .eq("id", leadId);
 
-      if (error) {
-        console.error("Supabase update error:", error);
-        throw error;
-      }
-
-      console.log(`Status successfully updated to ${newStatus}`);
+      if (error) throw error;
       
       toast({
         title: "Status updated",
@@ -156,85 +124,6 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
     return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
   };
 
-  const handleEditClick = (lead: Lead) => {
-    setCurrentLead(lead);
-    setEditFormData({
-      remark: lead.remark || "",
-      next_call_date: lead.next_call_date ? new Date(lead.next_call_date) : undefined
-    });
-    setRemarkCharCount(lead.remark?.length || 0);
-    setIsEditDialogOpen(true);
-  };
-
-  const handleRemarkChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
-    if (value.length <= MAX_REMARK_LENGTH) {
-      setEditFormData(prev => ({ ...prev, remark: value }));
-      setRemarkCharCount(value.length);
-    }
-  };
-
-  const handleDateChange = (date: Date | undefined) => {
-    setEditFormData(prev => ({ ...prev, next_call_date: date }));
-  };
-
-  const isDateInPast = (date: Date | undefined) => {
-    if (!date) return false;
-    
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return date < today;
-  };
-
-  const handleSaveChanges = async () => {
-    if (!currentLead) return;
-
-    if (editFormData.next_call_date && isDateInPast(editFormData.next_call_date)) {
-      toast({
-        title: "Invalid Date",
-        description: "Next call date cannot be in the past.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const next_call_date = editFormData.next_call_date 
-        ? editFormData.next_call_date.toISOString() 
-        : null;
-      
-      const { error } = await supabase
-        .from("journey_requests")
-        .update({
-          remark: editFormData.remark,
-          next_call_date: next_call_date,
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", currentLead.id);
-
-      if (error) {
-        console.error("Error updating lead:", error);
-        throw error;
-      }
-
-      toast({
-        title: "Update successful",
-        description: "Remarks and Next Call Date updated!",
-      });
-      
-      setIsEditDialogOpen(false);
-      onDataChange();
-    } catch (error) {
-      console.error("Error updating lead:", error);
-      
-      toast({
-        title: "Update failed",
-        description: "Failed to update the lead. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
   const getDateCellClass = (dateString: string | null) => {
     if (!dateString) return "";
     
@@ -242,199 +131,27 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    if (date < today) {
-      return "text-red-500 font-medium";
-    } else {
-      return "text-green-500 font-medium";
-    }
-  };
-
-  const applyNextCallDateFilter = () => {
-    if (!nextCallDateStart || !nextCallDateEnd) {
-      toast({
-        title: "Missing date range",
-        description: "Please select both start and end dates for the next call date filter.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsNextCallDateFilterOpen(false);
-    
-    toast({
-      title: "Filter applied",
-      description: "Showing leads with next call dates in the selected range.",
-    });
-  };
-
-  const clearNextCallDateFilter = () => {
-    setNextCallDateStart(undefined);
-    setNextCallDateEnd(undefined);
-    
-    toast({
-      description: "Next call date filter cleared.",
-    });
-  };
-
-  const handleDeleteClick = (lead: Lead) => {
-    setLeadToDelete(lead);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!leadToDelete) return;
-
-    try {
-      const { error } = await supabase
-        .from("journey_requests")
-        .delete()
-        .eq("id", leadToDelete.id);
-
-      if (error) {
-        console.error("Error deleting lead:", error);
-        throw error;
-      }
-
-      toast({
-        title: "Lead deleted",
-        description: "The lead has been successfully deleted.",
-      });
-      
-      onDataChange();
-    } catch (error) {
-      console.error("Error deleting lead:", error);
-      
-      toast({
-        title: "Delete failed",
-        description: "Failed to delete the lead. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsDeleteDialogOpen(false);
-      setLeadToDelete(null);
-    }
+    return date < today ? "text-red-500 font-medium" : "text-green-500 font-medium";
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Search className="h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by remarks..."
-            value={remarkFilter}
-            onChange={(e) => setRemarkFilter(e.target.value)}
-            className="max-w-sm"
-          />
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Popover open={isNextCallDateFilterOpen} onOpenChange={setIsNextCallDateFilterOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                <span>Filter Next Call Date</span>
-                {nextCallDateStart && nextCallDateEnd && (
-                  <Badge variant="secondary" className="ml-1">
-                    Active
-                  </Badge>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <div className="space-y-4 p-4">
-                <h4 className="text-sm font-medium">Next Call Date Range</h4>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <p className="text-xs text-muted-foreground">Start Date</p>
-                    <div className="flex flex-col items-start gap-2">
-                      <CalendarComponent
-                        mode="single"
-                        selected={nextCallDateStart}
-                        onSelect={setNextCallDateStart}
-                        initialFocus
-                        className="border rounded-md"
-                      />
-                      {nextCallDateStart && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => setNextCallDateStart(undefined)}
-                          className="mt-1"
-                        >
-                          <X className="h-4 w-4 mr-1" /> Clear
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <p className="text-xs text-muted-foreground">End Date</p>
-                    <div className="flex flex-col items-start gap-2">
-                      <CalendarComponent
-                        mode="single"
-                        selected={nextCallDateEnd}
-                        onSelect={setNextCallDateEnd}
-                        initialFocus
-                        className="border rounded-md"
-                      />
-                      {nextCallDateEnd && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => setNextCallDateEnd(undefined)}
-                          className="mt-1"
-                        >
-                          <X className="h-4 w-4 mr-1" /> Clear
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex justify-between pt-2">
-                  <Button variant="outline" size="sm" onClick={clearNextCallDateFilter}>
-                    Clear All
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    onClick={applyNextCallDateFilter}
-                    disabled={!nextCallDateStart || !nextCallDateEnd}
-                  >
-                    Apply Filter
-                  </Button>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-          
-          {nextCallDateStart && nextCallDateEnd && (
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={clearNextCallDateFilter}
-              title="Clear next call date filter"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      </div>
+      <LeadsTableFilters
+        remarkFilter={remarkFilter}
+        setRemarkFilter={setRemarkFilter}
+        nextCallDateStart={nextCallDateStart}
+        nextCallDateEnd={nextCallDateEnd}
+        setNextCallDateStart={setNextCallDateStart}
+        setNextCallDateEnd={setNextCallDateEnd}
+        isNextCallDateFilterOpen={isNextCallDateFilterOpen}
+        setIsNextCallDateFilterOpen={setIsNextCallDateFilterOpen}
+      />
       
       {nextCallDateStart && nextCallDateEnd && (
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">
             Next Call Date Filter: {nextCallDateStart.toLocaleDateString()} - {nextCallDateEnd.toLocaleDateString()}
           </span>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-6 p-0 px-2"
-            onClick={clearNextCallDateFilter}
-          >
-            Clear
-          </Button>
         </div>
       )}
       
@@ -513,7 +230,10 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        onClick={() => handleEditClick(lead)}
+                        onClick={() => {
+                          setCurrentLead(lead);
+                          setIsEditDialogOpen(true);
+                        }}
                         title="Edit Remarks & Next Call Date"
                       >
                         <Edit className="h-4 w-4" />
@@ -521,7 +241,10 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
                       <Button 
                         variant="ghost" 
                         size="icon"
-                        onClick={() => handleDeleteClick(lead)}
+                        onClick={() => {
+                          setCurrentLead(lead);
+                          setIsDeleteDialogOpen(true);
+                        }}
                         className="text-destructive hover:text-destructive"
                         title="Delete Lead"
                       >
@@ -536,99 +259,19 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
         </Table>
       </div>
 
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Lead Details</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label htmlFor="remark" className="text-sm font-medium">
-                Customer Remarks
-              </label>
-              <Textarea 
-                id="remark" 
-                placeholder="Add notes from the last interaction..."
-                value={editFormData.remark}
-                onChange={handleRemarkChange}
-                className="resize-none min-h-[100px]"
-              />
-              <div className={`text-xs flex justify-end ${remarkCharCount > MAX_REMARK_LENGTH * 0.9 ? 'text-orange-500' : 'text-muted-foreground'}`}>
-                {remarkCharCount}/{MAX_REMARK_LENGTH}
-              </div>
-            </div>
+      <LeadEditDialog
+        isOpen={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        lead={currentLead}
+        onLeadUpdate={onDataChange}
+      />
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Next Follow-Up Date
-              </label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal"
-                  >
-                    <Calendar className="mr-2 h-4 w-4" />
-                    {editFormData.next_call_date ? (
-                      format(editFormData.next_call_date, "dd/MM/yyyy")
-                    ) : (
-                      <span className="text-muted-foreground">Select a date</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <CalendarComponent
-                    mode="single"
-                    selected={editFormData.next_call_date}
-                    onSelect={handleDateChange}
-                    disabled={(date) => {
-                      const today = new Date();
-                      today.setHours(0, 0, 0, 0);
-                      return date < today;
-                    }}
-                    initialFocus
-                    className="p-3 pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-              <p className="text-xs text-muted-foreground">Select a future date for the next call</p>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveChanges}>
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the lead for{' '}
-              <span className="font-medium">
-                {leadToDelete?.destination}
-              </span>.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <LeadDeleteDialog
+        isOpen={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        lead={currentLead}
+        onLeadDelete={onDataChange}
+      />
     </div>
   );
 };
