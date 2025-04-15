@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,6 +13,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Lead } from "../LeadsTable";
+import { Loader2 } from "lucide-react";
 
 interface LeadDeleteDialogProps {
   isOpen: boolean;
@@ -28,17 +29,25 @@ const LeadDeleteDialog: React.FC<LeadDeleteDialogProps> = ({
   onLeadDelete,
 }) => {
   const { toast } = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDeleteConfirm = async () => {
     if (!lead) return;
-
+    
+    setIsDeleting(true);
+    
     try {
+      console.log("Deleting lead with ID:", lead.id);
+      
       const { error } = await supabase
         .from("journey_requests")
         .delete()
         .eq("id", lead.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase delete error:", error);
+        throw error;
+      }
 
       toast({
         title: "Lead deleted",
@@ -55,6 +64,7 @@ const LeadDeleteDialog: React.FC<LeadDeleteDialogProps> = ({
         variant: "destructive",
       });
     } finally {
+      setIsDeleting(false);
       onOpenChange(false);
     }
   };
@@ -72,12 +82,20 @@ const LeadDeleteDialog: React.FC<LeadDeleteDialogProps> = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDeleteConfirm}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            disabled={isDeleting}
           >
-            Delete
+            {isDeleting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Deleting...
+              </>
+            ) : (
+              "Delete"
+            )}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
