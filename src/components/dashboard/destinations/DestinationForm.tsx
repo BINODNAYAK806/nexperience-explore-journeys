@@ -16,6 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Json } from '@/integrations/supabase/types';
 
 interface DestinationFormData {
   id?: string;
@@ -78,17 +79,17 @@ const DestinationForm = ({ initialData, onSuccess, mode }: DestinationFormProps)
       
       const formattedData = {
         ...data,
-        highlights: highlightsArray,
-        inclusions: inclusionsArray,
-        gallery: galleryArray,
-        activities: activitiesArray,
+        highlights: highlightsArray as unknown as string,
+        inclusions: inclusionsArray as unknown as Json,
+        gallery: galleryArray as unknown as Json,
+        activities: activitiesArray as unknown as Json,
         slug
       };
       
       if (mode === 'create') {
         const { error } = await supabase
           .from('destinations')
-          .insert([formattedData]);
+          .insert(formattedData);
 
         if (error) throw error;
         
