@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   ArrowLeft, MapPin, Star, Clock, Calendar, Users, 
@@ -16,13 +15,15 @@ import { supabase } from '@/integrations/supabase/client';
 const DestinationDetail = () => {
   const { id } = useParams<{ id: string }>();
   
+  const cleanSlug = id?.replace(/-+$/, '') || '';
+
   const { data: destination, isLoading } = useQuery({
-    queryKey: ['destination', id],
+    queryKey: ['destination', cleanSlug],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('destinations')
         .select('*')
-        .eq('slug', id)
+        .eq('slug', cleanSlug)
         .single();
       
       if (error) throw error;
