@@ -1,63 +1,61 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Search, Filter, MapPin, ChevronRight, ArrowDownAZ,
-  Landmark, Compass, Coffee, Utensils, Camera, Users, Heart
-} from 'lucide-react';
+import { Search, Filter, MapPin, ChevronRight, ArrowDownAZ, Landmark, Compass, Coffee, Utensils, Camera, Users, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-
-const activities = [
-  { name: "Sightseeing", icon: <Landmark size={18} /> },
-  { name: "Adventures", icon: <Compass size={18} /> },
-  { name: "Cultural", icon: <Coffee size={18} /> },
-  { name: "Culinary", icon: <Utensils size={18} /> },
-  { name: "Photography", icon: <Camera size={18} /> },
-  { name: "Family", icon: <Users size={18} /> },
-];
-
+const activities = [{
+  name: "Sightseeing",
+  icon: <Landmark size={18} />
+}, {
+  name: "Adventures",
+  icon: <Compass size={18} />
+}, {
+  name: "Cultural",
+  icon: <Coffee size={18} />
+}, {
+  name: "Culinary",
+  icon: <Utensils size={18} />
+}, {
+  name: "Photography",
+  icon: <Camera size={18} />
+}, {
+  name: "Family",
+  icon: <Users size={18} />
+}];
 const categories = ["All", "Luxury", "Beach", "Adventure", "Nature", "Cultural"];
-
 const Destinations = () => {
   const [filteredDestinations, setFilteredDestinations] = useState([]);
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("trending");
   const [isFiltersVisible, setIsFiltersVisible] = useState(false);
-
-  const { data: destinations = [], isLoading } = useQuery({
+  const {
+    data: destinations = [],
+    isLoading
+  } = useQuery({
     queryKey: ['destinations'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('destinations')
-        .select('*');
-      
+      const {
+        data,
+        error
+      } = await supabase.from('destinations').select('*');
       if (error) throw error;
       return data || [];
     }
   });
-
   useEffect(() => {
     let results = [...destinations];
-    
     if (activeCategory !== "All") {
       results = results.filter(destination => destination.category === activeCategory);
     }
-    
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      results = results.filter(
-        destination => 
-          destination.name?.toLowerCase().includes(query) || 
-          destination.country?.toLowerCase().includes(query) ||
-          destination.description?.toLowerCase().includes(query)
-      );
+      results = results.filter(destination => destination.name?.toLowerCase().includes(query) || destination.country?.toLowerCase().includes(query) || destination.description?.toLowerCase().includes(query));
     }
-    
     if (sortBy === "trending") {
       results.sort((a, b) => (b.bookings || 0) - (a.bookings || 0));
     } else if (sortBy === "priceAsc") {
@@ -67,24 +65,16 @@ const Destinations = () => {
     } else if (sortBy === "rating") {
       results.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     }
-    
     setFilteredDestinations(results);
   }, [activeCategory, searchQuery, sortBy, destinations]);
-
   const toggleFilters = () => {
     setIsFiltersVisible(!isFiltersVisible);
   };
-
-  return (
-    <div className="opacity-100">
+  return <div className="opacity-100">
       <section className="relative py-32 flex items-center overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-700">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-blue-900/70"></div>
-          <img 
-            src="https://images.unsplash.com/photo-1488085061387-422e29b40080?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" 
-            alt="Travel Map" 
-            className="w-full h-full object-cover"
-          />
+          <img src="https://images.unsplash.com/photo-1488085061387-422e29b40080?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Travel Map" className="w-full h-full object-cover" />
         </div>
 
         <div className="container-custom relative z-10">
@@ -98,13 +88,7 @@ const Destinations = () => {
 
             <div className="relative max-w-xl mx-auto">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
-              <input
-                type="text"
-                placeholder="Search destinations, countries, or experiences..."
-                className="w-full bg-white/90 backdrop-blur-sm border-0 rounded-full py-3 pl-12 pr-4 shadow-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+              <input type="text" placeholder="Search destinations, countries, or experiences..." className="w-full bg-white/90 backdrop-blur-sm border-0 rounded-full py-3 pl-12 pr-4 shadow-lg focus:outline-none focus:ring-2 focus:ring-primary" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
             </div>
           </div>
         </div>
@@ -120,21 +104,12 @@ const Destinations = () => {
               </h2>
               
               <div className="flex items-center space-x-3">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={toggleFilters}
-                  className="flex items-center gap-2"
-                >
+                <Button variant="outline" size="sm" onClick={toggleFilters} className="flex items-center gap-2">
                   <Filter size={16} />
                   <span>Filters</span>
                 </Button>
                 
-                <select
-                  className="bg-background border border-input rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-shadow"
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                >
+                <select className="bg-background border border-input rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-shadow" value={sortBy} onChange={e => setSortBy(e.target.value)}>
                   <option value="trending">Trending</option>
                   <option value="priceAsc">Price: Low to High</option>
                   <option value="priceDesc">Price: High to Low</option>
@@ -145,56 +120,32 @@ const Destinations = () => {
             
             <Tabs defaultValue="All" className="w-full">
               <TabsList className="flex overflow-x-auto pb-1 max-w-full hide-scrollbar">
-                {categories.map((category) => (
-                  <TabsTrigger 
-                    key={category} 
-                    value={category}
-                    onClick={() => setActiveCategory(category)}
-                    className="px-4 py-2 whitespace-nowrap"
-                  >
+                {categories.map(category => <TabsTrigger key={category} value={category} onClick={() => setActiveCategory(category)} className="px-4 py-2 whitespace-nowrap">
                     {category}
-                  </TabsTrigger>
-                ))}
+                  </TabsTrigger>)}
               </TabsList>
             </Tabs>
 
-            <div 
-              className={`mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-border transition-all duration-300 overflow-hidden ${
-                isFiltersVisible ? 'max-h-96' : 'max-h-0 p-0 mt-0 border-transparent'
-              }`}
-            >
+            <div className="px-0 mx-0 py-[30px]">
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {activities.map((activity) => (
-                  <div key={activity.name} className="flex items-center">
+                {activities.map(activity => <div key={activity.name} className="flex items-center">
                     <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                      />
+                      <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />
                       <span className="flex items-center ml-2 text-sm">
                         {activity.icon}
                         <span className="ml-1.5">{activity.name}</span>
                       </span>
                     </label>
-                  </div>
-                ))}
+                  </div>)}
               </div>
               
               <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Price Range</label>
                   <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      placeholder="Min"
-                      className="w-full p-2 bg-background border border-input rounded-md text-sm"
-                    />
+                    <input type="number" placeholder="Min" className="w-full p-2 bg-background border border-input rounded-md text-sm" />
                     <span>-</span>
-                    <input
-                      type="number"
-                      placeholder="Max"
-                      className="w-full p-2 bg-background border border-input rounded-md text-sm"
-                    />
+                    <input type="number" placeholder="Max" className="w-full p-2 bg-background border border-input rounded-md text-sm" />
                   </div>
                 </div>
                 
@@ -232,10 +183,8 @@ const Destinations = () => {
             </div>
           </div>
           
-          {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((n) => (
-                <Card key={n} className="overflow-hidden border-0 shadow-md h-full animate-pulse">
+          {isLoading ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map(n => <Card key={n} className="overflow-hidden border-0 shadow-md h-full animate-pulse">
                   <div className="h-56 bg-gray-200" />
                   <CardContent className="p-5">
                     <div className="h-6 bg-gray-200 rounded w-2/3 mb-2" />
@@ -243,35 +192,17 @@ const Destinations = () => {
                     <div className="h-4 bg-gray-200 rounded w-full mb-2" />
                     <div className="h-4 bg-gray-200 rounded w-3/4" />
                   </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : filteredDestinations.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredDestinations.map((destination) => (
-                <Link
-                  key={destination.id}
-                  to={`/destinations/${destination.slug}`}
-                  className="group"
-                >
+                </Card>)}
+            </div> : filteredDestinations.length > 0 ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredDestinations.map(destination => <Link key={destination.id} to={`/destinations/${destination.slug}`} className="group">
                   <Card className="overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 hover:translate-y-[-8px] h-full">
                     <div className="relative h-56 overflow-hidden">
-                      <img 
-                        src={destination.image_url || '/placeholder.svg'} 
-                        alt={destination.name} 
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      />
-                      {destination.trending && (
-                        <div className="absolute top-3 left-3 bg-primary text-white text-xs font-semibold py-1 px-2 rounded-full flex items-center">
+                      <img src={destination.image_url || '/placeholder.svg'} alt={destination.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                      {destination.trending && <div className="absolute top-3 left-3 bg-primary text-white text-xs font-semibold py-1 px-2 rounded-full flex items-center">
                           <span className="animate-pulse mr-1 w-2 h-2 bg-white rounded-full"></span>
                           Trending
-                        </div>
-                      )}
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="absolute top-3 right-3 bg-white/60 backdrop-blur-sm hover:bg-white/80 text-gray-700 rounded-full w-8 h-8 flex items-center justify-center"
-                      >
+                        </div>}
+                      <Button variant="ghost" size="icon" className="absolute top-3 right-3 bg-white/60 backdrop-blur-sm hover:bg-white/80 text-gray-700 rounded-full w-8 h-8 flex items-center justify-center">
                         <Heart size={16} />
                       </Button>
                       <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm text-xs font-semibold py-1 px-2 rounded">
@@ -297,32 +228,23 @@ const Destinations = () => {
                       
                       <div className="mb-4">
                         <div className="flex flex-wrap gap-2">
-                          {(destination.activities as string[] || []).slice(0, 3).map((activity, i) => (
-                            <Badge key={i} variant="secondary" className="font-normal text-xs">
+                          {(destination.activities as string[] || []).slice(0, 3).map((activity, i) => <Badge key={i} variant="secondary" className="font-normal text-xs">
                               {activity}
-                            </Badge>
-                          ))}
-                          {(destination.activities as string[] || []).length > 3 && (
-                            <Badge variant="outline" className="font-normal text-xs">
+                            </Badge>)}
+                          {(destination.activities as string[] || []).length > 3 && <Badge variant="outline" className="font-normal text-xs">
                               +{(destination.activities as string[] || []).length - 3} more
-                            </Badge>
-                          )}
+                            </Badge>}
                         </div>
                       </div>
                       
                       <div className="flex justify-between items-center">
                         <div className="flex items-center">
                           <div className="flex">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <svg 
-                                key={i} 
-                                className={`w-4 h-4 ${i < Math.floor(destination.rating || 0) ? "text-yellow-400" : "text-gray-300"}`}
-                                fill="currentColor" 
-                                viewBox="0 0 20 20"
-                              >
+                            {Array.from({
+                        length: 5
+                      }).map((_, i) => <svg key={i} className={`w-4 h-4 ${i < Math.floor(destination.rating || 0) ? "text-yellow-400" : "text-gray-300"}`} fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                              </svg>
-                            ))}
+                              </svg>)}
                           </div>
                           <span className="text-xs ml-1 text-muted-foreground">
                             {destination.rating?.toFixed(1)}
@@ -334,11 +256,8 @@ const Destinations = () => {
                       </div>
                     </CardContent>
                   </Card>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
+                </Link>)}
+            </div> : <div className="text-center py-12">
               <div className="mb-4 flex justify-center">
                 <Search size={48} className="text-muted-foreground/40" />
               </div>
@@ -347,15 +266,14 @@ const Destinations = () => {
                 Try adjusting your search or filter criteria.
               </p>
               <Button onClick={() => {
-                setSearchQuery('');
-                setActiveCategory('All');
-                setSortBy('trending');
-                setIsFiltersVisible(false);
-              }}>
+            setSearchQuery('');
+            setActiveCategory('All');
+            setSortBy('trending');
+            setIsFiltersVisible(false);
+          }}>
                 Reset Filters
               </Button>
-            </div>
-          )}
+            </div>}
         </div>
       </section>
 
@@ -381,11 +299,7 @@ const Destinations = () => {
               
               <div className="w-full md:w-auto">
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <input
-                    type="email"
-                    placeholder="Your email address"
-                    className="px-4 py-3 rounded-lg flex-1 min-w-0 focus:outline-none focus:ring-2 focus:ring-white/50"
-                  />
+                  <input type="email" placeholder="Your email address" className="px-4 py-3 rounded-lg flex-1 min-w-0 focus:outline-none focus:ring-2 focus:ring-white/50" />
                   <Button className="bg-white text-primary hover:bg-white/90 rounded-lg">
                     Subscribe
                   </Button>
@@ -395,8 +309,6 @@ const Destinations = () => {
           </div>
         </div>
       </section>
-    </div>
-  );
+    </div>;
 };
-
 export default Destinations;
