@@ -12,53 +12,71 @@ export type Database = {
       destinations: {
         Row: {
           activities: Json | null
+          best_time: string | null
+          bookings: number | null
           category: string | null
           country: string | null
           created_at: string
           description: string
+          duration: string | null
           gallery: Json | null
           highlights: string | null
           id: string
           image_url: string | null
+          inclusions: Json | null
           location: string
           name: string
           overview: string | null
           price: number | null
           rating: number | null
+          slug: string
+          trending: boolean | null
           updated_at: string
         }
         Insert: {
           activities?: Json | null
+          best_time?: string | null
+          bookings?: number | null
           category?: string | null
           country?: string | null
           created_at?: string
           description: string
+          duration?: string | null
           gallery?: Json | null
           highlights?: string | null
           id?: string
           image_url?: string | null
+          inclusions?: Json | null
           location: string
           name: string
           overview?: string | null
           price?: number | null
           rating?: number | null
+          slug: string
+          trending?: boolean | null
           updated_at?: string
         }
         Update: {
           activities?: Json | null
+          best_time?: string | null
+          bookings?: number | null
           category?: string | null
           country?: string | null
           created_at?: string
           description?: string
+          duration?: string | null
           gallery?: Json | null
           highlights?: string | null
           id?: string
           image_url?: string | null
+          inclusions?: Json | null
           location?: string
           name?: string
           overview?: string | null
           price?: number | null
           rating?: number | null
+          slug?: string
+          trending?: boolean | null
           updated_at?: string
         }
         Relationships: []

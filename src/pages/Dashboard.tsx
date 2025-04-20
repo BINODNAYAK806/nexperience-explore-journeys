@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,8 @@ import DateRangeFilter from "@/components/dashboard/DateRangeFilter";
 import LeadsTable, { Lead } from "@/components/dashboard/LeadsTable";
 import LeadsChart from "@/components/dashboard/LeadsChart";
 import { supabase } from "@/integrations/supabase/client";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import DestinationsManager from "./DestinationsManager";
 
 const Dashboard: React.FC = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -137,42 +140,49 @@ const Dashboard: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Travel Leads Dashboard</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
           <Button variant="outline" onClick={handleLogout}>
             <LogOutIcon className="mr-2 h-4 w-4" />
             Logout
           </Button>
         </div>
 
-        <div className="mt-8 space-y-6">
-          <LeadsChart leads={filteredLeads} />
-          
-          <Separator className="my-8" />
-          
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Lead Management</h2>
-            
-            <DateRangeFilter
-              startDate={startDate}
-              endDate={endDate}
-              setStartDate={setStartDate}
-              setEndDate={setEndDate}
-              onFilterApply={handleFilterApply}
-              onShowAllLeads={handleShowAllLeads}
-            />
-            
-            {loading ? (
-              <div className="flex justify-center py-10">
-                <p className="text-muted-foreground">Loading leads...</p>
-              </div>
-            ) : (
-              <LeadsTable 
-                leads={filteredLeads} 
-                onDataChange={handleDataChange} 
+        <Tabs defaultValue="leads" className="mt-8">
+          <TabsList>
+            <TabsTrigger value="leads">Leads</TabsTrigger>
+            <TabsTrigger value="destinations">Destinations</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="leads" className="space-y-6">
+            <LeadsChart leads={filteredLeads} />
+            <Separator className="my-8" />
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold">Lead Management</h2>
+              <DateRangeFilter
+                startDate={startDate}
+                endDate={endDate}
+                setStartDate={setStartDate}
+                setEndDate={setEndDate}
+                onFilterApply={handleFilterApply}
+                onShowAllLeads={handleShowAllLeads}
               />
-            )}
-          </div>
-        </div>
+              {loading ? (
+                <div className="flex justify-center py-10">
+                  <p className="text-muted-foreground">Loading leads...</p>
+                </div>
+              ) : (
+                <LeadsTable 
+                  leads={filteredLeads} 
+                  onDataChange={handleDataChange} 
+                />
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="destinations">
+            <DestinationsManager />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
