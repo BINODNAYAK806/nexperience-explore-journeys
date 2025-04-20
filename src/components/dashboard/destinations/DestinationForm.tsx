@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/form';
 
 interface DestinationFormData {
-  id?: string; // Added id as optional property
+  id?: string;
   name: string;
   country: string;
   description: string;
@@ -29,6 +29,14 @@ interface DestinationFormData {
   category: string;
   image_url: string;
   trending: boolean;
+  // Additional fields to match destination detail page
+  highlights: string; // Stored as a string, will be converted to array
+  inclusions: string; // Stored as a string, will be converted to array
+  gallery: string; // Stored as a string, will be converted to array
+  activities: string; // Stored as a string, will be converted to array
+  bookings: number;
+  rating: number;
+  overview: string;
 }
 
 interface DestinationFormProps {
@@ -39,7 +47,22 @@ interface DestinationFormProps {
 
 const DestinationForm = ({ initialData, onSuccess, mode }: DestinationFormProps) => {
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<DestinationFormData>({
-    defaultValues: initialData || {}
+    defaultValues: {
+      ...initialData,
+      // Convert arrays back to string for editing
+      highlights: Array.isArray(initialData?.highlights) 
+        ? initialData?.highlights.join('\n') 
+        : initialData?.highlights || '',
+      inclusions: Array.isArray(initialData?.inclusions) 
+        ? initialData?.inclusions.join('\n') 
+        : initialData?.inclusions || '',
+      gallery: Array.isArray(initialData?.gallery) 
+        ? initialData?.gallery.join('\n') 
+        : initialData?.gallery || '',
+      activities: Array.isArray(initialData?.activities) 
+        ? initialData?.activities.join('\n') 
+        : initialData?.activities || '',
+    }
   });
   const { toast } = useToast();
 
@@ -47,10 +70,25 @@ const DestinationForm = ({ initialData, onSuccess, mode }: DestinationFormProps)
     try {
       const slug = data.name.toLowerCase().replace(/[^a-zA-Z0-9]/g, '-');
       
+      // Convert string inputs to arrays for database storage
+      const highlightsArray = data.highlights.split('\n').filter(item => item.trim() !== '');
+      const inclusionsArray = data.inclusions.split('\n').filter(item => item.trim() !== '');
+      const galleryArray = data.gallery.split('\n').filter(item => item.trim() !== '');
+      const activitiesArray = data.activities.split('\n').filter(item => item.trim() !== '');
+      
+      const formattedData = {
+        ...data,
+        highlights: highlightsArray,
+        inclusions: inclusionsArray,
+        gallery: galleryArray,
+        activities: activitiesArray,
+        slug
+      };
+      
       if (mode === 'create') {
         const { error } = await supabase
           .from('destinations')
-          .insert([{ ...data, slug }]);
+          .insert([formattedData]);
 
         if (error) throw error;
         
@@ -61,7 +99,7 @@ const DestinationForm = ({ initialData, onSuccess, mode }: DestinationFormProps)
       } else {
         const { error } = await supabase
           .from('destinations')
-          .update({ ...data, slug })
+          .update(formattedData)
           .eq('id', initialData?.id);
 
         if (error) throw error;
@@ -165,13 +203,48 @@ const DestinationForm = ({ initialData, onSuccess, mode }: DestinationFormProps)
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="image_url">Image URL</Label>
+          <Label htmlFor="image_url">Main Image URL</Label>
           <Input
             id="image_url"
             {...register('image_url', { required: 'Image URL is required' })}
           />
           {errors.image_url && (
             <p className="text-sm text-red-500">{errors.image_url.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="rating">Rating (0-5)</Label>
+          <Input
+            id="rating"
+            type="number"
+            step="0.1"
+            min="0"
+            max="5"
+            {...register('rating', { 
+              required: 'Rating is required',
+              min: { value: 0, message: 'Rating must be at least 0' },
+              max: { value: 5, message: 'Rating must be at most 5' },
+            })}
+          />
+          {errors.rating && (
+            <p className="text-sm text-red-500">{errors.rating.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="bookings">Number of Bookings</Label>
+          <Input
+            id="bookings"
+            type="number"
+            min="0"
+            {...register('bookings', { 
+              required: 'Bookings count is required',
+              min: { value: 0, message: 'Bookings must be at least 0' }
+            })}
+          />
+          {errors.bookings && (
+            <p className="text-sm text-red-500">{errors.bookings.message}</p>
           )}
         </div>
       </div>
@@ -185,6 +258,87 @@ const DestinationForm = ({ initialData, onSuccess, mode }: DestinationFormProps)
         />
         {errors.description && (
           <p className="text-sm text-red-500">{errors.description.message}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="overview">Overview</Label>
+        <Textarea
+          id="overview"
+          {...register('overview')}
+          rows={3}
+        />
+        {errors.overview && (
+          <p className="text-sm text-red-500">{errors.overview.message}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="highlights">
+          Highlights (one per line)
+        </Label>
+        <Textarea
+          id="highlights"
+          {...register('highlights', { required: 'At least one highlight is required' })}
+          rows={5}
+          placeholder="Visit the iconic Burj Khalifa
+Experience an exhilarating desert safari
+Shop at the Dubai Mall"
+        />
+        {errors.highlights && (
+          <p className="text-sm text-red-500">{errors.highlights.message}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="inclusions">
+          Inclusions (one per line)
+        </Label>
+        <Textarea
+          id="inclusions"
+          {...register('inclusions', { required: 'At least one inclusion is required' })}
+          rows={5}
+          placeholder="Return flights from major Indian cities
+5-star hotel accommodation
+Daily breakfast and select meals"
+        />
+        {errors.inclusions && (
+          <p className="text-sm text-red-500">{errors.inclusions.message}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="activities">
+          Activities (one per line)
+        </Label>
+        <Textarea
+          id="activities"
+          {...register('activities', { required: 'At least one activity is required' })}
+          rows={5}
+          placeholder="Desert Safari
+Burj Khalifa
+Dubai Mall
+Palm Jumeirah"
+        />
+        {errors.activities && (
+          <p className="text-sm text-red-500">{errors.activities.message}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="gallery">
+          Gallery Image URLs (one per line)
+        </Label>
+        <Textarea
+          id="gallery"
+          {...register('gallery', { required: 'At least one gallery image is required' })}
+          rows={5}
+          placeholder="https://example.com/image1.jpg
+https://example.com/image2.jpg
+https://example.com/image3.jpg"
+        />
+        {errors.gallery && (
+          <p className="text-sm text-red-500">{errors.gallery.message}</p>
         )}
       </div>
 
