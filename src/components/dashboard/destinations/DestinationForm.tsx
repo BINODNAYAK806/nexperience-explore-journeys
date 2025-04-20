@@ -6,10 +6,19 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 
 interface DestinationFormData {
+  id?: string; // Added id as optional property
   name: string;
   country: string;
   description: string;
@@ -32,6 +41,7 @@ const DestinationForm = ({ initialData, onSuccess, mode }: DestinationFormProps)
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<DestinationFormData>({
     defaultValues: initialData || {}
   });
+  const { toast } = useToast();
 
   const onSubmit = async (data: DestinationFormData) => {
     try {
@@ -81,8 +91,10 @@ const DestinationForm = ({ initialData, onSuccess, mode }: DestinationFormProps)
           <Input
             id="name"
             {...register('name', { required: 'Name is required' })}
-            error={errors.name?.message}
           />
+          {errors.name && (
+            <p className="text-sm text-red-500">{errors.name.message}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -90,8 +102,10 @@ const DestinationForm = ({ initialData, onSuccess, mode }: DestinationFormProps)
           <Input
             id="country"
             {...register('country', { required: 'Country is required' })}
-            error={errors.country?.message}
           />
+          {errors.country && (
+            <p className="text-sm text-red-500">{errors.country.message}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -99,8 +113,10 @@ const DestinationForm = ({ initialData, onSuccess, mode }: DestinationFormProps)
           <Input
             id="location"
             {...register('location', { required: 'Location is required' })}
-            error={errors.location?.message}
           />
+          {errors.location && (
+            <p className="text-sm text-red-500">{errors.location.message}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -109,8 +125,10 @@ const DestinationForm = ({ initialData, onSuccess, mode }: DestinationFormProps)
             id="price"
             type="number"
             {...register('price', { required: 'Price is required' })}
-            error={errors.price?.message}
           />
+          {errors.price && (
+            <p className="text-sm text-red-500">{errors.price.message}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -118,8 +136,10 @@ const DestinationForm = ({ initialData, onSuccess, mode }: DestinationFormProps)
           <Input
             id="duration"
             {...register('duration', { required: 'Duration is required' })}
-            error={errors.duration?.message}
           />
+          {errors.duration && (
+            <p className="text-sm text-red-500">{errors.duration.message}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -127,8 +147,10 @@ const DestinationForm = ({ initialData, onSuccess, mode }: DestinationFormProps)
           <Input
             id="best_time"
             {...register('best_time', { required: 'Best time to visit is required' })}
-            error={errors.best_time?.message}
           />
+          {errors.best_time && (
+            <p className="text-sm text-red-500">{errors.best_time.message}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -136,8 +158,10 @@ const DestinationForm = ({ initialData, onSuccess, mode }: DestinationFormProps)
           <Input
             id="category"
             {...register('category', { required: 'Category is required' })}
-            error={errors.category?.message}
           />
+          {errors.category && (
+            <p className="text-sm text-red-500">{errors.category.message}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -145,8 +169,10 @@ const DestinationForm = ({ initialData, onSuccess, mode }: DestinationFormProps)
           <Input
             id="image_url"
             {...register('image_url', { required: 'Image URL is required' })}
-            error={errors.image_url?.message}
           />
+          {errors.image_url && (
+            <p className="text-sm text-red-500">{errors.image_url.message}</p>
+          )}
         </div>
       </div>
 
@@ -155,9 +181,11 @@ const DestinationForm = ({ initialData, onSuccess, mode }: DestinationFormProps)
         <Textarea
           id="description"
           {...register('description', { required: 'Description is required' })}
-          error={errors.description?.message}
           rows={4}
         />
+        {errors.description && (
+          <p className="text-sm text-red-500">{errors.description.message}</p>
+        )}
       </div>
 
       <div className="flex items-center space-x-2">
