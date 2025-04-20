@@ -8,115 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
-const allDestinations = [
-  {
-    id: "dubai",
-    name: "Dubai",
-    country: "United Arab Emirates",
-    description: "Experience the blend of modern luxury and Arabian heritage in this futuristic city rising from the desert. Explore iconic skyscrapers, traditional souks, and endless entertainment.",
-    image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-    price: "₹75,000",
-    rating: 4.8,
-    category: "Luxury",
-    activities: ["Desert Safari", "Burj Khalifa", "Dubai Mall", "Palm Jumeirah"],
-    trending: true,
-    bookings: 258
-  },
-  {
-    id: "kerala",
-    name: "Kerala",
-    country: "India",
-    description: "Discover serene backwaters, lush green landscapes, and pristine beaches in God's Own Country. Experience Ayurvedic treatments and vibrant cultural festivals.",
-    image: "https://images.unsplash.com/photo-1593693397690-362cb9666fc2?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-    price: "₹35,000",
-    rating: 4.7,
-    category: "Nature",
-    activities: ["Backwater Cruise", "Ayurvedic Spa", "Tea Plantations", "Wildlife Safari"],
-    trending: true,
-    bookings: 189
-  },
-  {
-    id: "bali",
-    name: "Bali",
-    country: "Indonesia",
-    description: "Immerse yourself in tropical paradise with stunning beaches, rice terraces, and vibrant culture. Explore ancient temples, surf world-class waves, and enjoy renowned hospitality.",
-    image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-    price: "₹65,000",
-    rating: 4.9,
-    category: "Beach",
-    activities: ["Temple Tours", "Surfing", "Rice Terrace Trek", "Monkey Forest"],
-    trending: true,
-    bookings: 312
-  },
-  {
-    id: "manali",
-    name: "Manali",
-    country: "India",
-    description: "Enjoy breathtaking Himalayan views, adventure activities, and serene landscapes. Perfect for thrill-seekers and nature lovers looking for mountain escapades.",
-    image: "https://images.unsplash.com/photo-1593181629936-11c609b8db9b?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    price: "₹25,000",
-    rating: 4.6,
-    category: "Adventure",
-    activities: ["Paragliding", "Solang Valley", "Rohtang Pass", "Great Himalayan National Park"],
-    trending: false,
-    bookings: 154
-  },
-  {
-    id: "phuket",
-    name: "Phuket",
-    country: "Thailand",
-    description: "Thailand's largest island offers beautiful beaches, vibrant nightlife, and delicious cuisine. Explore limestone cliffs, turquoise waters, and cultural attractions.",
-    image: "https://images.unsplash.com/photo-1589394815804-964ed0be2eb5?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-    price: "₹45,000",
-    rating: 4.5,
-    category: "Beach",
-    activities: ["Island Hopping", "Patong Beach", "Big Buddha", "Old Phuket Town"],
-    trending: true,
-    bookings: 201
-  },
-  {
-    id: "maldives",
-    name: "Maldives",
-    country: "Maldives",
-    description: "Experience paradise on Earth with overwater bungalows, crystal clear waters, and vibrant marine life. Perfect for honeymoons and luxury getaways.",
-    image: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-    price: "₹1,20,000",
-    rating: 4.9,
-    category: "Luxury",
-    activities: ["Snorkeling", "Diving", "Sunset Cruise", "Spa Treatments"],
-    trending: true,
-    bookings: 176
-  },
-  {
-    id: "paris",
-    name: "Paris",
-    country: "France",
-    description: "The City of Light captivates with its iconic landmarks, world-class museums, and charming neighborhoods. Experience romance, history, and culinary excellence.",
-    image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-    price: "₹85,000",
-    rating: 4.7,
-    category: "Cultural",
-    activities: ["Eiffel Tower", "Louvre Museum", "Seine River Cruise", "Montmartre"],
-    trending: false,
-    bookings: 143
-  },
-  {
-    id: "kyoto",
-    name: "Kyoto",
-    country: "Japan",
-    description: "Japan's cultural capital offers traditional temples, serene gardens, and authentic experiences. Immerse yourself in centuries of history and tradition.",
-    image: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-    price: "₹90,000",
-    rating: 4.8,
-    category: "Cultural",
-    activities: ["Fushimi Inari Shrine", "Arashiyama Bamboo Grove", "Kinkaku-ji Temple", "Geisha District"],
-    trending: false,
-    bookings: 132
-  }
-];
-
-const categories = ["All", "Luxury", "Beach", "Adventure", "Nature", "Cultural"];
 const activities = [
   { name: "Sightseeing", icon: <Landmark size={18} /> },
   { name: "Adventures", icon: <Compass size={18} /> },
@@ -126,15 +20,29 @@ const activities = [
   { name: "Family", icon: <Users size={18} /> },
 ];
 
+const categories = ["All", "Luxury", "Beach", "Adventure", "Nature", "Cultural"];
+
 const Destinations = () => {
-  const [filteredDestinations, setFilteredDestinations] = useState(allDestinations);
+  const [filteredDestinations, setFilteredDestinations] = useState([]);
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("trending");
   const [isFiltersVisible, setIsFiltersVisible] = useState(false);
 
+  const { data: destinations = [], isLoading } = useQuery({
+    queryKey: ['destinations'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('destinations')
+        .select('*');
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
   useEffect(() => {
-    let results = [...allDestinations];
+    let results = [...destinations];
     
     if (activeCategory !== "All") {
       results = results.filter(destination => destination.category === activeCategory);
@@ -144,24 +52,24 @@ const Destinations = () => {
       const query = searchQuery.toLowerCase();
       results = results.filter(
         destination => 
-          destination.name.toLowerCase().includes(query) || 
-          destination.country.toLowerCase().includes(query) ||
-          destination.description.toLowerCase().includes(query)
+          destination.name?.toLowerCase().includes(query) || 
+          destination.country?.toLowerCase().includes(query) ||
+          destination.description?.toLowerCase().includes(query)
       );
     }
     
     if (sortBy === "trending") {
-      results.sort((a, b) => b.bookings - a.bookings);
+      results.sort((a, b) => (b.bookings || 0) - (a.bookings || 0));
     } else if (sortBy === "priceAsc") {
-      results.sort((a, b) => parseInt(a.price.replace(/[^\d]/g, '')) - parseInt(b.price.replace(/[^\d]/g, '')));
+      results.sort((a, b) => (a.price || 0) - (b.price || 0));
     } else if (sortBy === "priceDesc") {
-      results.sort((a, b) => parseInt(b.price.replace(/[^\d]/g, '')) - parseInt(a.price.replace(/[^\d]/g, '')));
+      results.sort((a, b) => (b.price || 0) - (a.price || 0));
     } else if (sortBy === "rating") {
-      results.sort((a, b) => b.rating - a.rating);
+      results.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     }
     
     setFilteredDestinations(results);
-  }, [activeCategory, searchQuery, sortBy]);
+  }, [activeCategory, searchQuery, sortBy, destinations]);
 
   const toggleFilters = () => {
     setIsFiltersVisible(!isFiltersVisible);
@@ -324,18 +232,32 @@ const Destinations = () => {
             </div>
           </div>
           
-          {filteredDestinations.length > 0 ? (
+          {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredDestinations.map((destination, index) => (
+              {[1, 2, 3, 4, 5, 6].map((n) => (
+                <Card key={n} className="overflow-hidden border-0 shadow-md h-full animate-pulse">
+                  <div className="h-56 bg-gray-200" />
+                  <CardContent className="p-5">
+                    <div className="h-6 bg-gray-200 rounded w-2/3 mb-2" />
+                    <div className="h-4 bg-gray-200 rounded w-1/2 mb-4" />
+                    <div className="h-4 bg-gray-200 rounded w-full mb-2" />
+                    <div className="h-4 bg-gray-200 rounded w-3/4" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : filteredDestinations.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredDestinations.map((destination) => (
                 <Link
                   key={destination.id}
-                  to={`/destinations/${destination.id}`}
+                  to={`/destinations/${destination.slug}`}
                   className="group"
                 >
                   <Card className="overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 hover:translate-y-[-8px] h-full">
                     <div className="relative h-56 overflow-hidden">
                       <img 
-                        src={destination.image} 
+                        src={destination.image_url || '/placeholder.svg'} 
                         alt={destination.name} 
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
@@ -365,7 +287,7 @@ const Destinations = () => {
                           </p>
                         </div>
                         <div className="text-right">
-                          <div className="font-semibold text-primary">{destination.price}</div>
+                          <div className="font-semibold text-primary">₹{destination.price?.toLocaleString()}</div>
                           <div className="text-xs text-muted-foreground">per person</div>
                         </div>
                       </div>
@@ -375,14 +297,14 @@ const Destinations = () => {
                       
                       <div className="mb-4">
                         <div className="flex flex-wrap gap-2">
-                          {destination.activities.slice(0, 3).map((activity, i) => (
+                          {(destination.activities as string[] || []).slice(0, 3).map((activity, i) => (
                             <Badge key={i} variant="secondary" className="font-normal text-xs">
                               {activity}
                             </Badge>
                           ))}
-                          {destination.activities.length > 3 && (
+                          {(destination.activities as string[] || []).length > 3 && (
                             <Badge variant="outline" className="font-normal text-xs">
-                              +{destination.activities.length - 3} more
+                              +{(destination.activities as string[] || []).length - 3} more
                             </Badge>
                           )}
                         </div>
@@ -394,7 +316,7 @@ const Destinations = () => {
                             {Array.from({ length: 5 }).map((_, i) => (
                               <svg 
                                 key={i} 
-                                className={`w-4 h-4 ${i < Math.floor(destination.rating) ? "text-yellow-400" : "text-gray-300"}`}
+                                className={`w-4 h-4 ${i < Math.floor(destination.rating || 0) ? "text-yellow-400" : "text-gray-300"}`}
                                 fill="currentColor" 
                                 viewBox="0 0 20 20"
                               >
@@ -403,7 +325,7 @@ const Destinations = () => {
                             ))}
                           </div>
                           <span className="text-xs ml-1 text-muted-foreground">
-                            {destination.rating.toFixed(1)}
+                            {destination.rating?.toFixed(1)}
                           </span>
                         </div>
                         <span className="inline-flex items-center text-xs font-medium text-primary group-hover:translate-x-1 transition-transform">

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   ArrowLeft, MapPin, Star, Clock, Calendar, Users, 
@@ -10,356 +10,42 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
-// Use the same destination data from the Destinations page
-const allDestinations = [
-  {
-    id: "dubai",
-    name: "Dubai",
-    country: "United Arab Emirates",
-    description: "Experience the blend of modern luxury and Arabian heritage in this futuristic city rising from the desert. Explore iconic skyscrapers, traditional souks, and endless entertainment.",
-    image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-    price: "₹75,000",
-    rating: 4.8,
-    category: "Luxury",
-    activities: ["Desert Safari", "Burj Khalifa", "Dubai Mall", "Palm Jumeirah"],
-    trending: true,
-    bookings: 258,
-    duration: "5 nights / 6 days",
-    bestTime: "November to March",
-    highlights: [
-      "Visit the iconic Burj Khalifa, the tallest building in the world",
-      "Experience an exhilarating desert safari with dune bashing",
-      "Shop at the Dubai Mall, one of the world's largest shopping centers",
-      "Explore the historic Al Fahidi district and traditional souks",
-      "Relax on the pristine beaches of Palm Jumeirah"
-    ],
-    inclusions: [
-      "Return flights from major Indian cities",
-      "5-star hotel accommodation",
-      "Daily breakfast and select meals",
-      "Airport transfers in luxury vehicles",
-      "Desert safari with BBQ dinner",
-      "Burj Khalifa 'At The Top' experience",
-      "Half-day city tour with professional guide",
-      "All taxes and service charges"
-    ],
-    gallery: [
-      "https://images.unsplash.com/photo-1582672752286-2c65c06127e7?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1526495124232-a04e1849168c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1576467825668-fe3f911c5e90?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
-    ]
-  },
-  {
-    id: "kerala",
-    name: "Kerala",
-    country: "India",
-    description: "Discover serene backwaters, lush green landscapes, and pristine beaches in God's Own Country. Experience Ayurvedic treatments and vibrant cultural festivals.",
-    image: "https://images.unsplash.com/photo-1593693397690-362cb9666fc2?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-    price: "₹35,000",
-    rating: 4.7,
-    category: "Nature",
-    activities: ["Backwater Cruise", "Ayurvedic Spa", "Tea Plantations", "Wildlife Safari"],
-    trending: true,
-    bookings: 189,
-    duration: "6 nights / 7 days",
-    bestTime: "October to March",
-    highlights: [
-      "Cruise through the tranquil backwaters on a traditional houseboat",
-      "Explore the tea plantations of Munnar",
-      "Experience authentic Ayurvedic treatments and wellness therapies",
-      "Visit Thekkady's Periyar Wildlife Sanctuary",
-      "Discover the culture and history of Fort Kochi"
-    ],
-    inclusions: [
-      "Return flights from major Indian cities",
-      "Luxury houseboat stay (1 night)",
-      "4-star hotel accommodations (5 nights)",
-      "Daily breakfast and select meals",
-      "Private air-conditioned vehicle for sightseeing",
-      "Kathakali dance performance",
-      "Spice plantation tour",
-      "All taxes and service charges"
-    ],
-    gallery: [
-      "https://images.unsplash.com/photo-1602415151078-5c845bd959e4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1605649487212-47bdab064df7?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1568633712642-122e6d09d30b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1590154242340-a0d7c04a55a5?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
-    ]
-  },
-  {
-    id: "bali",
-    name: "Bali",
-    country: "Indonesia",
-    description: "Immerse yourself in tropical paradise with stunning beaches, rice terraces, and vibrant culture. Explore ancient temples, surf world-class waves, and enjoy renowned hospitality.",
-    image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-    price: "₹65,000",
-    rating: 4.9,
-    category: "Beach",
-    activities: ["Temple Tours", "Surfing", "Rice Terrace Trek", "Monkey Forest"],
-    trending: true,
-    bookings: 312,
-    duration: "7 nights / 8 days",
-    bestTime: "April to October",
-    highlights: [
-      "Visit sacred temples like Tanah Lot and Uluwatu",
-      "Explore the iconic Tegallalang Rice Terraces",
-      "Experience the vibrant beach clubs of Seminyak",
-      "Trek to the summit of Mount Batur for sunrise",
-      "Discover the cultural heart of Bali in Ubud"
-    ],
-    inclusions: [
-      "Return flights from major Indian cities",
-      "Luxury villa accommodation with private pool",
-      "Daily breakfast and select meals",
-      "Airport transfers and private transportation",
-      "Full-day Ubud tour with lunch",
-      "Traditional Balinese massage",
-      "Sunset dinner cruise",
-      "All taxes and service charges"
-    ],
-    gallery: [
-      "https://images.unsplash.com/photo-1573790387438-4da905039392?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1517070208541-6ddc4d3efbcb?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1604999333679-b86d54738315?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
-    ]
-  },
-  {
-    id: "manali",
-    name: "Manali",
-    country: "India",
-    description: "Enjoy breathtaking Himalayan views, adventure activities, and serene landscapes. Perfect for thrill-seekers and nature lovers looking for mountain escapades.",
-    image: "https://images.unsplash.com/photo-1593181629936-11c609b8db9b?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    price: "₹25,000",
-    rating: 4.6,
-    category: "Adventure",
-    activities: ["Paragliding", "Solang Valley", "Rohtang Pass", "Great Himalayan National Park"],
-    trending: false,
-    bookings: 154,
-    duration: "5 nights / 6 days",
-    bestTime: "March to June, October to November",
-    highlights: [
-      "Visit the majestic Rohtang Pass for snow activities",
-      "Experience adrenaline-pumping paragliding in Solang Valley",
-      "Explore the ancient Hadimba Temple surrounded by cedar forests",
-      "Trek through the pristine trails of Great Himalayan National Park",
-      "Relax in the natural hot springs of Vashisht"
-    ],
-    inclusions: [
-      "Return flights from major Indian cities",
-      "Boutique hotel or cottage accommodation",
-      "Daily breakfast and select meals",
-      "Private SUV transportation for sightseeing",
-      "Guided trek to hidden waterfall",
-      "Paragliding experience (subject to weather)",
-      "River rafting session",
-      "All taxes and service charges"
-    ],
-    gallery: [
-      "https://images.unsplash.com/photo-1596461010768-1bed322add08?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1589830400120-30c969a71693?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1599922543571-4a9675cb57f8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1585116938581-0a8c1aaa3f88?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
-    ]
-  },
-  {
-    id: "phuket",
-    name: "Phuket",
-    country: "Thailand",
-    description: "Thailand's largest island offers beautiful beaches, vibrant nightlife, and delicious cuisine. Explore limestone cliffs, turquoise waters, and cultural attractions.",
-    image: "https://images.unsplash.com/photo-1589394815804-964ed0be2eb5?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-    price: "₹45,000",
-    rating: 4.5,
-    category: "Beach",
-    activities: ["Island Hopping", "Patong Beach", "Big Buddha", "Old Phuket Town"],
-    trending: true,
-    bookings: 201,
-    duration: "6 nights / 7 days",
-    bestTime: "November to April",
-    highlights: [
-      "Discover the stunning Phi Phi Islands and Maya Bay",
-      "Visit the massive Big Buddha statue with panoramic views",
-      "Experience the vibrant nightlife of Patong Beach",
-      "Explore the charming colonial architecture of Old Phuket Town",
-      "Relax on the pristine beaches of Karon and Kata"
-    ],
-    inclusions: [
-      "Return flights from major Indian cities",
-      "Beachfront resort accommodation",
-      "Daily breakfast and select meals",
-      "Airport transfers and ferry tickets",
-      "Full-day Phi Phi Islands tour with lunch",
-      "Thai cooking class with market visit",
-      "Traditional Thai massage",
-      "All taxes and service charges"
-    ],
-    gallery: [
-      "https://images.unsplash.com/photo-1540879286235-2f28f76a7573?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1595159499889-8bfc79f6e936?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1556953410-78dcabbfc399?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
-    ]
-  },
-  {
-    id: "maldives",
-    name: "Maldives",
-    country: "Maldives",
-    description: "Experience paradise on Earth with overwater bungalows, crystal clear waters, and vibrant marine life. Perfect for honeymoons and luxury getaways.",
-    image: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-    price: "₹1,20,000",
-    rating: 4.9,
-    category: "Luxury",
-    activities: ["Snorkeling", "Diving", "Sunset Cruise", "Spa Treatments"],
-    trending: true,
-    bookings: 176,
-    duration: "5 nights / 6 days",
-    bestTime: "November to April",
-    highlights: [
-      "Stay in a luxurious overwater villa with direct ocean access",
-      "Snorkel or dive among colorful coral reefs and marine life",
-      "Experience a romantic sunset dolphin cruise",
-      "Enjoy a private dinner on a secluded sandbank",
-      "Indulge in world-class spa treatments overlooking the ocean"
-    ],
-    inclusions: [
-      "Return flights from major Indian cities",
-      "Overwater villa accommodation",
-      "All-inclusive meal plan (breakfast, lunch, dinner)",
-      "Speedboat or seaplane transfers",
-      "Snorkeling equipment and guided reef tour",
-      "Sunset cruise with champagne",
-      "Couples spa treatment",
-      "All taxes and service charges"
-    ],
-    gallery: [
-      "https://images.unsplash.com/photo-1573843981267-be1999ff37cd?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1540202404-a2f29016b523?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1602002418816-5c0aeef426aa?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1544550581-1bcabf842b77?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
-    ]
-  },
-  {
-    id: "paris",
-    name: "Paris",
-    country: "France",
-    description: "The City of Light captivates with its iconic landmarks, world-class museums, and charming neighborhoods. Experience romance, history, and culinary excellence.",
-    image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-    price: "₹85,000",
-    rating: 4.7,
-    category: "Cultural",
-    activities: ["Eiffel Tower", "Louvre Museum", "Seine River Cruise", "Montmartre"],
-    trending: false,
-    bookings: 143,
-    duration: "6 nights / 7 days",
-    bestTime: "April to June, September to October",
-    highlights: [
-      "Visit the iconic Eiffel Tower and enjoy panoramic city views",
-      "Explore the world's largest art museum, the Louvre",
-      "Cruise along the Seine River past famous monuments",
-      "Wander through the artistic neighborhood of Montmartre",
-      "Experience French gastronomy with wine and cheese tastings"
-    ],
-    inclusions: [
-      "Return flights from major Indian cities",
-      "Boutique hotel accommodation in central Paris",
-      "Daily breakfast and select gourmet experiences",
-      "Paris Museum Pass for skip-the-line access",
-      "Seine River dinner cruise",
-      "Guided walking tour of historic neighborhoods",
-      "Day trip to Versailles Palace",
-      "All taxes and service charges"
-    ],
-    gallery: [
-      "https://images.unsplash.com/photo-1551634979-2b11f8c946fe?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1570939274717-7eda259b50ed?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1541171382774-2c5c9a65a2a5?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1520939817895-060bdaf4fe1b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
-    ]
-  },
-  {
-    id: "kyoto",
-    name: "Kyoto",
-    country: "Japan",
-    description: "Japan's cultural capital offers traditional temples, serene gardens, and authentic experiences. Immerse yourself in centuries of history and tradition.",
-    image: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-    price: "₹90,000",
-    rating: 4.8,
-    category: "Cultural",
-    activities: ["Fushimi Inari Shrine", "Arashiyama Bamboo Grove", "Kinkaku-ji Temple", "Geisha District"],
-    trending: false,
-    bookings: 132,
-    duration: "7 nights / 8 days",
-    bestTime: "March to May, October to November",
-    highlights: [
-      "Walk through the thousands of vermillion torii gates at Fushimi Inari Shrine",
-      "Visit the magnificent Golden Pavilion (Kinkaku-ji)",
-      "Experience the tranquility of the Arashiyama Bamboo Grove",
-      "Explore the historic Gion district and spot geisha",
-      "Participate in a traditional Japanese tea ceremony"
-    ],
-    inclusions: [
-      "Return flights from major Indian cities",
-      "Traditional ryokan stay (2 nights) and hotel accommodation (5 nights)",
-      "Daily breakfast and select authentic meals",
-      "Japan Rail Pass for transportation",
-      "Cultural experiences (tea ceremony, kimono dressing)",
-      "Guided tour of major temples and shrines",
-      "Day trip to Nara Deer Park",
-      "All taxes and service charges"
-    ],
-    gallery: [
-      "https://images.unsplash.com/photo-1528360983277-13d401cdc186?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1493780474015-ba834fd0ce2f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1558862107-d49ef2a04d72?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1524413840807-0c3cb6fa808d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
-    ]
-  }
-];
-
-// Add this interface at the top of the file
-interface Destination {
-  id: string;
-  name: string;
-  country: string;
-  description: string;
-  image: string;
-  price: string;
-  rating: number;
-  category: string;
-  activities: string[];
-  trending: boolean;
-  bookings: number;
-  duration: string;
-  bestTime: string;
-  highlights: string[];
-  inclusions: string[];
-  gallery: string[];
-}
-
-// Update the component with proper typing
 const DestinationDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const [isLoading, setIsLoading] = useState(true);
-  const [destination, setDestination] = useState<Destination | null>(null);
-
-  useEffect(() => {
-    const found = allDestinations.find(dest => dest.id === id) as Destination | undefined;
-    
-    if (found) {
-      setDestination(found);
+  
+  const { data: destination, isLoading } = useQuery({
+    queryKey: ['destination', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('destinations')
+        .select('*')
+        .eq('slug', id)
+        .single();
+      
+      if (error) throw error;
+      return data;
     }
+  });
 
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
+  const { data: relatedDestinations = [] } = useQuery({
+    queryKey: ['related-destinations', destination?.category],
+    enabled: !!destination?.category,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('destinations')
+        .select('*')
+        .eq('category', destination.category)
+        .neq('id', destination.id)
+        .limit(3);
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
 
-    return () => clearTimeout(timer);
-  }, [id]);
-
-  // ... rest of the component remains the same ...
   if (isLoading) {
     return (
       <div className="container-custom py-12">
@@ -394,7 +80,7 @@ const DestinationDetail = () => {
       <div className="relative h-[50vh] md:h-[60vh] overflow-hidden">
         <div className="absolute inset-0 bg-black/30 z-10"></div>
         <img 
-          src={destination.image} 
+          src={destination.image_url || '/placeholder.svg'} 
           alt={destination.name} 
           className="w-full h-full object-cover"
         />
@@ -443,7 +129,7 @@ const DestinationDetail = () => {
               </div>
               <div className="flex items-center bg-muted/50 rounded-full px-3 py-1 text-sm">
                 <Calendar className="h-4 w-4 mr-1" />
-                <span>Best time: {destination.bestTime}</span>
+                <span>Best time: {destination.best_time}</span>
               </div>
               <div className="flex items-center bg-muted/50 rounded-full px-3 py-1 text-sm">
                 <Users className="h-4 w-4 mr-1" />
@@ -462,7 +148,7 @@ const DestinationDetail = () => {
               </TabsList>
               <TabsContent value="highlights" className="space-y-4">
                 <ul className="space-y-2">
-                  {destination.highlights.map((highlight: string, index: number) => (
+                  {(destination.highlights || '').split('\n').filter(Boolean).map((highlight: string, index: number) => (
                     <li key={index} className="flex items-start">
                       <div className="h-5 w-5 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 mt-0.5 mr-2">
                         <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -476,7 +162,7 @@ const DestinationDetail = () => {
               </TabsContent>
               <TabsContent value="inclusions" className="space-y-4">
                 <ul className="space-y-2">
-                  {destination.inclusions.map((inclusion: string, index: number) => (
+                  {(destination.inclusions as string[] || []).map((inclusion: string, index: number) => (
                     <li key={index} className="flex items-start">
                       <div className="h-5 w-5 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 mt-0.5 mr-2">
                         <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -500,7 +186,7 @@ const DestinationDetail = () => {
 
             <h2 className="text-2xl font-bold mb-4">Gallery</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              {destination.gallery.map((image: string, index: number) => (
+              {(destination.gallery as string[] || []).map((image: string, index: number) => (
                 <div key={index} className="rounded-lg overflow-hidden h-48">
                   <img 
                     src={image} 
@@ -513,7 +199,7 @@ const DestinationDetail = () => {
 
             <h2 className="text-2xl font-bold mb-4">Activities</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              {destination.activities.map((activity: string, index: number) => (
+              {(destination.activities as string[] || []).map((activity: string, index: number) => (
                 <Card key={index} className="border-0 shadow-sm hover:shadow transition-shadow">
                   <CardContent className="p-4">
                     <h3 className="font-medium">{activity}</h3>
@@ -529,14 +215,14 @@ const DestinationDetail = () => {
               <Card className="border-0 shadow-lg overflow-hidden">
                 <div className="p-6">
                   <h3 className="text-2xl font-bold mb-1">
-                    {destination.price}
+                    ₹{destination.price?.toLocaleString()}
                   </h3>
                   <p className="text-muted-foreground text-sm mb-4">per person on twin sharing</p>
                   
                   <div className="space-y-4 mb-6">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Base Price</span>
-                      <span className="font-medium">{destination.price}</span>
+                      <span className="font-medium">₹{destination.price?.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Taxes & Fees</span>
@@ -544,7 +230,7 @@ const DestinationDetail = () => {
                     </div>
                     <div className="border-t pt-2 flex justify-between">
                       <span className="font-medium">Total</span>
-                      <span className="font-bold">{destination.price}</span>
+                      <span className="font-bold">₹{destination.price?.toLocaleString()}</span>
                     </div>
                   </div>
                   
@@ -572,23 +258,21 @@ const DestinationDetail = () => {
       </div>
 
       {/* Related Destinations */}
-      <div className="bg-muted/30">
-        <div className="container-custom py-12">
-          <h2 className="text-2xl font-bold mb-6">You Might Also Like</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {allDestinations
-              .filter((d) => d.id !== destination.id && d.category === destination.category)
-              .slice(0, 3)
-              .map((relatedDest) => (
+      {relatedDestinations.length > 0 && (
+        <div className="bg-muted/30">
+          <div className="container-custom py-12">
+            <h2 className="text-2xl font-bold mb-6">You Might Also Like</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {relatedDestinations.map((relatedDest) => (
                 <Link 
                   key={relatedDest.id} 
-                  to={`/destinations/${relatedDest.id}`}
+                  to={`/destinations/${relatedDest.slug}`}
                   className="group"
                 >
                   <Card className="overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 h-full">
                     <div className="relative h-48 overflow-hidden">
                       <img 
-                        src={relatedDest.image} 
+                        src={relatedDest.image_url || '/placeholder.svg'} 
                         alt={relatedDest.name} 
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
@@ -599,7 +283,7 @@ const DestinationDetail = () => {
                     <CardContent className="p-4">
                       <div className="flex justify-between items-start mb-1">
                         <h3 className="font-semibold">{relatedDest.name}</h3>
-                        <div className="text-primary font-semibold">{relatedDest.price}</div>
+                        <div className="text-primary font-semibold">₹{relatedDest.price?.toLocaleString()}</div>
                       </div>
                       <p className="text-muted-foreground text-sm flex items-center mb-2">
                         <MapPin size={12} className="mr-1" /> {relatedDest.country}
@@ -609,7 +293,7 @@ const DestinationDetail = () => {
                           {Array.from({ length: 5 }).map((_, i) => (
                             <svg 
                               key={i} 
-                              className={`w-3 h-3 ${i < Math.floor(relatedDest.rating) ? "text-yellow-400" : "text-gray-300"}`}
+                              className={`w-3 h-3 ${i < Math.floor(relatedDest.rating || 0) ? "text-yellow-400" : "text-gray-300"}`}
                               fill="currentColor" 
                               viewBox="0 0 20 20"
                             >
@@ -618,16 +302,17 @@ const DestinationDetail = () => {
                           ))}
                         </div>
                         <span className="ml-1 text-muted-foreground">
-                          {relatedDest.rating.toFixed(1)}
+                          {relatedDest.rating?.toFixed(1)}
                         </span>
                       </div>
                     </CardContent>
                   </Card>
                 </Link>
               ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
