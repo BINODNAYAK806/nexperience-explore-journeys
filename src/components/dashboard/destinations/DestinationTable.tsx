@@ -34,11 +34,11 @@ const DestinationTable = ({ destinations, onRefresh }: DestinationTableProps) =>
     if (!deletingDestination) return;
 
     try {
+      // Remove the .select('count') which was causing the error
       const { error } = await supabase
         .from('destinations')
         .delete()
-        .eq('id', deletingDestination.id)
-        .select('count');
+        .eq('id', deletingDestination.id);
 
       if (error) throw error;
 
