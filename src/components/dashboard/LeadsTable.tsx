@@ -41,7 +41,11 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
   const [nextCallDateEnd, setNextCallDateEnd] = useState<Date | undefined>(undefined);
   const [isNextCallDateFilterOpen, setIsNextCallDateFilterOpen] = useState(false);
   
+  // Update local state when leads prop changes
   useEffect(() => {
+    console.log("Leads in LeadsTable:", leads);
+    setFilteredLeads(leads);
+    
     const initialStatuses: Record<string, string> = {};
     leads.forEach(lead => {
       initialStatuses[lead.id] = lead.status;

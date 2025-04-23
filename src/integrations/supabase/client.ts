@@ -29,7 +29,7 @@ export const insertJourneyRequest = async (journeyData: {
         destination: journeyData.destination,
         travel_date: journeyData.travel_date,
         contact_number: journeyData.contact_number,
-        status: 'new' // Adding default status
+        status: 'pending' // Changed from 'new' to 'pending' to match dashboard expectations
       })
     });
 
