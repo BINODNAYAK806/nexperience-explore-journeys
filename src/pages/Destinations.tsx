@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Filter, MapPin, ChevronRight, ArrowDownAZ, Landmark, Compass, Coffee, Utensils, Camera, Users, Heart } from 'lucide-react';
+import { Search, Filter, MapPin, ChevronRight, ArrowDownAZ, Landmark, Compass, Coffee, Utensils, Camera, Users, Heart, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+
 const activities = [{
   name: "Sightseeing",
   icon: <Landmark size={18} />
@@ -26,13 +31,16 @@ const activities = [{
   name: "Family",
   icon: <Users size={18} />
 }];
+
 const categories = ["All", "Luxury", "Beach", "Adventure", "Nature", "Cultural"];
+
 const Destinations = () => {
   const [filteredDestinations, setFilteredDestinations] = useState([]);
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("trending");
   const [isFiltersVisible, setIsFiltersVisible] = useState(false);
+
   const {
     data: destinations = [],
     isLoading
@@ -47,15 +55,50 @@ const Destinations = () => {
       return data || [];
     }
   });
+
+  const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
+  const [priceRange, setPriceRange] = useState({ min: '', max: '' });
+  const [selectedDuration, setSelectedDuration] = useState('');
+  const [selectedSeason, setSelectedSeason] = useState('');
+
   useEffect(() => {
     let results = [...destinations];
+    
+    // Category filter
     if (activeCategory !== "All") {
       results = results.filter(destination => destination.category === activeCategory);
     }
+
+    // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      results = results.filter(destination => destination.name?.toLowerCase().includes(query) || destination.country?.toLowerCase().includes(query) || destination.description?.toLowerCase().includes(query));
+      results = results.filter(destination => 
+        destination.name?.toLowerCase().includes(query) || 
+        destination.country?.toLowerCase().includes(query) || 
+        destination.description?.toLowerCase().includes(query)
+      );
     }
+
+    // Activities filter
+    if (selectedActivities.length > 0) {
+      results = results.filter(destination => 
+        selectedActivities.every(activity => 
+          destination.activities?.includes(activity)
+        )
+      );
+    }
+
+    // Price range filter
+    if (priceRange.min || priceRange.max) {
+      results = results.filter(destination => {
+        const price = destination.price || 0;
+        const min = priceRange.min ? parseFloat(priceRange.min) : 0;
+        const max = priceRange.max ? parseFloat(priceRange.max) : Infinity;
+        return price >= min && price <= max;
+      });
+    }
+
+    // Sorting
     if (sortBy === "trending") {
       results.sort((a, b) => (b.bookings || 0) - (a.bookings || 0));
     } else if (sortBy === "priceAsc") {
@@ -65,12 +108,16 @@ const Destinations = () => {
     } else if (sortBy === "rating") {
       results.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     }
+
     setFilteredDestinations(results);
-  }, [activeCategory, searchQuery, sortBy, destinations]);
+  }, [activeCategory, searchQuery, sortBy, destinations, selectedActivities, priceRange]);
+
   const toggleFilters = () => {
     setIsFiltersVisible(!isFiltersVisible);
   };
-  return <div className="opacity-100">
+
+  return (
+    <div className="opacity-100">
       <section className="relative py-32 flex items-center overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-700">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-blue-900/70"></div>
@@ -104,86 +151,157 @@ const Destinations = () => {
               </h2>
               
               <div className="flex items-center space-x-3">
-                <Button variant="outline" size="sm" onClick={toggleFilters} className="flex items-center gap-2">
-                  <Filter size={16} />
-                  <span>Filters</span>
-                </Button>
-                
-                <select className="bg-background border border-input rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-shadow" value={sortBy} onChange={e => setSortBy(e.target.value)}>
-                  <option value="trending">Trending</option>
-                  <option value="priceAsc">Price: Low to High</option>
-                  <option value="priceDesc">Price: High to Low</option>
-                  <option value="rating">Top Rated</option>
-                </select>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Sort by..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="trending">Trending</SelectItem>
+                    <SelectItem value="priceAsc">Price: Low to High</SelectItem>
+                    <SelectItem value="priceDesc">Price: High to Low</SelectItem>
+                    <SelectItem value="rating">Top Rated</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             
             <Tabs defaultValue="All" className="w-full">
               <TabsList className="flex overflow-x-auto pb-1 max-w-full hide-scrollbar">
-                {categories.map(category => <TabsTrigger key={category} value={category} onClick={() => setActiveCategory(category)} className="px-4 py-2 whitespace-nowrap">
+                {categories.map(category => (
+                  <TabsTrigger 
+                    key={category} 
+                    value={category} 
+                    onClick={() => setActiveCategory(category)}
+                    className="px-4 py-2 whitespace-nowrap"
+                  >
                     {category}
-                  </TabsTrigger>)}
+                  </TabsTrigger>
+                ))}
               </TabsList>
             </Tabs>
 
-            <div className="px-0 mx-0 py-[30px]">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {activities.map(activity => <div key={activity.name} className="flex items-center">
-                    <label className="flex items-center cursor-pointer">
-                      <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />
-                      <span className="flex items-center ml-2 text-sm">
-                        {activity.icon}
-                        <span className="ml-1.5">{activity.name}</span>
-                      </span>
-                    </label>
-                  </div>)}
+            <Collapsible>
+              <div className="flex items-center justify-between py-4">
+                <div className="flex items-center gap-2">
+                  <CollapsibleTrigger asChild>
+                    <Button variant="outline" size="sm" className="flex items-center gap-2">
+                      <Filter size={16} />
+                      <span>Filters</span>
+                    </Button>
+                  </CollapsibleTrigger>
+                  {selectedActivities.length > 0 && (
+                    <Badge variant="secondary" className="gap-1">
+                      {selectedActivities.length} selected
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-4 w-4 p-0 hover:bg-transparent"
+                        onClick={() => setSelectedActivities([])}
+                      >
+                        <X size={12} />
+                      </Button>
+                    </Badge>
+                  )}
+                </div>
               </div>
-              
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Price Range</label>
-                  <div className="flex items-center gap-2">
-                    <input type="number" placeholder="Min" className="w-full p-2 bg-background border border-input rounded-md text-sm" />
-                    <span>-</span>
-                    <input type="number" placeholder="Max" className="w-full p-2 bg-background border border-input rounded-md text-sm" />
+
+              <CollapsibleContent>
+                <div className="space-y-6 py-4 bg-gray-50 dark:bg-gray-900 rounded-lg p-6">
+                  <div>
+                    <h3 className="text-sm font-medium mb-3">Activities</h3>
+                    <ToggleGroup 
+                      type="multiple" 
+                      value={selectedActivities}
+                      onValueChange={setSelectedActivities}
+                      className="flex flex-wrap gap-2"
+                    >
+                      {activities.map(activity => (
+                        <ToggleGroupItem
+                          key={activity.name}
+                          value={activity.name}
+                          aria-label={activity.name}
+                          className="flex items-center gap-2 bg-white dark:bg-gray-800"
+                        >
+                          {activity.icon}
+                          <span>{activity.name}</span>
+                        </ToggleGroupItem>
+                      ))}
+                    </ToggleGroup>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Price Range</label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          placeholder="Min"
+                          value={priceRange.min}
+                          onChange={(e) => setPriceRange(prev => ({ ...prev, min: e.target.value }))}
+                          className="w-full"
+                        />
+                        <span>-</span>
+                        <Input
+                          type="number"
+                          placeholder="Max"
+                          value={priceRange.max}
+                          onChange={(e) => setPriceRange(prev => ({ ...prev, max: e.target.value }))}
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Duration</label>
+                      <Select value={selectedDuration} onValueChange={setSelectedDuration}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Any Duration" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">Any Duration</SelectItem>
+                          <SelectItem value="1-3">1-3 Days</SelectItem>
+                          <SelectItem value="4-7">4-7 Days</SelectItem>
+                          <SelectItem value="8-14">8-14 Days</SelectItem>
+                          <SelectItem value="15+">15+ Days</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Travel Season</label>
+                      <Select value={selectedSeason} onValueChange={setSelectedSeason}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Any Season" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">Any Season</SelectItem>
+                          <SelectItem value="winter">Winter</SelectItem>
+                          <SelectItem value="spring">Spring</SelectItem>
+                          <SelectItem value="summer">Summer</SelectItem>
+                          <SelectItem value="fall">Fall</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setSelectedActivities([]);
+                        setPriceRange({ min: '', max: '' });
+                        setSelectedDuration('');
+                        setSelectedSeason('');
+                      }}
+                    >
+                      Reset All
+                    </Button>
                   </div>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-1">Duration</label>
-                  <select className="w-full p-2 bg-background border border-input rounded-md text-sm">
-                    <option value="">Any Duration</option>
-                    <option value="1-3">1-3 Days</option>
-                    <option value="4-7">4-7 Days</option>
-                    <option value="8-14">8-14 Days</option>
-                    <option value="15+">15+ Days</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-1">Travel Season</label>
-                  <select className="w-full p-2 bg-background border border-input rounded-md text-sm">
-                    <option value="">Any Season</option>
-                    <option value="winter">Winter</option>
-                    <option value="spring">Spring</option>
-                    <option value="summer">Summer</option>
-                    <option value="fall">Fall</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div className="mt-4 flex justify-end">
-                <Button variant="outline" size="sm" className="mr-2">
-                  Reset
-                </Button>
-                <Button size="sm">
-                  Apply Filters
-                </Button>
-              </div>
-            </div>
-          </div>
-          
-          {isLoading ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              </CollapsibleContent>
+            </Collapsible>
+
+            {isLoading ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3, 4, 5, 6].map(n => <Card key={n} className="overflow-hidden border-0 shadow-md h-full animate-pulse">
                   <div className="h-56 bg-gray-200" />
                   <CardContent className="p-5">
@@ -309,6 +427,8 @@ const Destinations = () => {
           </div>
         </div>
       </section>
-    </div>;
+    </div>
+  );
 };
+
 export default Destinations;
