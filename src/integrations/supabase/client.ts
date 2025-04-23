@@ -4,9 +4,40 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
 const SUPABASE_URL = "https://jtzsavmdnziyyxoebday.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0enNhdm1kbnppeXl4b2ViZGF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxNDQzNjgsImV4cCI6MjA1NzcyMDM2OH0.pCSbpmkWHXOAuQMUYWU42k3xStBMm2IcwZao9GOQqGM";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0enNhdm1kbnppeXl4b2ViZGF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxNDQzNjgsImV4cCI6MjA1NzcyMDM2OH0.pCSbpmkWHXOAuQMUYWU42k3xStBMm2IcwZao9GOQqGM";
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Function to handle RLS-protected inserts for non-authenticated users
+export const insertJourneyRequest = async (journeyData: {
+  destination: string;
+  travel_date: string;
+  contact_number: string;
+}) => {
+  const { data, error } = await fetch(`${SUPABASE_URL}/rest/v1/journey_requests`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal',
+    },
+    body: JSON.stringify({
+      destination: journeyData.destination,
+      travel_date: journeyData.travel_date,
+      contact_number: journeyData.contact_number,
+      status: 'new' // Adding default status
+    })
+  }).then(response => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response.json();
+  }).catch(error => {
+    return { error };
+  });
+
+  return { data, error };
+};

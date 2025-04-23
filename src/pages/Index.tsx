@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import { 
   Search, ChevronRight, MapPin, Calendar, Phone, 
@@ -116,17 +115,11 @@ const Index = () => {
     setIsSubmitting(true);
 
     try {
-      // Store data in Supabase
-      const { data, error } = await supabase
-        .from('journey_requests')
-        .insert([
-          { 
-            destination, 
-            travel_date: date.toISOString().split('T')[0], 
-            contact_number: contactNo 
-          }
-        ])
-        .select();
+      const { data, error } = await insertJourneyRequest({
+        destination, 
+        travel_date: date.toISOString().split('T')[0], 
+        contact_number: contactNo 
+      });
 
       if (error) {
         console.error('Error storing journey data:', error);
@@ -142,7 +135,6 @@ const Index = () => {
           description: "Your travel details have been saved. We'll contact you soon!",
         });
         
-        // Reset form
         setDestination('');
         setDate(undefined);
         setContactNo('');
