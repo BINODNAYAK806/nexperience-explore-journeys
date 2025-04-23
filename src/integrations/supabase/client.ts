@@ -17,27 +17,55 @@ export const insertJourneyRequest = async (journeyData: {
   travel_date: string;
   contact_number: string;
 }) => {
-  const { data, error } = await fetch(`${SUPABASE_URL}/rest/v1/journey_requests`, {
-    method: 'POST',
-    headers: {
-      'apikey': SUPABASE_ANON_KEY,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=minimal',
-    },
-    body: JSON.stringify({
-      destination: journeyData.destination,
-      travel_date: journeyData.travel_date,
-      contact_number: journeyData.contact_number,
-      status: 'new' // Adding default status
-    })
-  }).then(response => {
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    return response.json();
-  }).catch(error => {
-    return { error };
-  });
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/journey_requests`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({
+        destination: journeyData.destination,
+        travel_date: journeyData.travel_date,
+        contact_number: journeyData.contact_number,
+        status: 'new' // Adding default status
+      })
+    });
 
-  return { data, error };
+    // Handle HTTP status errors
+    if (!response.ok) {
+      return { 
+        data: null, 
+        error: `Server responded with status: ${response.status}` 
+      };
+    }
+
+    // For 'return=minimal', the response body will be empty (HTTP 201 Created)
+    // So we return a success object without trying to parse JSON
+    if (response.headers.get('Prefer') === 'return=minimal' || response.status === 201) {
+      return { 
+        data: { success: true }, 
+        error: null 
+      };
+    }
+
+    // Only try to parse JSON if we expect a JSON response
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      const data = await response.json();
+      return { data, error: null };
+    }
+
+    return { 
+      data: { success: true }, 
+      error: null 
+    };
+  } catch (error) {
+    console.error('Exception in insertJourneyRequest:', error);
+    return { 
+      data: null, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    };
+  }
 };

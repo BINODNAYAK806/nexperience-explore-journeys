@@ -36,6 +36,12 @@ export const JourneyRequestForm = () => {
     setIsSubmitting(true);
 
     try {
+      console.log('Submitting journey data:', {
+        destination,
+        travel_date: date.toISOString().split('T')[0],
+        contact_number: contactNo
+      });
+      
       const { data, error } = await insertJourneyRequest({
         destination, 
         travel_date: date.toISOString().split('T')[0], 
