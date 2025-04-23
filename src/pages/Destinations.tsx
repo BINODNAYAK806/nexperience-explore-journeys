@@ -82,11 +82,16 @@ const Destinations = () => {
 
     // Activities filter
     if (selectedActivities.length > 0) {
-      results = results.filter(destination => 
-        selectedActivities.every(activity => 
-          destination.activities?.includes(activity)
-        )
-      );
+      results = results.filter(destination => {
+        // Check if activities exist and is an array
+        const activitiesArray = Array.isArray(destination.activities) 
+          ? destination.activities as string[] 
+          : [];
+          
+        return selectedActivities.every(activity => 
+          activitiesArray.includes(activity)
+        );
+      });
     }
 
     // Price range filter
