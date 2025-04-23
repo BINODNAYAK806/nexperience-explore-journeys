@@ -17,7 +17,7 @@ import {
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, insertJourneyRequest } from "@/integrations/supabase/client";
 
 const travelDestinations = [
   {
