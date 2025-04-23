@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Filter, MapPin, ChevronRight, ArrowDownAZ, Landmark, Compass, Coffee, Utensils, Camera, Users, Heart, X } from 'lucide-react';
@@ -301,97 +302,127 @@ const Destinations = () => {
               </CollapsibleContent>
             </Collapsible>
 
-            {isLoading ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map(n => <Card key={n} className="overflow-hidden border-0 shadow-md h-full animate-pulse">
-                  <div className="h-56 bg-gray-200" />
-                  <CardContent className="p-5">
-                    <div className="h-6 bg-gray-200 rounded w-2/3 mb-2" />
-                    <div className="h-4 bg-gray-200 rounded w-1/2 mb-4" />
-                    <div className="h-4 bg-gray-200 rounded w-full mb-2" />
-                    <div className="h-4 bg-gray-200 rounded w-3/4" />
-                  </CardContent>
-                </Card>)}
-            </div> : filteredDestinations.length > 0 ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredDestinations.map(destination => <Link key={destination.id} to={`/destinations/${destination.slug}`} className="group">
-                  <Card className="overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 hover:translate-y-[-8px] h-full">
-                    <div className="relative h-56 overflow-hidden">
-                      <img src={destination.image_url || '/placeholder.svg'} alt={destination.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                      {destination.trending && <div className="absolute top-3 left-3 bg-primary text-white text-xs font-semibold py-1 px-2 rounded-full flex items-center">
-                          <span className="animate-pulse mr-1 w-2 h-2 bg-white rounded-full"></span>
-                          Trending
-                        </div>}
-                      <Button variant="ghost" size="icon" className="absolute top-3 right-3 bg-white/60 backdrop-blur-sm hover:bg-white/80 text-gray-700 rounded-full w-8 h-8 flex items-center justify-center">
-                        <Heart size={16} />
-                      </Button>
-                      <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm text-xs font-semibold py-1 px-2 rounded">
-                        {destination.category}
-                      </div>
-                    </div>
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3, 4, 5, 6].map(n => (
+                  <Card key={n} className="overflow-hidden border-0 shadow-md h-full animate-pulse">
+                    <div className="h-56 bg-gray-200" />
                     <CardContent className="p-5">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h3 className="font-semibold text-lg mb-1">{destination.name}</h3>
-                          <p className="text-muted-foreground text-sm flex items-center">
-                            <MapPin size={14} className="mr-1" /> {destination.country}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-semibold text-primary">₹{destination.price?.toLocaleString()}</div>
-                          <div className="text-xs text-muted-foreground">per person</div>
-                        </div>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                        {destination.description}
-                      </p>
-                      
-                      <div className="mb-4">
-                        <div className="flex flex-wrap gap-2">
-                          {(destination.activities as string[] || []).slice(0, 3).map((activity, i) => <Badge key={i} variant="secondary" className="font-normal text-xs">
-                              {activity}
-                            </Badge>)}
-                          {(destination.activities as string[] || []).length > 3 && <Badge variant="outline" className="font-normal text-xs">
-                              +{(destination.activities as string[] || []).length - 3} more
-                            </Badge>}
-                        </div>
-                      </div>
-                      
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center">
-                          <div className="flex">
-                            {Array.from({
-                        length: 5
-                      }).map((_, i) => <svg key={i} className={`w-4 h-4 ${i < Math.floor(destination.rating || 0) ? "text-yellow-400" : "text-gray-300"}`} fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                              </svg>)}
-                          </div>
-                          <span className="text-xs ml-1 text-muted-foreground">
-                            {destination.rating?.toFixed(1)}
-                          </span>
-                        </div>
-                        <span className="inline-flex items-center text-xs font-medium text-primary group-hover:translate-x-1 transition-transform">
-                          Explore <ChevronRight size={14} className="ml-1" />
-                        </span>
-                      </div>
+                      <div className="h-6 bg-gray-200 rounded w-2/3 mb-2" />
+                      <div className="h-4 bg-gray-200 rounded w-1/2 mb-4" />
+                      <div className="h-4 bg-gray-200 rounded w-full mb-2" />
+                      <div className="h-4 bg-gray-200 rounded w-3/4" />
                     </CardContent>
                   </Card>
-                </Link>)}
-            </div> : <div className="text-center py-12">
-              <div className="mb-4 flex justify-center">
-                <Search size={48} className="text-muted-foreground/40" />
+                ))}
               </div>
-              <h3 className="text-xl font-semibold mb-2">No destinations found</h3>
-              <p className="text-muted-foreground mb-4">
-                Try adjusting your search or filter criteria.
-              </p>
-              <Button onClick={() => {
-            setSearchQuery('');
-            setActiveCategory('All');
-            setSortBy('trending');
-            setIsFiltersVisible(false);
-          }}>
-                Reset Filters
-              </Button>
-            </div>}
+            ) : filteredDestinations.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredDestinations.map(destination => (
+                  <Link key={destination.id} to={`/destinations/${destination.slug}`} className="group">
+                    <Card className="overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 hover:translate-y-[-8px] h-full">
+                      <div className="relative h-56 overflow-hidden">
+                        <img 
+                          src={destination.image_url || '/placeholder.svg'} 
+                          alt={destination.name} 
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                        />
+                        {destination.trending && (
+                          <div className="absolute top-3 left-3 bg-primary text-white text-xs font-semibold py-1 px-2 rounded-full flex items-center">
+                            <span className="animate-pulse mr-1 w-2 h-2 bg-white rounded-full"></span>
+                            Trending
+                          </div>
+                        )}
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="absolute top-3 right-3 bg-white/60 backdrop-blur-sm hover:bg-white/80 text-gray-700 rounded-full w-8 h-8 flex items-center justify-center"
+                        >
+                          <Heart size={16} />
+                        </Button>
+                        <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm text-xs font-semibold py-1 px-2 rounded">
+                          {destination.category}
+                        </div>
+                      </div>
+                      <CardContent className="p-5">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h3 className="font-semibold text-lg mb-1">{destination.name}</h3>
+                            <p className="text-muted-foreground text-sm flex items-center">
+                              <MapPin size={14} className="mr-1" /> {destination.country}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-semibold text-primary">₹{destination.price?.toLocaleString()}</div>
+                            <div className="text-xs text-muted-foreground">per person</div>
+                          </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                          {destination.description}
+                        </p>
+                        
+                        <div className="mb-4">
+                          <div className="flex flex-wrap gap-2">
+                            {(destination.activities as string[] || []).slice(0, 3).map((activity, i) => (
+                              <Badge key={i} variant="secondary" className="font-normal text-xs">
+                                {activity}
+                              </Badge>
+                            ))}
+                            {(destination.activities as string[] || []).length > 3 && (
+                              <Badge variant="outline" className="font-normal text-xs">
+                                +{(destination.activities as string[] || []).length - 3} more
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center">
+                            <div className="flex">
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                <svg 
+                                  key={i} 
+                                  className={`w-4 h-4 ${i < Math.floor(destination.rating || 0) ? "text-yellow-400" : "text-gray-300"}`} 
+                                  fill="currentColor" 
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                              ))}
+                            </div>
+                            <span className="text-xs ml-1 text-muted-foreground">
+                              {destination.rating?.toFixed(1)}
+                            </span>
+                          </div>
+                          <span className="inline-flex items-center text-xs font-medium text-primary group-hover:translate-x-1 transition-transform">
+                            Explore <ChevronRight size={14} className="ml-1" />
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="mb-4 flex justify-center">
+                  <Search size={48} className="text-muted-foreground/40" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">No destinations found</h3>
+                <p className="text-muted-foreground mb-4">
+                  Try adjusting your search or filter criteria.
+                </p>
+                <Button onClick={() => {
+                  setSearchQuery('');
+                  setActiveCategory('All');
+                  setSortBy('trending');
+                  setIsFiltersVisible(false);
+                }}>
+                  Reset Filters
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
