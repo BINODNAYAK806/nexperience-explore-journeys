@@ -61,7 +61,7 @@ const Navbar = () => {
           <img 
             src="/lovable-uploads/2b127b7a-f8e2-4ed9-b75a-f14f4e215484.png" 
             alt="NexYatra" 
-            className="h-12 w-auto md:h-14 lg:h-16 transition-all duration-300 group-hover:scale-105 drop-shadow-lg"
+            className="h-16 w-auto md:h-20 lg:h-24 xl:h-28 transition-all duration-300 group-hover:scale-105 drop-shadow-lg filter brightness-110"
           />
         </Link>
 
