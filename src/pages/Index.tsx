@@ -29,6 +29,15 @@ const Index = () => {
         </div>
 
         <div className="container-custom relative z-10 py-20">
+          {/* Logo */}
+          <div className="mb-8">
+            <img 
+              src="/lovable-uploads/a386c642-4a2f-4373-8587-b39922d4f13d.png" 
+              alt="NexYatra Logo" 
+              className="h-16 md:h-20 lg:h-24 w-auto"
+            />
+          </div>
+          
           <div className="max-w-3xl">
             <span className="inline-block px-3 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full mb-4">
               Next-level Travel Experiences
