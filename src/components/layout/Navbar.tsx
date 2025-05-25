@@ -1,13 +1,16 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, Menu, X, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 20) {
@@ -19,16 +22,20 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
   useEffect(() => {
     // Close mobile menu when route changes
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
+
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
+
   const handleSignIn = () => {
     navigate('/admin');
   };
+
   const navLinks = [{
     name: 'Home',
     path: '/'
@@ -45,18 +52,30 @@ const Navbar = () => {
     name: 'Contact',
     path: '/contact'
   }];
-  return <header className={cn('fixed top-0 left-0 right-0 z-50 transition-all duration-300', isScrolled ? 'bg-white/80 backdrop-blur-lg shadow-sm dark:bg-gray-900/80' : 'bg-transparent')}>
+
+  return (
+    <header className={cn('fixed top-0 left-0 right-0 z-50 transition-all duration-300', isScrolled ? 'bg-white/80 backdrop-blur-lg shadow-sm dark:bg-gray-900/80' : 'bg-transparent')}>
       <div className="container-custom py-4 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center">
-          
+          <img 
+            src="/lovable-uploads/2b127b7a-f8e2-4ed9-b75a-f14f4e215484.png" 
+            alt="NexYatra" 
+            className="h-8 w-auto"
+          />
         </Link>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8">
-          {navLinks.map(link => <Link key={link.path} to={link.path} className={cn('text-sm font-medium hover-underline transition-colors', location.pathname === link.path ? 'text-primary' : 'text-foreground/80')}>
+          {navLinks.map(link => (
+            <Link 
+              key={link.path} 
+              to={link.path} 
+              className={cn('text-sm font-medium hover-underline transition-colors', location.pathname === link.path ? 'text-primary' : 'text-foreground/80')}
+            >
               {link.name}
-            </Link>)}
+            </Link>
+          ))}
         </nav>
 
         {/* Search & Login - Desktop */}
@@ -76,8 +95,8 @@ const Navbar = () => {
 
         {/* Mobile Menu */}
         <div className={cn('fixed inset-0 bg-background flex flex-col z-50 transition-all duration-300 md:hidden', isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible')} style={{
-        top: '60px'
-      }}>
+          top: '60px'
+        }}>
           <div className="container-custom py-6 flex flex-col space-y-6">
             {/* Search - Mobile */}
             <div className="relative">
@@ -87,9 +106,15 @@ const Navbar = () => {
 
             {/* Nav Links - Mobile */}
             <nav className="flex flex-col space-y-4">
-              {navLinks.map(link => <Link key={link.path} to={link.path} className={cn('py-2 px-3 rounded-md transition-colors font-medium', location.pathname === link.path ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent')}>
+              {navLinks.map(link => (
+                <Link 
+                  key={link.path} 
+                  to={link.path} 
+                  className={cn('py-2 px-3 rounded-md transition-colors font-medium', location.pathname === link.path ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent')}
+                >
                   {link.name}
-                </Link>)}
+                </Link>
+              ))}
             </nav>
 
             {/* Auth - Mobile */}
@@ -101,6 +126,8 @@ const Navbar = () => {
           </div>
         </div>
       </div>
-    </header>;
+    </header>
+  );
 };
+
 export default Navbar;
