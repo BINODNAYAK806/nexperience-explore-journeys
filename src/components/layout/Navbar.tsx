@@ -49,7 +49,7 @@ const Navbar = () => {
       <div className="container-custom py-4 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center group">
-          <img src="/lovable-uploads/2b127b7a-f8e2-4ed9-b75a-f14f4e215484.png" alt="NexYatra" className="h-20 w-auto md:h-20 lg:h-24 xl:h-28 transition-all duration-300 group-hover:scale-105 drop-shadow-lg filter brightness-150" />
+          <img src="/lovable-uploads/2b127b7a-f8e2-4ed9-b75a-f14f4e215484.png" alt="NexYatra" className="h-40 w-auto md:h-20 lg:h-24 xl:h-28 transition-all duration-300 group-hover:scale-105 drop-shadow-lg filter brightness-150" />
         </Link>
 
         {/* Desktop Navigation */}
