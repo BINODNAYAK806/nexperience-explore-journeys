@@ -57,11 +57,11 @@ const Navbar = () => {
     <header className={cn('fixed top-0 left-0 right-0 z-50 transition-all duration-300', isScrolled ? 'bg-white/80 backdrop-blur-lg shadow-sm dark:bg-gray-900/80' : 'bg-transparent')}>
       <div className="container-custom py-4 flex items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center">
+        <Link to="/" className="flex items-center group">
           <img 
             src="/lovable-uploads/2b127b7a-f8e2-4ed9-b75a-f14f4e215484.png" 
             alt="NexYatra" 
-            className="h-8 w-auto"
+            className="h-12 w-auto md:h-14 lg:h-16 transition-all duration-300 group-hover:scale-105 drop-shadow-lg"
           />
         </Link>
 
