@@ -67,13 +67,13 @@ const Navbar = () => {
         : 'bg-transparent'
     )}>
       <div className="container-custom">
-        <div className="flex items-center justify-between h-16 lg:h-20">
+        <div className="flex items-center justify-between h-20 lg:h-24">
           {/* Logo */}
           <Link to="/" className="flex items-center group flex-shrink-0">
             <img 
               src="/lovable-uploads/2b127b7a-f8e2-4ed9-b75a-f14f4e215484.png" 
               alt="NexYatra" 
-              className="h-12 lg:h-16 w-auto transition-all duration-300 group-hover:scale-105 drop-shadow-lg filter brightness-150" 
+              className="h-16 lg:h-20 w-auto transition-all duration-300 group-hover:scale-105 drop-shadow-lg filter brightness-150" 
             />
           </Link>
 
@@ -125,8 +125,8 @@ const Navbar = () => {
         <div className={cn(
           'lg:hidden fixed inset-x-0 bg-background border-t border-border transition-all duration-300 z-50',
           isMobileMenuOpen 
-            ? 'opacity-100 visible top-16' 
-            : 'opacity-0 invisible top-16'
+            ? 'opacity-100 visible top-20' 
+            : 'opacity-0 invisible top-20'
         )}>
           <div className="container-custom py-6 flex flex-col space-y-6">
             {/* Search - Mobile */}
