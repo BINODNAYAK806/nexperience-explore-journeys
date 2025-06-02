@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { MapPin, Phone, Mail, Clock, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -5,6 +6,16 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useToast } from '@/hooks/use-toast';
+
+interface ContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  timestamp: Date;
+}
 
 const ContactUs = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -13,6 +24,8 @@ const ContactUs = () => {
     email: '',
     message: ''
   });
+  const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,11 +34,36 @@ const ContactUs = () => {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Create new message
+      const newMessage: ContactMessage = {
+        id: Date.now().toString(),
+        name: formData.name,
+        email: formData.email,
+        message: formData.message,
+        timestamp: new Date()
+      };
+      
+      // Add to messages list
+      setContactMessages(prev => [newMessage, ...prev]);
+      
+      // Show success toast
+      toast({
+        title: "Message sent successfully!",
+        description: "Thank you for contacting us. We'll get back to you soon.",
+      });
+      
       console.log('Form submitted:', formData);
+      
       // Reset form
       setFormData({ name: '', email: '', message: '' });
     } catch (error) {
       console.error('Submission error:', error instanceof Error ? error.message : error);
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -174,6 +212,37 @@ const ContactUs = () => {
           </Card>
         </div>
       </div>
+
+      {/* Messages Table */}
+      {contactMessages.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-2xl font-semibold">Recent Messages</h2>
+          <Card>
+            <CardContent className="p-6">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Message</TableHead>
+                    <TableHead>Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {contactMessages.map((msg) => (
+                    <TableRow key={msg.id}>
+                      <TableCell className="font-medium">{msg.name}</TableCell>
+                      <TableCell>{msg.email}</TableCell>
+                      <TableCell className="max-w-xs truncate">{msg.message}</TableCell>
+                      <TableCell>{msg.timestamp.toLocaleDateString()}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
