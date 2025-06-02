@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } from "lucide-react";
 import AboutUs from "@/pages/AboutUs";
@@ -38,11 +39,6 @@ const Footer = () => {
               <li>
                 <Link to="/destinations" className="text-muted-foreground hover:text-primary transition-colors hover-underline">
                   Destinations
-                </Link>
-              </li>
-              <li>
-                <Link to="/quiz" className="text-muted-foreground hover:text-primary transition-colors hover-underline">
-                  Travel Personality Quiz
                 </Link>
               </li>
               <li>

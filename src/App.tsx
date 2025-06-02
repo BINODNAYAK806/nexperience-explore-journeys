@@ -8,7 +8,6 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Destinations from "./pages/Destinations";
 import DestinationDetail from "./pages/DestinationDetail";
-import PersonalityQuiz from "./pages/PersonalityQuiz";
 import AdminLogin from "./pages/AdminLogin";
 import Dashboard from "./pages/Dashboard";
 import Layout from "./components/layout/Layout";
@@ -27,10 +26,9 @@ const App = () => (
           <Route path="/" element={<Layout><Index /></Layout>} />
           <Route path="/destinations" element={<Layout><Destinations /></Layout>} />
           <Route path="/destinations/:id" element={<Layout><DestinationDetail /></Layout>} />
-          <Route path="/quiz" element={<Layout><PersonalityQuiz /></Layout>} />
           <Route path="/admin" element={<AdminLogin />} />
-          <Route path="/about" element={<AboutUs />} />
-          <Route path="/contact" element={<ContactUs />} />
+          <Route path="/about" element={<Layout><AboutUs /></Layout>} />
+          <Route path="/contact" element={<Layout><ContactUs /></Layout>} />
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <Dashboard />

@@ -1,3 +1,4 @@
+
 import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,6 @@ import { JourneyRequestForm } from '@/components/home/JourneyRequestForm';
 import { TravelCategories } from '@/components/home/TravelCategories';
 import { FeaturedDestinations } from '@/components/home/FeaturedDestinations';
 import { Testimonials } from '@/components/home/Testimonials';
-import { TravelQuizSection } from '@/components/home/TravelQuizSection';
 
 const Index = () => {
   return (
@@ -36,20 +36,10 @@ const Index = () => {
               Discover Your Perfect <span className="text-primary">Journey</span>
             </h1>
             <p className="text-lg md:text-xl text-white/90 mb-8">
-              Immersive, personalized travel experiences tailored to your unique travel personality.
+              Immersive, personalized travel experiences tailored to your unique preferences.
             </p>
 
             <JourneyRequestForm />
-
-            {/* Quiz CTA */}
-            <div className="mt-8 flex items-center">
-              <Link to="/quiz" className="text-white hover:text-primary transition-colors flex items-center group">
-                <span className="mr-2">Discover your travel personality</span>
-                <span className="bg-white/20 rounded-full p-1 group-hover:bg-primary/20 transition-colors">
-                  <ChevronRight size={16} />
-                </span>
-              </Link>
-            </div>
           </div>
         </div>
 
@@ -63,7 +53,6 @@ const Index = () => {
 
       <TravelCategories />
       <FeaturedDestinations />
-      <TravelQuizSection />
       <Testimonials />
 
       {/* CTA Section */}
@@ -84,9 +73,9 @@ const Index = () => {
                   Explore Destinations
                 </Button>
               </Link>
-              <Link to="/quiz">
+              <Link to="/contact">
                 <Button variant="outline" size="lg" className="rounded-full text-white border-white hover:bg-white/10 w-full sm:w-auto">
-                  Take the Travel Quiz
+                  Contact Us
                 </Button>
               </Link>
             </div>

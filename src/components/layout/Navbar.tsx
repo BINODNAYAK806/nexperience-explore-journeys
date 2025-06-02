@@ -46,10 +46,6 @@ const Navbar = () => {
       path: '/destinations'
     },
     {
-      name: 'What\'s Your Travel Type?',
-      path: '/quiz'
-    },
-    {
       name: 'About',
       path: '/about'
     },
