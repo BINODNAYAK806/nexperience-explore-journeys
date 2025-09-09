@@ -1,6 +1,7 @@
 
 import { Link } from 'react-router-dom';
-import { ChevronRight, MapPin } from 'lucide-react';
+import { ChevronRight, MapPin, MessageCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { travelDestinations } from '@/data/destinations';
 
@@ -79,9 +80,26 @@ export const FeaturedDestinations = () => {
                         {destination.rating.toFixed(1)}
                       </span>
                     </div>
-                    <span className="inline-flex items-center text-xs font-medium text-primary group-hover:translate-x-1 transition-transform">
-                      Explore <ChevronRight size={14} className="ml-1" />
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="p-2 h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const message = `Hello, I'm interested in the ${destination.name} package. Can you provide more details?`;
+                          const whatsappUrl = `https://wa.me/918347015725?text=${encodeURIComponent(message)}`;
+                          window.open(whatsappUrl, '_blank');
+                        }}
+                        title="Contact via WhatsApp"
+                      >
+                        <MessageCircle size={16} />
+                      </Button>
+                      <span className="inline-flex items-center text-xs font-medium text-primary group-hover:translate-x-1 transition-transform">
+                        Explore <ChevronRight size={14} className="ml-1" />
+                      </span>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
