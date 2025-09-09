@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MapPin, Phone, Mail, Clock, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,13 +8,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ContactMessage {
   id: string;
   name: string;
   email: string;
   message: string;
-  timestamp: Date;
+  created_at: string;
 }
 
 const ContactUs = () => {
@@ -27,36 +28,50 @@ const ContactUs = () => {
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
   const { toast } = useToast();
 
+  useEffect(() => {
+    fetchMessages();
+  }, []);
+
+  const fetchMessages = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('contact_messages')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setContactMessages(data || []);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Create new message
-      const newMessage: ContactMessage = {
-        id: Date.now().toString(),
-        name: formData.name,
-        email: formData.email,
-        message: formData.message,
-        timestamp: new Date()
-      };
-      
-      // Add to messages list
-      setContactMessages(prev => [newMessage, ...prev]);
-      
+      const { error } = await supabase
+        .from('contact_messages')
+        .insert([
+          {
+            name: formData.name,
+            email: formData.email,
+            message: formData.message
+          }
+        ]);
+
+      if (error) throw error;
+
       // Show success toast
       toast({
         title: "Message sent successfully!",
         description: "Thank you for contacting us. We'll get back to you soon.",
       });
       
-      console.log('Form submitted:', formData);
-      
-      // Reset form
+      // Reset form and refresh messages
       setFormData({ name: '', email: '', message: '' });
+      fetchMessages();
     } catch (error) {
       console.error('Submission error:', error instanceof Error ? error.message : error);
       toast({
@@ -234,7 +249,7 @@ const ContactUs = () => {
                       <TableCell className="font-medium">{msg.name}</TableCell>
                       <TableCell>{msg.email}</TableCell>
                       <TableCell className="max-w-xs truncate">{msg.message}</TableCell>
-                      <TableCell>{msg.timestamp.toLocaleDateString()}</TableCell>
+                      <TableCell>{new Date(msg.created_at).toLocaleDateString()}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
