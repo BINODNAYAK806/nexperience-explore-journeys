@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Filter, MapPin, ChevronRight, ArrowDownAZ, Landmark, Compass, Coffee, Utensils, Camera, Users, Heart, X } from 'lucide-react';
+import { Search, Filter, MapPin, ChevronRight, ArrowDownAZ, Landmark, Compass, Coffee, Utensils, Camera, Users, Heart, X, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -388,7 +388,7 @@ const Destinations = () => {
                                 <svg 
                                   key={i} 
                                   className={`w-4 h-4 ${i < Math.floor(destination.rating || 0) ? "text-yellow-400" : "text-gray-300"}`} 
-                                  fill="currentColor" 
+                                  fill="currentColor"
                                   viewBox="0 0 20 20"
                                 >
                                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -399,9 +399,26 @@ const Destinations = () => {
                               {destination.rating?.toFixed(1)}
                             </span>
                           </div>
-                          <span className="inline-flex items-center text-xs font-medium text-primary group-hover:translate-x-1 transition-transform">
-                            Explore <ChevronRight size={14} className="ml-1" />
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="p-2 h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                const message = `Hello, I'm interested in the ${destination.name} package. Can you provide more details?`;
+                                const whatsappUrl = `https://wa.me/918347015725?text=${encodeURIComponent(message)}`;
+                                window.open(whatsappUrl, '_blank');
+                              }}
+                              title="Contact via WhatsApp"
+                            >
+                              <MessageCircle size={16} />
+                            </Button>
+                            <span className="inline-flex items-center text-xs font-medium text-primary group-hover:translate-x-1 transition-transform">
+                              Explore <ChevronRight size={14} className="ml-1" />
+                            </span>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
