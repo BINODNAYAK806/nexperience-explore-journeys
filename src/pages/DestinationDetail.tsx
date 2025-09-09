@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   ArrowLeft, MapPin, Star, Clock, Calendar, Users, 
-  Heart, Share2, BookOpen, Tag
+  Heart, Share2, BookOpen, Tag, MessageCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,6 +16,11 @@ const DestinationDetail = () => {
   const { id } = useParams<{ id: string }>();
   
   const cleanSlug = id?.replace(/-+$/, '') || '';
+
+  // Scroll to top when destination changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [cleanSlug]);
 
   const { data: destination, isLoading } = useQuery({
     queryKey: ['destination', cleanSlug],
@@ -149,16 +154,48 @@ const DestinationDetail = () => {
               </TabsList>
               <TabsContent value="highlights" className="space-y-4">
                 <ul className="space-y-2">
-                  {(destination.highlights || '').split('\n').filter(Boolean).map((highlight: string, index: number) => (
-                    <li key={index} className="flex items-start">
-                      <div className="h-5 w-5 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 mt-0.5 mr-2">
-                        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                      </div>
-                      {highlight}
-                    </li>
-                  ))}
+                  {(() => {
+                    try {
+                      // Try to parse as JSON array first
+                      if (destination.highlights && destination.highlights.startsWith('[')) {
+                        const highlightsArray = JSON.parse(destination.highlights);
+                        return highlightsArray.map((highlight: string, index: number) => (
+                          <li key={index} className="flex items-start">
+                            <div className="h-5 w-5 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 mt-0.5 mr-2">
+                              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
+                              </svg>
+                            </div>
+                            {highlight}
+                          </li>
+                        ));
+                      } else {
+                        // Fallback to string splitting
+                        return (destination.highlights || '').split('\n').filter(Boolean).map((highlight: string, index: number) => (
+                          <li key={index} className="flex items-start">
+                            <div className="h-5 w-5 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 mt-0.5 mr-2">
+                              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
+                              </svg>
+                            </div>
+                            {highlight}
+                          </li>
+                        ));
+                      }
+                    } catch {
+                      // Fallback to string splitting if JSON parsing fails
+                      return (destination.highlights || '').split('\n').filter(Boolean).map((highlight: string, index: number) => (
+                        <li key={index} className="flex items-start">
+                          <div className="h-5 w-5 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 mt-0.5 mr-2">
+                            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                          </div>
+                          {highlight}
+                        </li>
+                      ));
+                    }
+                  })()}
                 </ul>
               </TabsContent>
               <TabsContent value="inclusions" className="space-y-4">
@@ -236,7 +273,19 @@ const DestinationDetail = () => {
                   </div>
                   
                   <Button className="w-full mb-3">Book Now</Button>
-                  <Button variant="outline" className="w-full">Customize Package</Button>
+                  <Button variant="outline" className="w-full mb-3">Customize Package</Button>
+                  <Button 
+                    variant="secondary" 
+                    className="w-full flex items-center justify-center gap-2"
+                    onClick={() => {
+                      const message = `Hi! I'm interested in the ${destination.name} package. Could you please provide more details?`;
+                      const whatsappUrl = `https://wa.me/918347015725?text=${encodeURIComponent(message)}`;
+                      window.open(whatsappUrl, '_blank');
+                    }}
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    WhatsApp Us
+                  </Button>
                   
                   <div className="mt-4 text-center text-sm text-muted-foreground">
                     <p>No booking fees • Free cancellation</p>
@@ -269,6 +318,7 @@ const DestinationDetail = () => {
                   key={relatedDest.id} 
                   to={`/destinations/${relatedDest.slug}`}
                   className="group"
+                  onClick={() => window.scrollTo(0, 0)}
                 >
                   <Card className="overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 h-full">
                     <div className="relative h-48 overflow-hidden">
