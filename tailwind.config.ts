@@ -113,6 +113,20 @@ export default {
         'pulse-slow': {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.8' }
+        },
+        'float': {
+          '0%, 100%': { 
+            transform: 'translateY(0px) translateX(0px) rotate(0deg)' 
+          },
+          '25%': { 
+            transform: 'translateY(-20px) translateX(10px) rotate(5deg)' 
+          },
+          '50%': { 
+            transform: 'translateY(-10px) translateX(-10px) rotate(-5deg)' 
+          },
+          '75%': { 
+            transform: 'translateY(-25px) translateX(5px) rotate(3deg)' 
+          }
         }
 			},
 			animation: {

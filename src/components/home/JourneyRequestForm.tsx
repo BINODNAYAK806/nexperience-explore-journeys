@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Plane, MapPin, Calendar, Phone } from 'lucide-react';
+import { Plane, MapPin, Calendar, Phone, Luggage, Compass, Globe, Map, Palmtree } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -79,8 +79,19 @@ export const JourneyRequestForm = () => {
   };
 
   return (
-    <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg">
-      <form onSubmit={handleStartJourney}>
+    <div className="relative bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg overflow-hidden">
+      {/* Animated Travel Icons Background */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-10">
+        <Plane className="absolute animate-[float_8s_ease-in-out_infinite] text-primary" style={{ top: '10%', left: '5%', width: '40px', height: '40px' }} />
+        <Luggage className="absolute animate-[float_10s_ease-in-out_infinite_2s] text-primary" style={{ top: '60%', left: '15%', width: '35px', height: '35px' }} />
+        <Compass className="absolute animate-[float_12s_ease-in-out_infinite_4s] text-primary" style={{ top: '30%', right: '10%', width: '45px', height: '45px' }} />
+        <Globe className="absolute animate-[float_9s_ease-in-out_infinite_1s] text-primary" style={{ top: '70%', right: '20%', width: '38px', height: '38px' }} />
+        <Map className="absolute animate-[float_11s_ease-in-out_infinite_3s] text-primary" style={{ top: '20%', left: '80%', width: '42px', height: '42px' }} />
+        <Palmtree className="absolute animate-[float_13s_ease-in-out_infinite_5s] text-primary" style={{ top: '50%', left: '70%', width: '36px', height: '36px' }} />
+        <Plane className="absolute animate-[float_10s_ease-in-out_infinite_6s] text-primary rotate-45" style={{ top: '80%', left: '40%', width: '32px', height: '32px' }} />
+      </div>
+      
+      <form onSubmit={handleStartJourney} className="relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="relative">
             <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
