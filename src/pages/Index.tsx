@@ -12,15 +12,19 @@ const Index = () => {
     <div className="opacity-100">
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center pt-16 overflow-hidden">
-        {/* Animated Gradient Background */}
-        <div className="absolute inset-0 z-0 bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-600 animate-[gradient_15s_ease_infinite] bg-[length:200%_200%]">
-          {/* Overlay gradient for depth */}
-          <div className="absolute inset-0 bg-gradient-to-t from-blue-900/40 via-transparent to-indigo-900/30"></div>
-          
-          {/* Animated floating shapes */}
-          <div className="absolute top-20 left-10 w-64 h-64 bg-white/5 rounded-full blur-3xl animate-[float_20s_ease-in-out_infinite]"></div>
-          <div className="absolute top-40 right-20 w-96 h-96 bg-blue-300/10 rounded-full blur-3xl animate-[float_25s_ease-in-out_infinite_5s]"></div>
-          <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-purple-400/10 rounded-full blur-3xl animate-[float_30s_ease-in-out_infinite_10s]"></div>
+        {/* Video Background */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/30 to-indigo-600/30 z-10"></div>
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="w-full h-full object-cover"
+          >
+            <source src="https://cdn.coverr.co/videos/coverr-aerial-view-of-beautiful-resort-island-in-the-maldives-4507/1080p.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
         </div>
 
         <div className="container-custom relative z-10 py-20">
