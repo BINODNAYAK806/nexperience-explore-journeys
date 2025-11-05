@@ -12,19 +12,15 @@ const Index = () => {
     <div className="opacity-100">
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center pt-16 overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-indigo-600/20"></div>
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="w-full h-full object-cover"
-            style={{ objectPosition: 'center 30%' }}
-          >
-            <source src="https://videocdn.cdnpk.net/videos/d881af8f-c9f9-4499-952e-cd1219ba494c/horizontal/previews/clear/large.mp4?token=exp=1742751370~hmac=9222d9f0efff105c82b8a190af79bd2fb68f2c45f8ba96822fc1b4fbdcea2f10" type="video/webm" />
-            Your browser does not support the video tag.
-          </video>
+        {/* Animated Gradient Background */}
+        <div className="absolute inset-0 z-0 bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-600 animate-[gradient_15s_ease_infinite] bg-[length:200%_200%]">
+          {/* Overlay gradient for depth */}
+          <div className="absolute inset-0 bg-gradient-to-t from-blue-900/40 via-transparent to-indigo-900/30"></div>
+          
+          {/* Animated floating shapes */}
+          <div className="absolute top-20 left-10 w-64 h-64 bg-white/5 rounded-full blur-3xl animate-[float_20s_ease-in-out_infinite]"></div>
+          <div className="absolute top-40 right-20 w-96 h-96 bg-blue-300/10 rounded-full blur-3xl animate-[float_25s_ease-in-out_infinite_5s]"></div>
+          <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-purple-400/10 rounded-full blur-3xl animate-[float_30s_ease-in-out_infinite_10s]"></div>
         </div>
 
         <div className="container-custom relative z-10 py-20">

@@ -127,6 +127,14 @@ export default {
           '75%': { 
             transform: 'translateY(-25px) translateX(5px) rotate(3deg)' 
           }
+        },
+        'gradient': {
+          '0%, 100%': { 
+            backgroundPosition: '0% 50%'
+          },
+          '50%': { 
+            backgroundPosition: '100% 50%'
+          }
         }
 			},
 			animation: {
