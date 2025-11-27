@@ -14,6 +14,7 @@ import Layout from "./components/layout/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AboutUs from "./pages/AboutUs";
 import ContactUs from "./pages/ContactUs";
+import Terms from "./pages/Terms";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/about" element={<Layout><AboutUs /></Layout>} />
           <Route path="/contact" element={<Layout><ContactUs /></Layout>} />
+          <Route path="/terms" element={<Layout><Terms /></Layout>} />
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <Dashboard />
