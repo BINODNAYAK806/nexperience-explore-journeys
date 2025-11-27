@@ -74,6 +74,11 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
+                <Link to="/refund" className="text-muted-foreground hover:text-primary transition-colors hover-underline">
+                  Refund & Cancellation
+                </Link>
+              </li>
+              <li>
                 <Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors hover-underline">
                   Contact Us
                 </Link>
