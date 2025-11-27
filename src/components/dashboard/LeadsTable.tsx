@@ -40,6 +40,8 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
   const [nextCallDateStart, setNextCallDateStart] = useState<Date | undefined>(undefined);
   const [nextCallDateEnd, setNextCallDateEnd] = useState<Date | undefined>(undefined);
   const [isNextCallDateFilterOpen, setIsNextCallDateFilterOpen] = useState(false);
+  const [mobileFilter, setMobileFilter] = useState("");
+  const [destinationFilter, setDestinationFilter] = useState("");
   
   // Update local state when leads prop changes
   useEffect(() => {
@@ -62,6 +64,18 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
       );
     }
     
+    if (mobileFilter.trim() !== "") {
+      filtered = filtered.filter(lead => 
+        lead.contact_number.includes(mobileFilter.trim())
+      );
+    }
+    
+    if (destinationFilter.trim() !== "") {
+      filtered = filtered.filter(lead => 
+        lead.destination.toLowerCase().includes(destinationFilter.toLowerCase())
+      );
+    }
+    
     if (nextCallDateStart && nextCallDateEnd) {
       const startDate = new Date(nextCallDateStart);
       startDate.setHours(0, 0, 0, 0);
@@ -77,7 +91,7 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
     }
     
     setFilteredLeads(filtered);
-  }, [remarkFilter, nextCallDateStart, nextCallDateEnd, leads]);
+  }, [remarkFilter, mobileFilter, destinationFilter, nextCallDateStart, nextCallDateEnd, leads]);
 
   const handleStatusChange = async (leadId: string, newStatus: string) => {
     setUpdatingStatus(prev => ({ ...prev, [leadId]: true }));
@@ -149,6 +163,10 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onDataChange }) => {
         setNextCallDateEnd={setNextCallDateEnd}
         isNextCallDateFilterOpen={isNextCallDateFilterOpen}
         setIsNextCallDateFilterOpen={setIsNextCallDateFilterOpen}
+        mobileFilter={mobileFilter}
+        setMobileFilter={setMobileFilter}
+        destinationFilter={destinationFilter}
+        setDestinationFilter={setDestinationFilter}
       />
       
       {nextCallDateStart && nextCallDateEnd && (
