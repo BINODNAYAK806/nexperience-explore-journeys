@@ -38,10 +38,10 @@ const AboutUs = () => {
           <div className="space-y-4">
             <Avatar className="w-32 h-32 border-2 border-[#4364ed]/20">
               <AvatarImage src="/founders" />
-              <AvatarFallback>BN</AvatarFallback>
+              <AvatarFallback>SS</AvatarFallback>
             </Avatar>
             <div className="space-y-2">
-              <h3 className="text-xl font-semibold text-gray-900">Binod & Samir</h3>
+              <h3 className="text-xl font-semibold text-gray-900">Samir Solanki and Binod Nayak</h3>
               <p className="text-sm text-muted-foreground">
                 Passionate Travelers turned Planners
               </p>
