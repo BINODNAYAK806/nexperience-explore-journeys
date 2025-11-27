@@ -17,6 +17,10 @@ interface LeadsTableFiltersProps {
   setNextCallDateEnd: (date: Date | undefined) => void;
   isNextCallDateFilterOpen: boolean;
   setIsNextCallDateFilterOpen: (value: boolean) => void;
+  mobileFilter: string;
+  setMobileFilter: (value: string) => void;
+  destinationFilter: string;
+  setDestinationFilter: (value: string) => void;
 }
 
 const LeadsTableFilters: React.FC<LeadsTableFiltersProps> = ({
@@ -28,6 +32,10 @@ const LeadsTableFilters: React.FC<LeadsTableFiltersProps> = ({
   setNextCallDateEnd,
   isNextCallDateFilterOpen,
   setIsNextCallDateFilterOpen,
+  mobileFilter,
+  setMobileFilter,
+  destinationFilter,
+  setDestinationFilter,
 }) => {
   const { toast } = useToast();
 
@@ -59,18 +67,19 @@ const LeadsTableFilters: React.FC<LeadsTableFiltersProps> = ({
   };
 
   return (
-    <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
-      <div className="flex items-center gap-2">
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search by remarks..."
-          value={remarkFilter}
-          onChange={(e) => setRemarkFilter(e.target.value)}
-          className="max-w-sm"
-        />
-      </div>
-      
-      <div className="flex items-center gap-2">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by remarks..."
+            value={remarkFilter}
+            onChange={(e) => setRemarkFilter(e.target.value)}
+            className="max-w-sm"
+          />
+        </div>
+        
+        <div className="flex items-center gap-2">
         <Popover open={isNextCallDateFilterOpen} onOpenChange={setIsNextCallDateFilterOpen}>
           <PopoverTrigger asChild>
             <Button variant="outline" className="flex items-center gap-2">
@@ -161,6 +170,23 @@ const LeadsTableFilters: React.FC<LeadsTableFiltersProps> = ({
             <X className="h-4 w-4" />
           </Button>
         )}
+      </div>
+      </div>
+      
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+        <Input
+          placeholder="Filter by mobile number..."
+          value={mobileFilter}
+          onChange={(e) => setMobileFilter(e.target.value)}
+          className="max-w-sm"
+        />
+        
+        <Input
+          placeholder="Filter by destination..."
+          value={destinationFilter}
+          onChange={(e) => setDestinationFilter(e.target.value)}
+          className="max-w-sm"
+        />
       </div>
     </div>
   );
