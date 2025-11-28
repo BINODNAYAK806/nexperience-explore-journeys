@@ -92,16 +92,14 @@ const Footer = () => {
             <ul className="space-y-4">
               <li className="flex items-center space-x-3">
                 <Phone size={20} className="text-primary" />
-                <span className="text-muted-foreground">+91 8347015725 (India) </span>
-              </li>
-              
-              <li className="flex items-center space-x-3">
-                <Phone size={20} className="text-primary" />
-                <span className="text-muted-foreground">+971 523273730 (Dubai)</span>
+                <span className="text-muted-foreground">+91 8347015725</span>
               </li>
               <li className="flex items-center space-x-3">
                 <Mail size={20} className="text-primary" />
-                <span className="text-muted-foreground">book@nexyatra.in</span>
+                <span className="text-muted-foreground">info@nexyatra.in</span>
+              </li>
+              <li className="text-muted-foreground text-sm mt-2">
+                <span className="opacity-70">Owner: Ajaya Nayak</span>
               </li>
             </ul>
           </div>
