@@ -127,22 +127,14 @@ const AboutUs = () => {
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Phone className="w-5 h-5 text-[#4364ed]" />
-              <span className="font-medium">India:</span>
               <a href="tel:+918347015725" className="text-[#4364ed] hover:underline">
                 +91 8347015725
               </a>
             </div>
             <div className="flex items-center gap-2">
-              <Phone className="w-5 h-5 text-[#4364ed]" />
-              <span className="font-medium">Dubai:</span>
-              <a href="tel:+971523273730" className="text-[#4364ed] hover:underline">
-                +971 523273730
-              </a>
-            </div>
-            <div className="flex items-center gap-2">
               <Mail className="w-5 h-5 text-[#4364ed]" />
-              <a href="mailto:book@nexyatra.in" className="text-[#4364ed] hover:underline">
-                book@nexyatra.in
+              <a href="mailto:info@nexyatra.in" className="text-[#4364ed] hover:underline">
+                info@nexyatra.in
               </a>
             </div>
           </div>
