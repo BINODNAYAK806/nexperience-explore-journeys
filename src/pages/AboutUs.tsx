@@ -149,9 +149,6 @@ const AboutUs = () => {
           <Button className="bg-[#4364ed] text-white hover:bg-[#2a4bed]">
             Begin Your Journey
           </Button>
-          <p className="text-sm text-muted-foreground mt-4">
-            Visit our office: UL, Mahalaxmi Market, Udhana, Surat, Gujarat 394210
-          </p>
         </CardContent>
       </Card>
     </div>
