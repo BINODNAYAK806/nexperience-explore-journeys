@@ -165,11 +165,8 @@ const ContactUs = () => {
                   <Phone className="w-5 h-5 text-[#4364ed]" />
                 </div>
                 <div>
-                  <h3 className="font-medium">Phone Numbers</h3>
-                  <div className="space-y-1 text-muted-foreground">
-                    <p>India: +91 8347015725</p>
-                    <p>Dubai: +971 523273730</p>
-                  </div>
+                  <h3 className="font-medium">Phone Number</h3>
+                  <p className="text-muted-foreground">+91 8347015725</p>
                 </div>
               </div>
 
@@ -179,7 +176,7 @@ const ContactUs = () => {
                 </div>
                 <div>
                   <h3 className="font-medium">Email</h3>
-                  <p className="text-muted-foreground">book@nexyatra.in</p>
+                  <p className="text-muted-foreground">info@nexyatra.in</p>
                 </div>
               </div>
 
