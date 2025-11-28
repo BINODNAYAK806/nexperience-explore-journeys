@@ -90,13 +90,6 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold text-lg mb-6">Contact Us</h4>
             <ul className="space-y-4">
-              <li className="flex items-start space-x-3">
-                <MapPin size={20} className="text-primary shrink-0 mt-0.5" />
-                <div className="text-muted-foreground">
-                  <span>U1, Mahalaxmi Market, Udhana, Surat, Gujarat 394210</span>
-                  <div className="text-xs mt-1 opacity-70">Owner: Ajaya Nayak</div>
-                </div>
-              </li>
               <li className="flex items-center space-x-3">
                 <Phone size={20} className="text-primary" />
                 <span className="text-muted-foreground">+91 8347015725 (India) </span>
