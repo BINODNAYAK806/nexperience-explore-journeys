@@ -15,42 +15,54 @@ const RefundPolicy = () => {
 
         <div className="bg-card rounded-lg shadow-lg p-8 md:p-12">
           <h1 className="text-4xl font-bold mb-2">Cancellation & Refund Policy</h1>
-          <p className="text-muted-foreground mb-8">Last updated on 27-11-2025 23:11:59</p>
+          <p className="text-muted-foreground mb-8">Last updated on {new Date().toLocaleDateString('en-GB')}</p>
 
           <div className="prose prose-slate dark:prose-invert max-w-none space-y-6">
             <p>
-              Nexyatra believes in helping its customers as far as possible, and has therefore a liberal cancellation
-              policy. Under this policy:
+              At NexYatra, we understand that travel plans may change. Please review our cancellation and refund policy below:
             </p>
 
-            <ul className="list-disc pl-6 space-y-4">
+            <ol className="list-decimal pl-6 space-y-4">
               <li>
-                Cancellations will be considered only if the request is made immediately after placing the order.
-                However, the cancellation request may not be entertained if the orders have been communicated to the
-                vendors/merchants and they have initiated the process of shipping them.
+                Customers can cancel their booking up to 24 hours before the scheduled travel date.
               </li>
 
               <li>
-                Nexyatra does not accept cancellation requests for perishable items like flowers, eatables etc. However,
-                refund/replacement can be made if the customer establishes that the quality of product delivered is not
-                good.
+                Cancellations made after this period will not be eligible for a refund.
               </li>
 
               <li>
-                In case of receipt of damaged or defective items please report the same to our Customer Service team.
-                The request will, however, be entertained once the merchant has checked and determined the same at his
-                own end. This should be reported within 2 Days of receipt of the products. In case you feel that the
-                product received is not as shown on the site or as per your expectations, you must bring it to the notice of
-                our customer service within 2 Days of receiving the product. The Customer Service Team after
-                looking into your complaint will take an appropriate decision.
+                All eligible refunds will be credited back to the original mode of payment.
               </li>
 
               <li>
-                In case of complaints regarding products that come with a warranty from manufacturers, please refer
-                the issue to them. In case of any Refunds approved by the Nexyatra, it will take 1-2 Days for the
-                refund to be processed to the end customer.
+                Refunds are typically credited within 8–10 working days.
               </li>
-            </ul>
+
+              <li>
+                Processing time may vary depending on the customer's bank or payment provider.
+              </li>
+
+              <li>
+                Partial refunds, if applicable, will be based on the services utilized before cancellation.
+              </li>
+
+              <li>
+                No refunds will be provided for no-show or last-minute cancellations.
+              </li>
+
+              <li>
+                In case of trip rescheduling, standard cancellation rules will apply.
+              </li>
+
+              <li>
+                The company reserves the right to modify or update the policy at any time.
+              </li>
+
+              <li>
+                For any refund-related queries, customers can contact our support team.
+              </li>
+            </ol>
 
             <div className="mt-12 pt-8 border-t border-border">
               <p className="text-muted-foreground">
