@@ -196,19 +196,6 @@ const ContactUs = () => {
                 </div>
               </div>
 
-              <div className="flex items-start gap-4">
-                <div className="bg-[#4364ed]/10 p-2 rounded-lg">
-                  <MapPin className="w-5 h-5 text-[#4364ed]" />
-                </div>
-                <div>
-                  <h3 className="font-medium">Office Address</h3>
-                  <p className="text-muted-foreground">
-                    UL, Mahalaxmi Market,<br />
-                    Udhana, Surat,<br />
-                    Gujarat 394210, India
-                  </p>
-                </div>
-              </div>
             </CardContent>
           </Card>
 
