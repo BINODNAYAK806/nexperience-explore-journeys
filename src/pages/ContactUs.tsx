@@ -182,6 +182,20 @@ const ContactUs = () => {
 
               <div className="flex items-start gap-4">
                 <div className="bg-[#4364ed]/10 p-2 rounded-lg">
+                  <MapPin className="w-5 h-5 text-[#4364ed]" />
+                </div>
+                <div>
+                  <h3 className="font-medium">Address</h3>
+                  <p className="text-muted-foreground">
+                    G-1, Gandevi ND Complex<br />
+                    Navsari, Gujarat<br />
+                    Pin - 396445
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="bg-[#4364ed]/10 p-2 rounded-lg">
                   <Clock className="w-5 h-5 text-[#4364ed]" />
                 </div>
                 <div>
