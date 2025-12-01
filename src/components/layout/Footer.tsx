@@ -54,11 +54,6 @@ const Footer = () => {
             <h4 className="font-semibold text-lg mb-6">Support</h4>
             <ul className="space-y-4">
               <li>
-                <Link to="/faq" className="text-muted-foreground hover:text-primary transition-colors hover-underline">
-                  FAQs
-                </Link>
-              </li>
-              <li>
                 <Link to="/privacy" className="text-muted-foreground hover:text-primary transition-colors hover-underline">
                   Privacy Policy
                 </Link>
