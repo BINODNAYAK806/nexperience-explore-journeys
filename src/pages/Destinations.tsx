@@ -33,7 +33,7 @@ const activities = [{
   icon: <Users size={18} />
 }];
 
-const categories = ["All", "Luxury", "Beach", "Adventure", "Nature", "Cultural"];
+const categories = ["All", "Luxury", "Beach", "Adventure"];
 
 const Destinations = () => {
   const [filteredDestinations, setFilteredDestinations] = useState([]);
