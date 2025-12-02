@@ -22,9 +22,8 @@ const PaymentCallback = () => {
       try {
         setStatus('Checking payment status...');
 
-        const { data, error } = await supabase.functions.invoke('phonepe-payment', {
+        const { data, error } = await supabase.functions.invoke('phonepe-payment?action=check-status', {
           body: { merchantTransactionId: txnId },
-          headers: { 'Content-Type': 'application/json' },
         });
 
         if (error) throw error;

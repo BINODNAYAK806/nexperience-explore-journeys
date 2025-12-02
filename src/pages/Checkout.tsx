@@ -66,16 +66,13 @@ const Checkout = () => {
     try {
       const callbackUrl = `${window.location.origin}/payment-callback`;
       
-      const { data, error } = await supabase.functions.invoke('phonepe-payment', {
+      const { data, error } = await supabase.functions.invoke('phonepe-payment?action=create-order', {
         body: {
           amount: destination.price,
           phone: phone,
           destinationName: destination.name,
           destinationSlug: cleanSlug,
           callbackUrl: callbackUrl,
-        },
-        headers: {
-          'Content-Type': 'application/json',
         },
       });
 
