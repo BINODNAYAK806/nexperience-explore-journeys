@@ -272,7 +272,9 @@ const DestinationDetail = () => {
                     </div>
                   </div>
                   
-                  <Button className="w-full mb-3">Book Now</Button>
+                  <Link to={`/checkout/${cleanSlug}`} className="w-full">
+                    <Button className="w-full mb-3">Book Now</Button>
+                  </Link>
                   <Button variant="outline" className="w-full mb-3">Customize Package</Button>
                   <Button 
                     variant="secondary" 

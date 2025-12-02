@@ -17,6 +17,11 @@ import ContactUs from "./pages/ContactUs";
 import Terms from "./pages/Terms";
 import RefundPolicy from "./pages/RefundPolicy";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Checkout from "./pages/Checkout";
+import PaymentCallback from "./pages/PaymentCallback";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentFailed from "./pages/PaymentFailed";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -35,6 +40,10 @@ const App = () => (
           <Route path="/terms" element={<Layout><Terms /></Layout>} />
           <Route path="/refund" element={<Layout><RefundPolicy /></Layout>} />
           <Route path="/privacy" element={<Layout><PrivacyPolicy /></Layout>} />
+          <Route path="/checkout/:destination" element={<Layout><Checkout /></Layout>} />
+          <Route path="/payment-callback" element={<PaymentCallback />} />
+          <Route path="/payment-success" element={<Layout><PaymentSuccess /></Layout>} />
+          <Route path="/payment-failed" element={<Layout><PaymentFailed /></Layout>} />
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <Dashboard />
