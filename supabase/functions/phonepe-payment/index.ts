@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { crypto } from "https://deno.land/std@0.177.0/crypto/mod.ts";
 
 const corsHeaders = {
@@ -7,8 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const PHONEPE_MERCHANT_ID = Deno.env.get('PHONEPE_MERCHANT_ID')!;
-const PHONEPE_SALT_KEY = Deno.env.get('PHONEPE_SALT_KEY')!;
+const PHONEPE_MERCHANT_ID = Deno.env.get('PHONEPE_MERCHANT_ID');
+const PHONEPE_SALT_KEY = Deno.env.get('PHONEPE_SALT_KEY');
 const PHONEPE_SALT_INDEX = Deno.env.get('PHONEPE_SALT_INDEX') || '1';
 
 // Production URL for legacy API (salt key authentication)
@@ -36,11 +35,29 @@ serve(async (req) => {
   }
 
   try {
+    // Validate secrets are configured
+    if (!PHONEPE_MERCHANT_ID || !PHONEPE_SALT_KEY) {
+      console.error('=== PhonePe Configuration Error ===');
+      console.error('MERCHANT_ID exists:', !!PHONEPE_MERCHANT_ID);
+      console.error('SALT_KEY exists:', !!PHONEPE_SALT_KEY);
+      console.error('SALT_INDEX:', PHONEPE_SALT_INDEX);
+      return new Response(
+        JSON.stringify({ error: 'Payment gateway not configured properly' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
 
     if (action === 'create-order') {
       const { amount, phone, destinationName, destinationSlug, callbackUrl } = await req.json();
+
+      console.log('=== PhonePe Create Order Request ===');
+      console.log('Amount:', amount);
+      console.log('Phone:', phone);
+      console.log('Destination:', destinationName);
+      console.log('Callback URL:', callbackUrl);
 
       if (!amount || !phone || !destinationName) {
         return new Response(
@@ -51,7 +68,8 @@ serve(async (req) => {
 
       // Validate phone number
       const phoneRegex = /^[6-9]\d{9}$/;
-      if (!phoneRegex.test(phone.replace(/\D/g, '').slice(-10))) {
+      const cleanPhone = phone.replace(/\D/g, '').slice(-10);
+      if (!phoneRegex.test(cleanPhone)) {
         return new Response(
           JSON.stringify({ error: 'Invalid phone number' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -59,7 +77,7 @@ serve(async (req) => {
       }
 
       const merchantTransactionId = 'MT' + Date.now() + Math.random().toString(36).substring(2, 8).toUpperCase();
-      const merchantUserId = 'MU' + phone.replace(/\D/g, '').slice(-10);
+      const merchantUserId = 'MU' + cleanPhone;
 
       const payload = {
         merchantId: PHONEPE_MERCHANT_ID,
@@ -69,7 +87,7 @@ serve(async (req) => {
         redirectUrl: `${callbackUrl}?txnId=${merchantTransactionId}&destination=${encodeURIComponent(destinationSlug)}`,
         redirectMode: 'REDIRECT',
         callbackUrl: `${callbackUrl}?txnId=${merchantTransactionId}&destination=${encodeURIComponent(destinationSlug)}`,
-        mobileNumber: phone.replace(/\D/g, '').slice(-10),
+        mobileNumber: cleanPhone,
         paymentInstrument: {
           type: 'PAY_PAGE'
         }
@@ -79,21 +97,33 @@ serve(async (req) => {
       const endpoint = '/pg/v1/pay';
       const checksum = await generateChecksum(base64Payload, endpoint);
 
-      console.log('Creating PhonePe order:', { merchantTransactionId, amount, destinationName });
+      console.log('=== PhonePe API Request Details ===');
+      console.log('Merchant ID:', PHONEPE_MERCHANT_ID);
+      console.log('Transaction ID:', merchantTransactionId);
+      console.log('Payload:', JSON.stringify(payload, null, 2));
+      console.log('Base64 Payload:', base64Payload);
+      console.log('Endpoint:', endpoint);
+      console.log('Checksum:', checksum);
+      console.log('Full URL:', `${PHONEPE_BASE_URL}${endpoint}`);
 
       const response = await fetch(`${PHONEPE_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-VERIFY': checksum,
+          'accept': 'application/json',
         },
         body: JSON.stringify({ request: base64Payload }),
       });
 
       const responseData = await response.json();
-      console.log('PhonePe response:', responseData);
+      
+      console.log('=== PhonePe API Response ===');
+      console.log('Status:', response.status);
+      console.log('Response:', JSON.stringify(responseData, null, 2));
 
       if (responseData.success && responseData.data?.instrumentResponse?.redirectInfo?.url) {
+        console.log('Payment order created successfully');
         return new Response(
           JSON.stringify({
             success: true,
@@ -127,7 +157,10 @@ serve(async (req) => {
       const endpoint = `/pg/v1/status/${PHONEPE_MERCHANT_ID}/${merchantTransactionId}`;
       const checksum = await generateChecksum('', endpoint);
 
-      console.log('Checking payment status:', merchantTransactionId);
+      console.log('=== PhonePe Status Check ===');
+      console.log('Transaction ID:', merchantTransactionId);
+      console.log('Endpoint:', endpoint);
+      console.log('Checksum:', checksum);
 
       const response = await fetch(`${PHONEPE_BASE_URL}${endpoint}`, {
         method: 'GET',
@@ -135,11 +168,15 @@ serve(async (req) => {
           'Content-Type': 'application/json',
           'X-VERIFY': checksum,
           'X-MERCHANT-ID': PHONEPE_MERCHANT_ID,
+          'accept': 'application/json',
         },
       });
 
       const responseData = await response.json();
-      console.log('PhonePe status response:', responseData);
+      
+      console.log('=== PhonePe Status Response ===');
+      console.log('Status:', response.status);
+      console.log('Response:', JSON.stringify(responseData, null, 2));
 
       const isSuccess = responseData.success && responseData.code === 'PAYMENT_SUCCESS';
 
