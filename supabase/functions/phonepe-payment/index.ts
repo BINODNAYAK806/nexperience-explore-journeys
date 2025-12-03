@@ -11,9 +11,8 @@ const PHONEPE_MERCHANT_ID = Deno.env.get('PHONEPE_MERCHANT_ID')!;
 const PHONEPE_SALT_KEY = Deno.env.get('PHONEPE_SALT_KEY')!;
 const PHONEPE_SALT_INDEX = Deno.env.get('PHONEPE_SALT_INDEX') || '1';
 
-// Production URL (merchant activated)
-// Note: PhonePe updated their API - use /apis/pg for production
-const PHONEPE_BASE_URL = 'https://api.phonepe.com/apis/pg';
+// Production URL for legacy API (salt key authentication)
+const PHONEPE_BASE_URL = 'https://api.phonepe.com/apis/hermes';
 
 async function generateChecksum(payload: string, endpoint: string): Promise<string> {
   const data = payload + endpoint + PHONEPE_SALT_KEY;
