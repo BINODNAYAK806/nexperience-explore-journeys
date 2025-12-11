@@ -10,15 +10,15 @@ const PHONEPE_CLIENT_SECRET = Deno.env.get('PHONEPE_CLIENT_SECRET');
 const PHONEPE_CLIENT_VERSION = Deno.env.get('PHONEPE_CLIENT_VERSION');
 const PHONEPE_MERCHANT_ID = Deno.env.get('PHONEPE_MERCHANT_ID');
 
-// UAT URLs (switch to production URLs once merchant is activated)
-const PHONEPE_AUTH_URL = 'https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token';
-const PHONEPE_PAYMENT_URL = 'https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/pay';
-const PHONEPE_STATUS_URL = 'https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/order';
+// Production URLs
+const PHONEPE_AUTH_URL = 'https://api.phonepe.com/apis/identity-manager/v1/oauth/token';
+const PHONEPE_PAYMENT_URL = 'https://api.phonepe.com/apis/pg/checkout/v2/pay';
+const PHONEPE_STATUS_URL = 'https://api.phonepe.com/apis/pg/checkout/v2/order';
 
-// Production URLs (uncomment when ready for production)
-// const PHONEPE_AUTH_URL = 'https://api.phonepe.com/apis/identity-manager/v1/oauth/token';
-// const PHONEPE_PAYMENT_URL = 'https://api.phonepe.com/apis/pg/checkout/v2/pay';
-// const PHONEPE_STATUS_URL = 'https://api.phonepe.com/apis/pg/checkout/v2/order';
+// UAT URLs (uncomment for sandbox testing)
+// const PHONEPE_AUTH_URL = 'https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token';
+// const PHONEPE_PAYMENT_URL = 'https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/pay';
+// const PHONEPE_STATUS_URL = 'https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/order';
 
 async function getAccessToken(): Promise<string> {
   console.log('=== Getting OAuth Access Token ===');
