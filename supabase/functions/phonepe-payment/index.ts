@@ -31,6 +31,7 @@ async function getAccessToken(): Promise<string> {
     body: new URLSearchParams({
       client_id: PHONEPE_CLIENT_ID!,
       client_secret: PHONEPE_CLIENT_SECRET!,
+      client_version: PHONEPE_CLIENT_VERSION!,
       grant_type: 'client_credentials',
     }),
   });
@@ -54,10 +55,11 @@ serve(async (req) => {
 
   try {
     // Validate secrets are configured
-    if (!PHONEPE_CLIENT_ID || !PHONEPE_CLIENT_SECRET || !PHONEPE_MERCHANT_ID) {
+    if (!PHONEPE_CLIENT_ID || !PHONEPE_CLIENT_SECRET || !PHONEPE_CLIENT_VERSION || !PHONEPE_MERCHANT_ID) {
       console.error('=== PhonePe Configuration Error ===');
       console.error('CLIENT_ID exists:', !!PHONEPE_CLIENT_ID);
       console.error('CLIENT_SECRET exists:', !!PHONEPE_CLIENT_SECRET);
+      console.error('CLIENT_VERSION exists:', !!PHONEPE_CLIENT_VERSION);
       console.error('MERCHANT_ID exists:', !!PHONEPE_MERCHANT_ID);
       return new Response(
         JSON.stringify({ error: 'Payment gateway not configured properly' }),
