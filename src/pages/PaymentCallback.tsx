@@ -10,10 +10,10 @@ const PaymentCallback = () => {
 
   useEffect(() => {
     const verifyPayment = async () => {
-      const txnId = searchParams.get('txnId');
+      const orderId = searchParams.get('orderId');
       const destinationSlug = searchParams.get('destination');
 
-      if (!txnId) {
+      if (!orderId) {
         setStatus('Invalid payment callback');
         setTimeout(() => navigate('/payment-failed'), 2000);
         return;
@@ -23,7 +23,7 @@ const PaymentCallback = () => {
         setStatus('Checking payment status...');
 
         const { data, error } = await supabase.functions.invoke('phonepe-payment?action=check-status', {
-          body: { merchantTransactionId: txnId },
+          body: { merchantOrderId: orderId },
         });
 
         if (error) throw error;
@@ -35,7 +35,7 @@ const PaymentCallback = () => {
         if (data?.success) {
           // Payment successful
           const queryParams = new URLSearchParams({
-            txnId: txnId,
+            orderId: orderId,
             destination: destinationSlug || paymentDetails?.destination || '',
             destinationName: paymentDetails?.destinationName || '',
             amount: paymentDetails?.amount?.toString() || '',
@@ -44,7 +44,7 @@ const PaymentCallback = () => {
         } else {
           // Payment failed
           const queryParams = new URLSearchParams({
-            txnId: txnId,
+            orderId: orderId,
             reason: data?.message || 'Payment was not successful',
           });
           navigate(`/payment-failed?${queryParams.toString()}`);

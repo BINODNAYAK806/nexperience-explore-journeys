@@ -7,12 +7,12 @@ import { Card, CardContent } from '@/components/ui/card';
 const PaymentFailed = () => {
   const [searchParams] = useSearchParams();
   
-  const txnId = searchParams.get('txnId');
+  const orderId = searchParams.get('orderId');
   const reason = searchParams.get('reason') || 'Payment could not be completed';
 
   const handleWhatsAppSupport = () => {
-    const message = txnId 
-      ? `Hi! I had an issue with my payment. Transaction ID: ${txnId}. Error: ${reason}. Can you help?`
+    const message = orderId 
+      ? `Hi! I had an issue with my payment. Order ID: ${orderId}. Error: ${reason}. Can you help?`
       : `Hi! I had an issue completing my payment. Error: ${reason}. Can you help?`;
     window.open(`https://wa.me/918347015725?text=${encodeURIComponent(message)}`, '_blank');
   };
@@ -40,10 +40,10 @@ const PaymentFailed = () => {
             <p className="text-sm text-muted-foreground">Reason</p>
             <p className="text-sm">{reason}</p>
             
-            {txnId && (
+            {orderId && (
               <>
-                <p className="text-sm text-muted-foreground mt-3">Transaction ID</p>
-                <p className="font-mono text-xs break-all">{txnId}</p>
+                <p className="text-sm text-muted-foreground mt-3">Order ID</p>
+                <p className="font-mono text-xs break-all">{orderId}</p>
               </>
             )}
           </div>

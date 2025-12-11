@@ -81,7 +81,7 @@ const Checkout = () => {
       if (data?.success && data?.redirectUrl) {
         // Store transaction details in sessionStorage for callback
         sessionStorage.setItem('paymentDetails', JSON.stringify({
-          txnId: data.merchantTransactionId,
+          orderId: data.merchantOrderId,
           destination: cleanSlug,
           destinationName: destination.name,
           amount: destination.price,
