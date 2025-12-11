@@ -7,13 +7,13 @@ import { Card, CardContent } from '@/components/ui/card';
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   
-  const txnId = searchParams.get('txnId') || 'N/A';
+  const orderId = searchParams.get('orderId') || 'N/A';
   const destination = searchParams.get('destination') || '';
   const destinationName = searchParams.get('destinationName') || 'Your Trip';
   const amount = searchParams.get('amount') || '';
 
   const handleWhatsAppSupport = () => {
-    const message = `Hi! I just completed a payment for ${destinationName}. Transaction ID: ${txnId}. Please confirm my booking.`;
+    const message = `Hi! I just completed a payment for ${destinationName}. Order ID: ${orderId}. Please confirm my booking.`;
     window.open(`https://wa.me/918347015725?text=${encodeURIComponent(message)}`, '_blank');
   };
 
@@ -58,8 +58,8 @@ const PaymentSuccess = () => {
             <div className="flex items-start gap-3">
               <Receipt className="h-5 w-5 text-primary mt-0.5" />
               <div>
-                <p className="text-sm text-muted-foreground">Transaction ID</p>
-                <p className="font-mono text-sm break-all">{txnId}</p>
+                <p className="text-sm text-muted-foreground">Order ID</p>
+                <p className="font-mono text-sm break-all">{orderId}</p>
               </div>
             </div>
           </div>
