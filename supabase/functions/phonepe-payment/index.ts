@@ -7,6 +7,7 @@ const corsHeaders = {
 
 const PHONEPE_CLIENT_ID = Deno.env.get('PHONEPE_CLIENT_ID');
 const PHONEPE_CLIENT_SECRET = Deno.env.get('PHONEPE_CLIENT_SECRET');
+const PHONEPE_CLIENT_VERSION = Deno.env.get('PHONEPE_CLIENT_VERSION');
 const PHONEPE_MERCHANT_ID = Deno.env.get('PHONEPE_MERCHANT_ID');
 
 // UAT URLs (switch to production URLs once merchant is activated)
