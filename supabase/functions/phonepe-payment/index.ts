@@ -1,31 +1,48 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { crypto } from "https://deno.land/std@0.177.0/crypto/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const PHONEPE_CLIENT_ID = Deno.env.get('PHONEPE_CLIENT_ID');
+const PHONEPE_CLIENT_SECRET = Deno.env.get('PHONEPE_CLIENT_SECRET');
 const PHONEPE_MERCHANT_ID = Deno.env.get('PHONEPE_MERCHANT_ID');
-const PHONEPE_SALT_KEY = Deno.env.get('PHONEPE_SALT_KEY');
-const PHONEPE_SALT_INDEX = Deno.env.get('PHONEPE_SALT_INDEX') || '1';
 
-// Sandbox/UAT URL for testing (switch to production once merchant is activated)
-const PHONEPE_BASE_URL = 'https://api-preprod.phonepe.com/apis/pg-sandbox';
+// UAT URLs (switch to production URLs once merchant is activated)
+const PHONEPE_AUTH_URL = 'https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token';
+const PHONEPE_PAYMENT_URL = 'https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/pay';
+const PHONEPE_STATUS_URL = 'https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/order';
 
-async function generateChecksum(payload: string, endpoint: string): Promise<string> {
-  const data = payload + endpoint + PHONEPE_SALT_KEY;
-  const encoder = new TextEncoder();
-  const dataBuffer = encoder.encode(data);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  return hashHex + '###' + PHONEPE_SALT_INDEX;
-}
+// Production URLs (uncomment when ready for production)
+// const PHONEPE_AUTH_URL = 'https://api.phonepe.com/apis/identity-manager/v1/oauth/token';
+// const PHONEPE_PAYMENT_URL = 'https://api.phonepe.com/apis/pg/checkout/v2/pay';
+// const PHONEPE_STATUS_URL = 'https://api.phonepe.com/apis/pg/checkout/v2/order';
 
-function base64Encode(obj: object): string {
-  const jsonStr = JSON.stringify(obj);
-  return btoa(jsonStr);
+async function getAccessToken(): Promise<string> {
+  console.log('=== Getting OAuth Access Token ===');
+  
+  const response = await fetch(PHONEPE_AUTH_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      client_id: PHONEPE_CLIENT_ID!,
+      client_secret: PHONEPE_CLIENT_SECRET!,
+      grant_type: 'client_credentials',
+    }),
+  });
+
+  const data = await response.json();
+  console.log('Auth Response Status:', response.status);
+  console.log('Auth Response:', JSON.stringify(data, null, 2));
+
+  if (!response.ok || !data.access_token) {
+    throw new Error(data.message || 'Failed to get access token');
+  }
+
+  return data.access_token;
 }
 
 serve(async (req) => {
@@ -36,11 +53,11 @@ serve(async (req) => {
 
   try {
     // Validate secrets are configured
-    if (!PHONEPE_MERCHANT_ID || !PHONEPE_SALT_KEY) {
+    if (!PHONEPE_CLIENT_ID || !PHONEPE_CLIENT_SECRET || !PHONEPE_MERCHANT_ID) {
       console.error('=== PhonePe Configuration Error ===');
+      console.error('CLIENT_ID exists:', !!PHONEPE_CLIENT_ID);
+      console.error('CLIENT_SECRET exists:', !!PHONEPE_CLIENT_SECRET);
       console.error('MERCHANT_ID exists:', !!PHONEPE_MERCHANT_ID);
-      console.error('SALT_KEY exists:', !!PHONEPE_SALT_KEY);
-      console.error('SALT_INDEX:', PHONEPE_SALT_INDEX);
       return new Response(
         JSON.stringify({ error: 'Payment gateway not configured properly' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -76,44 +93,42 @@ serve(async (req) => {
         );
       }
 
-      const merchantTransactionId = 'MT' + Date.now() + Math.random().toString(36).substring(2, 8).toUpperCase();
-      const merchantUserId = 'MU' + cleanPhone;
+      // Get OAuth access token
+      const accessToken = await getAccessToken();
+
+      const merchantOrderId = 'ORDER_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
       const payload = {
-        merchantId: PHONEPE_MERCHANT_ID,
-        merchantTransactionId: merchantTransactionId,
-        merchantUserId: merchantUserId,
+        merchantOrderId: merchantOrderId,
         amount: Math.round(amount * 100), // Convert to paise
-        redirectUrl: `${callbackUrl}?txnId=${merchantTransactionId}&destination=${encodeURIComponent(destinationSlug)}`,
-        redirectMode: 'REDIRECT',
-        callbackUrl: `${callbackUrl}?txnId=${merchantTransactionId}&destination=${encodeURIComponent(destinationSlug)}`,
-        mobileNumber: cleanPhone,
-        paymentInstrument: {
-          type: 'PAY_PAGE'
-        }
+        expireAfter: 1200, // 20 minutes
+        metaInfo: {
+          udf1: destinationName,
+          udf2: destinationSlug,
+          udf3: cleanPhone,
+        },
+        paymentFlow: {
+          type: 'PG_CHECKOUT',
+          message: `Payment for ${destinationName}`,
+          merchantUrls: {
+            redirectUrl: `${callbackUrl}?orderId=${merchantOrderId}&destination=${encodeURIComponent(destinationSlug)}`,
+          },
+        },
       };
 
-      const base64Payload = base64Encode(payload);
-      const endpoint = '/pg/v1/pay';
-      const checksum = await generateChecksum(base64Payload, endpoint);
-
-      console.log('=== PhonePe API Request Details ===');
+      console.log('=== PhonePe v2 API Request ===');
       console.log('Merchant ID:', PHONEPE_MERCHANT_ID);
-      console.log('Transaction ID:', merchantTransactionId);
+      console.log('Order ID:', merchantOrderId);
       console.log('Payload:', JSON.stringify(payload, null, 2));
-      console.log('Base64 Payload:', base64Payload);
-      console.log('Endpoint:', endpoint);
-      console.log('Checksum:', checksum);
-      console.log('Full URL:', `${PHONEPE_BASE_URL}${endpoint}`);
 
-      const response = await fetch(`${PHONEPE_BASE_URL}${endpoint}`, {
+      const response = await fetch(PHONEPE_PAYMENT_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-VERIFY': checksum,
-          'accept': 'application/json',
+          'Authorization': `O-Bearer ${accessToken}`,
+          'X-Merchant-Id': PHONEPE_MERCHANT_ID,
         },
-        body: JSON.stringify({ request: base64Payload }),
+        body: JSON.stringify(payload),
       });
 
       const responseData = await response.json();
@@ -122,13 +137,13 @@ serve(async (req) => {
       console.log('Status:', response.status);
       console.log('Response:', JSON.stringify(responseData, null, 2));
 
-      if (responseData.success && responseData.data?.instrumentResponse?.redirectInfo?.url) {
+      if (response.ok && responseData.redirectUrl) {
         console.log('Payment order created successfully');
         return new Response(
           JSON.stringify({
             success: true,
-            redirectUrl: responseData.data.instrumentResponse.redirectInfo.url,
-            merchantTransactionId: merchantTransactionId,
+            redirectUrl: responseData.redirectUrl,
+            merchantOrderId: merchantOrderId,
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
@@ -145,30 +160,27 @@ serve(async (req) => {
     }
 
     if (action === 'check-status') {
-      const { merchantTransactionId } = await req.json();
+      const { merchantOrderId } = await req.json();
 
-      if (!merchantTransactionId) {
+      if (!merchantOrderId) {
         return new Response(
-          JSON.stringify({ error: 'Missing transaction ID' }),
+          JSON.stringify({ error: 'Missing order ID' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      const endpoint = `/pg/v1/status/${PHONEPE_MERCHANT_ID}/${merchantTransactionId}`;
-      const checksum = await generateChecksum('', endpoint);
+      // Get OAuth access token
+      const accessToken = await getAccessToken();
 
       console.log('=== PhonePe Status Check ===');
-      console.log('Transaction ID:', merchantTransactionId);
-      console.log('Endpoint:', endpoint);
-      console.log('Checksum:', checksum);
+      console.log('Order ID:', merchantOrderId);
 
-      const response = await fetch(`${PHONEPE_BASE_URL}${endpoint}`, {
+      const response = await fetch(`${PHONEPE_STATUS_URL}/${merchantOrderId}/status`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'X-VERIFY': checksum,
-          'X-MERCHANT-ID': PHONEPE_MERCHANT_ID,
-          'accept': 'application/json',
+          'Authorization': `O-Bearer ${accessToken}`,
+          'X-Merchant-Id': PHONEPE_MERCHANT_ID,
         },
       });
 
@@ -178,14 +190,14 @@ serve(async (req) => {
       console.log('Status:', response.status);
       console.log('Response:', JSON.stringify(responseData, null, 2));
 
-      const isSuccess = responseData.success && responseData.code === 'PAYMENT_SUCCESS';
+      const isSuccess = responseData.state === 'COMPLETED';
 
       return new Response(
         JSON.stringify({
           success: isSuccess,
-          status: responseData.code,
+          status: responseData.state,
           message: responseData.message,
-          data: responseData.data,
+          data: responseData,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
