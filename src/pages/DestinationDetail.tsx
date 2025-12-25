@@ -155,46 +155,39 @@ const DestinationDetail = () => {
               <TabsContent value="highlights" className="space-y-4">
                 <ul className="space-y-2">
                   {(() => {
-                    try {
-                      // Try to parse as JSON array first
-                      if (destination.highlights && destination.highlights.startsWith('[')) {
-                        const highlightsArray = JSON.parse(destination.highlights);
-                        return highlightsArray.map((highlight: string, index: number) => (
-                          <li key={index} className="flex items-start">
-                            <div className="h-5 w-5 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 mt-0.5 mr-2">
-                              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
-                              </svg>
-                            </div>
-                            {highlight}
-                          </li>
-                        ));
-                      } else {
+                    const highlightsData = destination.highlights;
+                    if (!highlightsData) return null;
+                    
+                    let highlightsArray: string[] = [];
+                    
+                    // Handle different formats
+                    if (Array.isArray(highlightsData)) {
+                      highlightsArray = highlightsData;
+                    } else if (typeof highlightsData === 'string') {
+                      try {
+                        // Try to parse as JSON array
+                        const parsed = JSON.parse(highlightsData);
+                        if (Array.isArray(parsed)) {
+                          highlightsArray = parsed;
+                        } else {
+                          highlightsArray = highlightsData.split('\n').filter(Boolean);
+                        }
+                      } catch {
                         // Fallback to string splitting
-                        return (destination.highlights || '').split('\n').filter(Boolean).map((highlight: string, index: number) => (
-                          <li key={index} className="flex items-start">
-                            <div className="h-5 w-5 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 mt-0.5 mr-2">
-                              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
-                              </svg>
-                            </div>
-                            {highlight}
-                          </li>
-                        ));
+                        highlightsArray = highlightsData.split('\n').filter(Boolean);
                       }
-                    } catch {
-                      // Fallback to string splitting if JSON parsing fails
-                      return (destination.highlights || '').split('\n').filter(Boolean).map((highlight: string, index: number) => (
-                        <li key={index} className="flex items-start">
-                          <div className="h-5 w-5 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 mt-0.5 mr-2">
-                            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                          </div>
-                          {highlight}
-                        </li>
-                      ));
                     }
+                    
+                    return highlightsArray.map((highlight: string, index: number) => (
+                      <li key={index} className="flex items-start">
+                        <div className="h-5 w-5 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 mt-0.5 mr-2">
+                          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
+                          </svg>
+                        </div>
+                        {highlight}
+                      </li>
+                    ));
                   })()}
                 </ul>
               </TabsContent>
