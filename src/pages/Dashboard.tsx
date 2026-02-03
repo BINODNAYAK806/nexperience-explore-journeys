@@ -11,6 +11,7 @@ import LeadsChart from "@/components/dashboard/LeadsChart";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DestinationsManager from "./DestinationsManager";
+import ContactMessagesTable from "@/components/dashboard/ContactMessagesTable";
 
 const Dashboard: React.FC = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -151,6 +152,7 @@ const Dashboard: React.FC = () => {
           <TabsList>
             <TabsTrigger value="leads">Leads</TabsTrigger>
             <TabsTrigger value="destinations">Destinations</TabsTrigger>
+            <TabsTrigger value="contacts">Contact Messages</TabsTrigger>
           </TabsList>
 
           <TabsContent value="leads" className="space-y-6">
@@ -181,6 +183,10 @@ const Dashboard: React.FC = () => {
 
           <TabsContent value="destinations">
             <DestinationsManager />
+          </TabsContent>
+
+          <TabsContent value="contacts">
+            <ContactMessagesTable />
           </TabsContent>
         </Tabs>
       </div>

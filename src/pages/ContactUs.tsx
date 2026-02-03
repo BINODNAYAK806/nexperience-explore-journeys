@@ -1,22 +1,12 @@
-
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { MapPin, Phone, Mail, Clock, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-
-interface ContactMessage {
-  id: string;
-  name: string;
-  email: string;
-  message: string;
-  created_at: string;
-}
 
 const ContactUs = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -25,26 +15,7 @@ const ContactUs = () => {
     email: '',
     message: ''
   });
-  const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
   const { toast } = useToast();
-
-  useEffect(() => {
-    fetchMessages();
-  }, []);
-
-  const fetchMessages = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('contact_messages')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setContactMessages(data || []);
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,9 +40,8 @@ const ContactUs = () => {
         description: "Thank you for contacting us. We'll get back to you soon.",
       });
       
-      // Reset form and refresh messages
+      // Reset form
       setFormData({ name: '', email: '', message: '' });
-      fetchMessages();
     } catch (error) {
       console.error('Submission error:', error instanceof Error ? error.message : error);
       toast({
@@ -187,9 +157,9 @@ const ContactUs = () => {
                 <div>
                   <h3 className="font-medium">Address</h3>
                   <p className="text-muted-foreground">
-                    G-1, Gandevi ND Complex<br />
-                    Navsari, Gujarat<br />
-                    Pin - 396445
+                    320 Exult Shoppers<br />
+                    Nr. Siddhi Vinayak Temple, Vesu Main Road,<br />
+                    Vesu, Surat, Gujarat 395007
                   </p>
                 </div>
               </div>
@@ -225,37 +195,6 @@ const ContactUs = () => {
           </Card>
         </div>
       </div>
-
-      {/* Messages Table */}
-      {contactMessages.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-2xl font-semibold">Recent Messages</h2>
-          <Card>
-            <CardContent className="p-6">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Message</TableHead>
-                    <TableHead>Date</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {contactMessages.map((msg) => (
-                    <TableRow key={msg.id}>
-                      <TableCell className="font-medium">{msg.name}</TableCell>
-                      <TableCell>{msg.email}</TableCell>
-                      <TableCell className="max-w-xs truncate">{msg.message}</TableCell>
-                      <TableCell>{new Date(msg.created_at).toLocaleDateString()}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </div>
-      )}
     </div>
   );
 };
