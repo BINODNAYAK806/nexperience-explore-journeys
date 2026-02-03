@@ -1,0 +1,30 @@
+# NexYatra Travel Agency - robots.txt
+# https://nexperience-explore-journeys.lovable.app
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://nexperience-explore-journeys.lovable.app/sitemap.xml
+
+# Crawl-delay for all bots
+Crawl-delay: 1
+
+# Disallow admin and internal routes
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /payment-callback
+Disallow: /checkout/
+
+# Allow all search engine bots
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /

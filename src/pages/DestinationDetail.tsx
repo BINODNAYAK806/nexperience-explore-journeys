@@ -11,6 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import SEO, { getDestinationSchema, getBreadcrumbSchema } from '@/components/SEO';
 
 const DestinationDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -80,8 +81,37 @@ const DestinationDetail = () => {
     );
   }
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      getDestinationSchema({
+        name: destination.name,
+        description: destination.description,
+        price: destination.price || 0,
+        image_url: destination.image_url || '',
+        country: destination.country || '',
+        rating: destination.rating || 4.5,
+        duration: destination.duration || '5 Days',
+        slug: cleanSlug
+      }),
+      getBreadcrumbSchema([
+        { name: "Home", url: "https://nexperience-explore-journeys.lovable.app/" },
+        { name: "Destinations", url: "https://nexperience-explore-journeys.lovable.app/destinations" },
+        { name: destination.name, url: `https://nexperience-explore-journeys.lovable.app/destinations/${cleanSlug}` }
+      ])
+    ]
+  };
+
   return (
     <div>
+      <SEO 
+        title={`${destination.name} Tour Package - ₹${destination.price?.toLocaleString()} | NexYatra`}
+        description={`Book ${destination.name} tour package starting ₹${destination.price?.toLocaleString()}. ${destination.description?.slice(0, 120)}... Best prices & customized itineraries.`}
+        keywords={`${destination.name} tour, ${destination.name} package, ${destination.country} travel, ${destination.name} holiday, ${destination.category} vacation, affordable ${destination.name} trip`}
+        image={destination.image_url || '/og-image.png'}
+        type="product"
+        structuredData={structuredData}
+      />
       {/* Hero Section */}
       <div className="relative h-[50vh] md:h-[60vh] overflow-hidden">
         <div className="absolute inset-0 bg-black/30 z-10"></div>

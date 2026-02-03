@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import SEO, { getOrganizationSchema, getBreadcrumbSchema } from '@/components/SEO';
 
 const ContactUs = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -16,6 +17,17 @@ const ContactUs = () => {
     message: ''
   });
   const { toast } = useToast();
+
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      getOrganizationSchema(),
+      getBreadcrumbSchema([
+        { name: "Home", url: "https://nexperience-explore-journeys.lovable.app/" },
+        { name: "Contact Us", url: "https://nexperience-explore-journeys.lovable.app/contact" }
+      ])
+    ]
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +68,12 @@ const ContactUs = () => {
 
   return (
     <div className="container max-w-6xl py-12 pt-24 space-y-12">
+      <SEO 
+        title="Contact NexYatra - Get Travel Quotes & Support | Surat, Gujarat"
+        description="Contact NexYatra for travel inquiries, package quotes, and support. Located in Vesu, Surat. Call +91 8347015725 or email info@nexyatra.in. We're here to help!"
+        keywords="contact NexYatra, travel agency Surat, travel support, travel quotes, NexYatra phone number, NexYatra email, Vesu Surat travel"
+        structuredData={structuredData}
+      />
       {/* Hero Section */}
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold tracking-tight">

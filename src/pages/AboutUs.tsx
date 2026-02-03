@@ -3,6 +3,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Globe, Luggage, Smile, Wallet, Phone, Mail } from "lucide-react"
+import SEO, { getOrganizationSchema, getBreadcrumbSchema } from "@/components/SEO"
 
 const SectionHeading = ({ children }: { children: React.ReactNode }) => (
   <h2 className="text-2xl font-bold bg-gradient-to-r from-[#2a4bed] to-[#4364ed] bg-clip-text text-transparent mb-6">
@@ -11,8 +12,25 @@ const SectionHeading = ({ children }: { children: React.ReactNode }) => (
 )
 
 const AboutUs = () => {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      getOrganizationSchema(),
+      getBreadcrumbSchema([
+        { name: "Home", url: "https://nexperience-explore-journeys.lovable.app/" },
+        { name: "About Us", url: "https://nexperience-explore-journeys.lovable.app/about" }
+      ])
+    ]
+  };
+
   return (
     <div className="container max-w-6xl py-12 pt-24 space-y-12">
+      <SEO 
+        title="About NexYatra - Your Trusted Travel Partner | Affordable Tours"
+        description="Learn about NexYatra - your trusted travel agency in Surat, Gujarat. Founded by passionate travelers Samir Solanki & Binod Nayak. Stress-free, affordable travel packages."
+        keywords="about NexYatra, travel agency Surat, trusted travel partner, affordable travel, travel experts Gujarat, Samir Solanki, Binod Nayak"
+        structuredData={structuredData}
+      />
       {/* Hero Section */}
       <header className="text-center space-y-4">
         <Badge variant="outline" className="px-4 py-1 bg-[#4364ed]/10">
