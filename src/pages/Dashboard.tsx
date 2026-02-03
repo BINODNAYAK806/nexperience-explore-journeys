@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DestinationsManager from "./DestinationsManager";
 import ContactMessagesTable from "@/components/dashboard/ContactMessagesTable";
+import { ReviewsTable } from "@/components/dashboard/ReviewsTable";
 
 const Dashboard: React.FC = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -152,6 +152,7 @@ const Dashboard: React.FC = () => {
           <TabsList>
             <TabsTrigger value="leads">Leads</TabsTrigger>
             <TabsTrigger value="destinations">Destinations</TabsTrigger>
+            <TabsTrigger value="reviews">Reviews</TabsTrigger>
             <TabsTrigger value="contacts">Contact Messages</TabsTrigger>
           </TabsList>
 
@@ -183,6 +184,18 @@ const Dashboard: React.FC = () => {
 
           <TabsContent value="destinations">
             <DestinationsManager />
+          </TabsContent>
+
+          <TabsContent value="reviews">
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-xl font-semibold">Customer Reviews</h2>
+                <p className="text-sm text-muted-foreground">
+                  Approve reviews to make them visible. Toggle "Featured" to show on homepage.
+                </p>
+              </div>
+              <ReviewsTable />
+            </div>
           </TabsContent>
 
           <TabsContent value="contacts">

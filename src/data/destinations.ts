@@ -41,27 +41,3 @@ export const travelDestinations = [
     category: "Adventure"
   }
 ];
-
-export const testimonials = [
-  {
-    id: 1,
-    name: "Priya Sharma",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=250&q=80",
-    destination: "Dubai",
-    text: "My Dubai experience was beyond expectations. The VR preview helped me pre-explore the Burj Khalifa before the trip. The NexYatra team took care of every detail!"
-  },
-  {
-    id: 2,
-    name: "Rahul Patel",
-    avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-1.2.1&auto=format&fit=crop&w=250&q=80",
-    destination: "Kerala",
-    text: "The backwaters of Kerala were exactly as shown in the interactive map. I loved how I could customize my itinerary. Perfect for a peaceful retreat from city life."
-  },
-  {
-    id: 3,
-    name: "Ananya Joshi",
-    avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-1.2.1&auto=format&fit=crop&w=250&q=80",
-    destination: "Bali",
-    text: "Creating a bucket list on NexYatra and checking off activities in Bali was incredibly satisfying. The dinner with a local chef that they arranged was the highlight of my trip!"
-  }
-];
