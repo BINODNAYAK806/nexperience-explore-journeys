@@ -91,12 +91,10 @@ const Footer = () => {
               <li className="flex items-start space-x-3">
                 <MapPin size={20} className="text-primary mt-1" />
                 <span className="text-muted-foreground text-sm">
-                  G-1, Gandevi ND Complex<br />
-                  Navsari, Gujarat - 396445
+                  320 Exult Shoppers<br />
+                  Nr. Siddhi Vinayak Temple, Vesu Main Road,<br />
+                  Vesu, Surat, Gujarat 395007
                 </span>
-              </li>
-              <li className="text-muted-foreground text-sm mt-2">
-                <span className="opacity-70">Owner: Ajaya Nayak</span>
               </li>
             </ul>
           </div>
