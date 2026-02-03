@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Filter, MapPin, ChevronRight, ArrowDownAZ, Landmark, Compass, Coffee, Utensils, Camera, Users, Heart, X, MessageCircle } from 'lucide-react';
@@ -12,6 +11,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import SEO, { getBreadcrumbSchema } from '@/components/SEO';
 
 const activities = [{
   name: "Sightseeing",
@@ -122,8 +122,19 @@ const Destinations = () => {
     setIsFiltersVisible(!isFiltersVisible);
   };
 
+  const breadcrumbSchema = getBreadcrumbSchema([
+    { name: "Home", url: "https://nexperience-explore-journeys.lovable.app/" },
+    { name: "Destinations", url: "https://nexperience-explore-journeys.lovable.app/destinations" }
+  ]);
+
   return (
     <div className="opacity-100">
+      <SEO 
+        title="Explore Travel Destinations | Affordable Tour Packages - NexYatra"
+        description="Discover affordable travel packages to Dubai, Bali, Kerala, Manali and more. Compare prices, read reviews, and book your perfect holiday. Starting from ₹8,999."
+        keywords="travel destinations, tour packages, Dubai tours, Bali packages, Kerala holidays, Manali trips, adventure travel, luxury resorts, budget travel India"
+        structuredData={breadcrumbSchema}
+      />
       <section className="relative py-32 flex items-center overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-700">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-blue-900/70"></div>

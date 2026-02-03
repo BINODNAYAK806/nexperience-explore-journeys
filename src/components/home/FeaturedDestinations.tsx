@@ -36,29 +36,31 @@ export const FeaturedDestinations = () => {
               className="group"
             >
               <Card className="overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 hover:translate-y-[-8px]">
-                <div className="relative h-60 overflow-hidden">
-                  <img 
-                    src={destination.image} 
-                    alt={destination.name} 
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                  <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-xs font-semibold py-1 px-2 rounded">
-                    {destination.category}
+                <article>
+                  <div className="relative h-60 overflow-hidden">
+                    <img 
+                      src={destination.image} 
+                      alt={`${destination.name} tour package - ${destination.category} travel destination in ${destination.country}`} 
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      loading="lazy"
+                    />
+                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-xs font-semibold py-1 px-2 rounded">
+                      {destination.category}
+                    </div>
                   </div>
-                </div>
                 <CardContent className="p-5">
-                  <div className="flex justify-between items-start mb-2">
+                  <header className="flex justify-between items-start mb-2">
                     <div>
                       <h3 className="font-semibold text-lg">{destination.name}</h3>
                       <p className="text-muted-foreground text-sm flex items-center">
-                        <MapPin size={14} className="mr-1" /> {destination.country}
+                        <MapPin size={14} className="mr-1" aria-hidden="true" /> {destination.country}
                       </p>
                     </div>
                     <div className="text-right">
                       <div className="font-semibold text-primary">{destination.price}</div>
                       <div className="text-xs text-muted-foreground">per person</div>
                     </div>
-                  </div>
+                  </header>
                   <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
                     {destination.description}
                   </p>
@@ -102,6 +104,7 @@ export const FeaturedDestinations = () => {
                     </div>
                   </div>
                 </CardContent>
+                </article>
               </Card>
             </Link>
           ))}

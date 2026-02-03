@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,10 +5,25 @@ import { JourneyRequestForm } from '@/components/home/JourneyRequestForm';
 import { TravelCategories } from '@/components/home/TravelCategories';
 import { FeaturedDestinations } from '@/components/home/FeaturedDestinations';
 import { Testimonials } from '@/components/home/Testimonials';
+import SEO, { getOrganizationSchema, getWebsiteSchema } from '@/components/SEO';
 
 const Index = () => {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      getOrganizationSchema(),
+      getWebsiteSchema()
+    ]
+  };
+
   return (
     <div className="opacity-100">
+      <SEO 
+        title="NexYatra - Affordable Travel Packages | Dubai, Bali, Kerala Tours"
+        description="Book affordable travel packages to Dubai, Bali, Kerala, Manali & more. NexYatra offers customized holiday packages starting ₹8,999. Best prices guaranteed!"
+        keywords="travel packages, affordable tours, Dubai tour packages, Bali holidays, Kerala backwaters, Manali trips, budget travel, holiday packages India, NexYatra"
+        structuredData={structuredData}
+      />
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center pt-16 overflow-hidden">
         {/* Video Background */}
