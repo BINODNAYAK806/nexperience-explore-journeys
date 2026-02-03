@@ -12,7 +12,7 @@ const SectionHeading = ({ children }: { children: React.ReactNode }) => (
 
 const AboutUs = () => {
   return (
-    <div className="container max-w-6xl py-12 space-y-12">
+    <div className="container max-w-6xl py-12 pt-24 space-y-12">
       {/* Hero Section */}
       <header className="text-center space-y-4">
         <Badge variant="outline" className="px-4 py-1 bg-[#4364ed]/10">
@@ -36,10 +36,13 @@ const AboutUs = () => {
         </CardHeader>
         <CardContent className="grid md:grid-cols-2 gap-8">
           <div className="space-y-4">
-            <Avatar className="w-32 h-32 border-2 border-[#4364ed]/20">
-              <AvatarImage src="/founders" />
-              <AvatarFallback>SS</AvatarFallback>
-            </Avatar>
+            <div className="w-32 h-32 rounded-full border-2 border-[#4364ed]/20 bg-white flex items-center justify-center overflow-hidden">
+              <img 
+                src="/lovable-uploads/2b127b7a-f8e2-4ed9-b75a-f14f4e215484.png" 
+                alt="NexYatra Logo" 
+                className="w-24 h-24 object-contain"
+              />
+            </div>
             <div className="space-y-2">
               <h3 className="text-xl font-semibold text-gray-900">Samir Solanki and Binod Nayak</h3>
               <p className="text-sm text-muted-foreground">

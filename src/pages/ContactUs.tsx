@@ -55,7 +55,7 @@ const ContactUs = () => {
   };
 
   return (
-    <div className="container max-w-6xl py-12 space-y-12">
+    <div className="container max-w-6xl py-12 pt-24 space-y-12">
       {/* Hero Section */}
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold tracking-tight">
