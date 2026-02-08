@@ -1,9 +1,22 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import SEO, { getBreadcrumbSchema } from "@/components/SEO";
 
 const RefundPolicy = () => {
+  const breadcrumbSchema = getBreadcrumbSchema([
+    { name: "Home", url: "https://nexperience-explore-journeys.lovable.app/" },
+    { name: "Refund Policy", url: "https://nexperience-explore-journeys.lovable.app/refund" }
+  ]);
+
   return (
+    <>
+      <SEO 
+        title="Cancellation & Refund Policy | NexYatra Travel Agency"
+        description="Learn about NexYatra's cancellation and refund policy. Refunds processed within 8-10 working days. Cancel up to 24 hours before travel for eligible refunds."
+        keywords="NexYatra refund policy, travel cancellation, tour package refund, booking cancellation India, travel refund process"
+        structuredData={breadcrumbSchema}
+      />
     <div className="min-h-screen bg-background py-16">
       <div className="container-custom max-w-4xl">
         <Link to="/">
@@ -77,6 +90,7 @@ const RefundPolicy = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

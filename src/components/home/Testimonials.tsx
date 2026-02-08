@@ -1,9 +1,11 @@
+import { useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ReviewForm } from './ReviewForm';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { User } from 'lucide-react';
+import { getAggregateRatingSchema, getReviewSchema } from '@/components/SEO';
 
 interface Review {
   id: string;
@@ -31,6 +33,39 @@ export const Testimonials = () => {
       return data as Review[];
     }
   });
+
+  // Inject review structured data for SEO
+  useEffect(() => {
+    if (reviews.length > 0) {
+      const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+      const reviewSchemaData = {
+        "@context": "https://schema.org",
+        "@graph": [
+          getAggregateRatingSchema(avgRating, reviews.length),
+          getReviewSchema(reviews.map(r => ({
+            name: r.name,
+            rating: r.rating,
+            review_text: r.review_text,
+            destination: r.destination
+          })))
+        ]
+      };
+
+      let scriptElement = document.querySelector('#review-structured-data');
+      if (!scriptElement) {
+        scriptElement = document.createElement('script');
+        scriptElement.id = 'review-structured-data';
+        scriptElement.setAttribute('type', 'application/ld+json');
+        document.head.appendChild(scriptElement);
+      }
+      scriptElement.textContent = JSON.stringify(reviewSchemaData);
+
+      return () => {
+        const el = document.querySelector('#review-structured-data');
+        if (el) el.remove();
+      };
+    }
+  }, [reviews]);
 
   return (
     <section className="py-20 bg-gray-50 dark:bg-gray-900">

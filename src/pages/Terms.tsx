@@ -1,9 +1,22 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import SEO, { getBreadcrumbSchema } from "@/components/SEO";
 
 const Terms = () => {
+  const breadcrumbSchema = getBreadcrumbSchema([
+    { name: "Home", url: "https://nexperience-explore-journeys.lovable.app/" },
+    { name: "Terms & Conditions", url: "https://nexperience-explore-journeys.lovable.app/terms" }
+  ]);
+
   return (
+    <>
+      <SEO 
+        title="Terms & Conditions | NexYatra Travel Agency"
+        description="Read NexYatra's terms and conditions for booking travel packages. Learn about our policies on payments, cancellations, and customer responsibilities."
+        keywords="NexYatra terms, travel booking terms, tour package conditions, travel agency policies, booking terms India"
+        structuredData={breadcrumbSchema}
+      />
     <div className="min-h-screen bg-background py-16">
       <div className="container-custom max-w-4xl">
         <Link to="/">
@@ -87,6 +100,7 @@ const Terms = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

@@ -110,9 +110,51 @@ export const getOrganizationSchema = () => ({
     "availableLanguage": ["English", "Hindi", "Gujarati"]
   },
   "sameAs": [
+    "https://www.facebook.com/nexyatra.2025",
+    "https://www.instagram.com/nexyatra",
+    "https://x.com/NexYatra89312",
+    "https://www.youtube.com/@nexyatra",
     "https://wa.me/918347015725"
   ],
   "priceRange": "₹₹"
+});
+
+export const getLocalBusinessSchema = () => ({
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "NexYatra Travel Agency",
+  "image": "https://nexperience-explore-journeys.lovable.app/lovable-uploads/2b127b7a-f8e2-4ed9-b75a-f14f4e215484.png",
+  "url": "https://nexperience-explore-journeys.lovable.app",
+  "telephone": "+91-8347015725",
+  "email": "info@nexyatra.in",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "320 Exult Shoppers, Nr. Siddhi Vinayak Temple, Vesu Main Road, Vesu",
+    "addressLocality": "Surat",
+    "addressRegion": "Gujarat",
+    "postalCode": "395007",
+    "addressCountry": "IN"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 21.1702,
+    "longitude": 72.8311
+  },
+  "openingHoursSpecification": [
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+      "opens": "10:00",
+      "closes": "19:00"
+    }
+  ],
+  "paymentAccepted": ["Cash", "Credit Card", "Debit Card", "UPI", "Bank Transfer"],
+  "currenciesAccepted": "INR",
+  "areaServed": {
+    "@type": "Country",
+    "name": "India"
+  },
+  "priceRange": "₹8,999 - ₹1,50,000"
 });
 
 export const getWebsiteSchema = () => ({
@@ -193,4 +235,60 @@ export const getFAQSchema = (faqs: { question: string; answer: string }[]) => ({
       "text": faq.answer
     }
   }))
+});
+
+export const getAggregateRatingSchema = (rating: number, reviewCount: number) => ({
+  "@context": "https://schema.org",
+  "@type": "TravelAgency",
+  "name": "NexYatra",
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": rating.toFixed(1),
+    "bestRating": 5,
+    "worstRating": 1,
+    "ratingCount": reviewCount
+  }
+});
+
+export const getReviewSchema = (reviews: { name: string; rating: number; review_text: string; destination: string }[]) => ({
+  "@context": "https://schema.org",
+  "@type": "TravelAgency",
+  "name": "NexYatra",
+  "review": reviews.map(review => ({
+    "@type": "Review",
+    "author": {
+      "@type": "Person",
+      "name": review.name
+    },
+    "reviewRating": {
+      "@type": "Rating",
+      "ratingValue": review.rating,
+      "bestRating": 5
+    },
+    "reviewBody": review.review_text,
+    "itemReviewed": {
+      "@type": "TouristTrip",
+      "name": review.destination
+    }
+  }))
+});
+
+export const getServiceSchema = (services: { name: string; description: string; price: string }[]) => ({
+  "@context": "https://schema.org",
+  "@type": "TravelAgency",
+  "name": "NexYatra",
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Travel Packages",
+    "itemListElement": services.map(service => ({
+      "@type": "Offer",
+      "itemOffered": {
+        "@type": "Service",
+        "name": service.name,
+        "description": service.description
+      },
+      "price": service.price,
+      "priceCurrency": "INR"
+    }))
+  }
 });

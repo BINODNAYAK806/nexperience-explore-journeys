@@ -5,14 +5,15 @@ import { JourneyRequestForm } from '@/components/home/JourneyRequestForm';
 import { TravelCategories } from '@/components/home/TravelCategories';
 import { FeaturedDestinations } from '@/components/home/FeaturedDestinations';
 import { Testimonials } from '@/components/home/Testimonials';
-import SEO, { getOrganizationSchema, getWebsiteSchema } from '@/components/SEO';
+import SEO, { getOrganizationSchema, getWebsiteSchema, getLocalBusinessSchema } from '@/components/SEO';
 
 const Index = () => {
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
       getOrganizationSchema(),
-      getWebsiteSchema()
+      getWebsiteSchema(),
+      getLocalBusinessSchema()
     ]
   };
 
