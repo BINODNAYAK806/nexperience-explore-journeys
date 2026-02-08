@@ -11,7 +11,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import SEO, { getBreadcrumbSchema } from '@/components/SEO';
+import SEO, { getBreadcrumbSchema, getDestinationListSchema } from '@/components/SEO';
 
 const activities = [{
   name: "Sightseeing",
@@ -127,13 +127,33 @@ const Destinations = () => {
     { name: "Destinations", url: "https://nexperience-explore-journeys.lovable.app/destinations" }
   ]);
 
+  // Generate ItemList schema for destination listings
+  const destinationListSchema = destinations.length > 0 ? getDestinationListSchema(
+    destinations.map(dest => ({
+      name: dest.name,
+      slug: dest.slug,
+      price: dest.price || 0,
+      image_url: dest.image_url || ''
+    }))
+  ) : null;
+
+  // Combined structured data
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      breadcrumbSchema,
+      ...(destinationListSchema ? [destinationListSchema] : [])
+    ]
+  };
+
   return (
     <div className="opacity-100">
       <SEO 
-        title="Explore Travel Destinations | Affordable Tour Packages - NexYatra"
-        description="Discover affordable travel packages to Dubai, Bali, Kerala, Manali and more. Compare prices, read reviews, and book your perfect holiday. Starting from ₹8,999."
-        keywords="travel destinations, tour packages, Dubai tours, Bali packages, Kerala holidays, Manali trips, adventure travel, luxury resorts, budget travel India"
-        structuredData={breadcrumbSchema}
+        title="Travel Destinations 2026 | Affordable Tour Packages from ₹8,999 - NexYatra"
+        description="Explore 2026 travel packages to Dubai, Bali, Thailand, Kashmir, Kerala & more. Compare prices, read reviews, and book your perfect holiday. Starting from ₹8,999. Best deals from Surat!"
+        keywords="travel destinations 2026, tour packages India, Dubai trip, Bali holiday package, Thailand trip, Kashmir tour, Kerala backwaters, Manali trip, adventure travel, luxury resorts, budget travel India, international tours from Surat, domestic tours, honeymoon packages, family vacation"
+        url="https://nexperience-explore-journeys.lovable.app/destinations"
+        structuredData={structuredData}
       />
       <section className="relative py-32 flex items-center overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-700">
         <div className="absolute inset-0 z-0">

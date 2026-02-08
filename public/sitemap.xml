@@ -17,66 +17,125 @@
     <priority>0.9</priority>
   </url>
   
-  <!-- Individual Destinations -->
+  <!-- Individual Destinations with Image Sitemaps -->
   <url>
     <loc>https://nexperience-explore-journeys.lovable.app/destinations/dubai</loc>
     <lastmod>2026-02-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1512453979798-5ea266f8880c</image:loc>
+      <image:title>Dubai Trip Package 2026 - NexYatra</image:title>
+      <image:caption>Dubai tour package with luxury hotels and desert safari</image:caption>
+    </image:image>
   </url>
+  
   <url>
     <loc>https://nexperience-explore-journeys.lovable.app/destinations/bali</loc>
     <lastmod>2026-02-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1537996194471-e657df975ab4</image:loc>
+      <image:title>Bali Trip Package 2026 - NexYatra</image:title>
+      <image:caption>Bali beach holiday package with temple visits and rice terraces</image:caption>
+    </image:image>
   </url>
+  
   <url>
     <loc>https://nexperience-explore-journeys.lovable.app/destinations/kerala</loc>
     <lastmod>2026-02-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1593693397690-362cb9666fc2</image:loc>
+      <image:title>Kerala Trip Package 2026 - NexYatra</image:title>
+      <image:caption>Kerala backwaters tour with houseboat stay and Ayurveda</image:caption>
+    </image:image>
   </url>
+  
   <url>
     <loc>https://nexperience-explore-journeys.lovable.app/destinations/kashmir</loc>
     <lastmod>2026-02-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1597074866923-dc0589150358</image:loc>
+      <image:title>Kashmir Trip Package 2026 - NexYatra</image:title>
+      <image:caption>Kashmir tour package with Dal Lake houseboat and Gulmarg</image:caption>
+    </image:image>
   </url>
+  
   <url>
     <loc>https://nexperience-explore-journeys.lovable.app/destinations/himachal-pradesh</loc>
     <lastmod>2026-02-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1626621341517-bbf3d9990a23</image:loc>
+      <image:title>Himachal Pradesh Trip Package 2026 - NexYatra</image:title>
+      <image:caption>Himachal Pradesh mountain adventure tour with trekking</image:caption>
+    </image:image>
   </url>
+  
   <url>
     <loc>https://nexperience-explore-journeys.lovable.app/destinations/shimla---manali</loc>
     <lastmod>2026-02-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1593181629936-11c609b8db9b</image:loc>
+      <image:title>Shimla Manali Trip Package 2026 - NexYatra</image:title>
+      <image:caption>Shimla Manali honeymoon package with snow activities</image:caption>
+    </image:image>
   </url>
+  
   <url>
     <loc>https://nexperience-explore-journeys.lovable.app/destinations/andman-and-nicobar-islands</loc>
     <lastmod>2026-02-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1507525428034-b723cf961d3e</image:loc>
+      <image:title>Andaman Islands Trip Package 2026 - NexYatra</image:title>
+      <image:caption>Andaman beach vacation with scuba diving and water sports</image:caption>
+    </image:image>
   </url>
+  
   <url>
     <loc>https://nexperience-explore-journeys.lovable.app/destinations/thailand</loc>
     <lastmod>2026-02-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1528181304800-259b08848526</image:loc>
+      <image:title>Thailand Trip Package 2026 - NexYatra</image:title>
+      <image:caption>Thailand tour with Bangkok, Pattaya, and Phuket beaches</image:caption>
+    </image:image>
   </url>
+  
   <url>
     <loc>https://nexperience-explore-journeys.lovable.app/destinations/vietnam</loc>
     <lastmod>2026-02-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1528127269322-539801943592</image:loc>
+      <image:title>Vietnam Trip Package 2026 - NexYatra</image:title>
+      <image:caption>Vietnam tour with Ha Long Bay and Ho Chi Minh City</image:caption>
+    </image:image>
   </url>
+  
   <url>
     <loc>https://nexperience-explore-journeys.lovable.app/destinations/srilanka</loc>
     <lastmod>2026-02-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1586613835341-6d0d6d8b92dc</image:loc>
+      <image:title>Sri Lanka Trip Package 2026 - NexYatra</image:title>
+      <image:caption>Sri Lanka tour with Colombo, Kandy, and tea plantations</image:caption>
+    </image:image>
   </url>
   
   <!-- About & Contact -->
