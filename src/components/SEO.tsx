@@ -178,21 +178,27 @@ export const getDestinationSchema = (destination: {
   rating: number;
   duration: string;
   slug: string;
+  category?: string;
+  bestTime?: string;
 }) => ({
   "@context": "https://schema.org",
   "@type": "TouristTrip",
-  "name": `${destination.name} Tour Package - NexYatra`,
+  "name": `${destination.name} Trip Package 2026 - NexYatra`,
   "description": destination.description,
-  "touristType": "Adventure, Leisure",
+  "touristType": ["Adventure", "Leisure", "Family", "Honeymoon"],
   "offers": {
     "@type": "Offer",
     "price": destination.price,
     "priceCurrency": "INR",
     "availability": "https://schema.org/InStock",
     "url": `https://nexperience-explore-journeys.lovable.app/destinations/${destination.slug}`,
+    "validFrom": "2026-01-01",
+    "validThrough": "2026-12-31",
+    "priceValidUntil": "2026-12-31",
     "seller": {
       "@type": "TravelAgency",
-      "name": "NexYatra"
+      "name": "NexYatra",
+      "url": "https://nexperience-explore-journeys.lovable.app"
     }
   },
   "image": destination.image_url,
@@ -209,8 +215,78 @@ export const getDestinationSchema = (destination: {
     "@type": "AggregateRating",
     "ratingValue": destination.rating,
     "bestRating": 5,
+    "worstRating": 1,
     "ratingCount": 150
   }
+});
+
+// Product schema for destinations (enables price in search results)
+export const getProductSchema = (destination: {
+  name: string;
+  description: string;
+  price: number;
+  image_url: string;
+  rating: number;
+  slug: string;
+  category?: string;
+}) => ({
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": `${destination.name} Tour Package 2026`,
+  "description": destination.description,
+  "image": destination.image_url,
+  "brand": {
+    "@type": "Brand",
+    "name": "NexYatra"
+  },
+  "offers": {
+    "@type": "AggregateOffer",
+    "lowPrice": destination.price,
+    "highPrice": Math.round(destination.price * 1.5),
+    "priceCurrency": "INR",
+    "availability": "https://schema.org/InStock",
+    "offerCount": 3,
+    "validFrom": "2026-01-01",
+    "url": `https://nexperience-explore-journeys.lovable.app/destinations/${destination.slug}`
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": destination.rating,
+    "reviewCount": 150,
+    "bestRating": 5,
+    "worstRating": 1
+  },
+  "category": destination.category || "Travel Package"
+});
+
+// ItemList schema for destination listings page
+export const getDestinationListSchema = (destinations: Array<{
+  name: string;
+  slug: string;
+  price: number;
+  image_url: string;
+}>) => ({
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "Travel Destinations - NexYatra",
+  "description": "Explore affordable travel packages to popular destinations",
+  "numberOfItems": destinations.length,
+  "itemListElement": destinations.map((dest, index) => ({
+    "@type": "ListItem",
+    "position": index + 1,
+    "name": dest.name,
+    "url": `https://nexperience-explore-journeys.lovable.app/destinations/${dest.slug}`,
+    "item": {
+      "@type": "Product",
+      "name": `${dest.name} Tour Package`,
+      "image": dest.image_url,
+      "offers": {
+        "@type": "Offer",
+        "price": dest.price,
+        "priceCurrency": "INR"
+      }
+    }
+  }))
 });
 
 export const getBreadcrumbSchema = (items: { name: string; url: string }[]) => ({

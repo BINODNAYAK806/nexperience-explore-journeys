@@ -11,7 +11,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import SEO, { getDestinationSchema, getBreadcrumbSchema } from '@/components/SEO';
+import SEO, { getDestinationSchema, getBreadcrumbSchema, getProductSchema, getFAQSchema } from '@/components/SEO';
+import DestinationBreadcrumb from '@/components/DestinationBreadcrumb';
+import DestinationFAQ, { generateDestinationFAQs } from '@/components/DestinationFAQ';
 
 const DestinationDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -81,6 +83,24 @@ const DestinationDetail = () => {
     );
   }
 
+  // Generate destination-specific FAQs for schema
+  const destinationFAQs = generateDestinationFAQs(
+    destination.name,
+    destination.price || 0,
+    destination.duration || '5 Days',
+    destination.best_time || 'year-round',
+    destination.category || 'Travel'
+  );
+
+  // Enhanced SEO title with search terms
+  const seoTitle = `${destination.name} Trip Package 2026 | ${destination.duration} from ₹${destination.price?.toLocaleString()} | NexYatra`;
+  
+  // Enhanced SEO description with keywords
+  const seoDescription = `Book ${destination.name} tour package starting ₹${destination.price?.toLocaleString()}. ${destination.duration} trip with hotels, transfers & sightseeing. Best ${destination.name} holiday deals from Surat. Free customization!`;
+  
+  // Enhanced keywords for destination-specific searches
+  const seoKeywords = `${destination.name} trip, ${destination.name} tour package, ${destination.name} holiday, ${destination.name} vacation, ${destination.name} trip from Surat, ${destination.name} tour from India, cheap ${destination.name} trip, best ${destination.name} package, ${destination.name} ${destination.category} trip, ${destination.name} honeymoon package, ${destination.name} family vacation, ${destination.country} travel packages`;
+
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -92,23 +112,39 @@ const DestinationDetail = () => {
         country: destination.country || '',
         rating: destination.rating || 4.5,
         duration: destination.duration || '5 Days',
-        slug: cleanSlug
+        slug: cleanSlug,
+        category: destination.category || 'Travel',
+        bestTime: destination.best_time || 'year-round'
+      }),
+      getProductSchema({
+        name: destination.name,
+        description: destination.description,
+        price: destination.price || 0,
+        image_url: destination.image_url || '',
+        rating: destination.rating || 4.5,
+        slug: cleanSlug,
+        category: destination.category || 'Travel'
       }),
       getBreadcrumbSchema([
         { name: "Home", url: "https://nexperience-explore-journeys.lovable.app/" },
         { name: "Destinations", url: "https://nexperience-explore-journeys.lovable.app/destinations" },
         { name: destination.name, url: `https://nexperience-explore-journeys.lovable.app/destinations/${cleanSlug}` }
-      ])
+      ]),
+      getFAQSchema(destinationFAQs)
     ]
   };
+
+  // Canonical URL for this destination
+  const canonicalUrl = `https://nexperience-explore-journeys.lovable.app/destinations/${cleanSlug}`;
 
   return (
     <div>
       <SEO 
-        title={`${destination.name} Tour Package - ₹${destination.price?.toLocaleString()} | NexYatra`}
-        description={`Book ${destination.name} tour package starting ₹${destination.price?.toLocaleString()}. ${destination.description?.slice(0, 120)}... Best prices & customized itineraries.`}
-        keywords={`${destination.name} tour, ${destination.name} package, ${destination.country} travel, ${destination.name} holiday, ${destination.category} vacation, affordable ${destination.name} trip`}
+        title={seoTitle}
+        description={seoDescription}
+        keywords={seoKeywords}
         image={destination.image_url || '/og-image.png'}
+        url={canonicalUrl}
         type="product"
         structuredData={structuredData}
       />
@@ -117,7 +153,8 @@ const DestinationDetail = () => {
         <div className="absolute inset-0 bg-black/30 z-10"></div>
         <img 
           src={destination.image_url || '/placeholder.svg'} 
-          alt={destination.name} 
+          alt={`${destination.name} trip package - ${destination.category} vacation in ${destination.country} - NexYatra`}
+          title={`${destination.name} Tour Package 2026`}
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 z-20 flex items-end">
@@ -135,6 +172,14 @@ const DestinationDetail = () => {
 
       {/* Content Section */}
       <div className="container-custom py-12">
+        {/* Visible Breadcrumb Navigation */}
+        <DestinationBreadcrumb 
+          items={[
+            { label: "Destinations", href: "/destinations" },
+            { label: destination.name }
+          ]}
+        />
+        
         <div className="flex flex-col md:flex-row md:items-start gap-8">
           {/* Main Content */}
           <div className="flex-1">
@@ -251,7 +296,9 @@ const DestinationDetail = () => {
                 <div key={index} className="rounded-lg overflow-hidden h-48">
                   <img 
                     src={image} 
-                    alt={`${destination.name} ${index + 1}`} 
+                    alt={`${destination.name} travel photo ${index + 1} - ${destination.category} trip to ${destination.country} - NexYatra`}
+                    title={`${destination.name} gallery image ${index + 1}`}
+                    loading="lazy"
                     className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
                   />
                 </div>
@@ -268,6 +315,15 @@ const DestinationDetail = () => {
                 </Card>
               ))}
             </div>
+
+            {/* FAQ Section for SEO */}
+            <DestinationFAQ
+              destinationName={destination.name}
+              price={destination.price || 0}
+              duration={destination.duration || '5 Days'}
+              bestTime={destination.best_time || 'year-round'}
+              category={destination.category || 'Travel'}
+            />
           </div>
 
           {/* Sidebar */}
