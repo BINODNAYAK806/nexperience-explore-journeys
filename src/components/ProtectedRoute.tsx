@@ -1,4 +1,3 @@
-
 import { Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,17 +7,37 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAdminAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        setIsAuthenticated(!!session);
+        
+        if (!session) {
+          setIsAdmin(false);
+          setLoading(false);
+          return;
+        }
+        
+        // Check if user has admin role in user_roles table
+        const { data: userRole, error } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .eq('role', 'admin')
+          .maybeSingle();
+        
+        if (error) {
+          console.error("Error checking admin role:", error);
+          setIsAdmin(false);
+        } else {
+          setIsAdmin(!!userRole);
+        }
       } catch (error) {
         console.error("Error checking authentication:", error);
-        setIsAuthenticated(false);
+        setIsAdmin(false);
       } finally {
         setLoading(false);
       }
@@ -26,13 +45,32 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setIsAuthenticated(!!session);
+      async (event, session) => {
+        if (!session) {
+          setIsAdmin(false);
+          setLoading(false);
+          return;
+        }
+        
+        // Re-check admin role on auth state change
+        const { data: userRole, error } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .eq('role', 'admin')
+          .maybeSingle();
+        
+        if (error) {
+          console.error("Error checking admin role:", error);
+          setIsAdmin(false);
+        } else {
+          setIsAdmin(!!userRole);
+        }
         setLoading(false);
       }
     );
 
-    checkAuth();
+    checkAdminAuth();
 
     // Cleanup subscription
     return () => {
@@ -45,7 +83,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
   
-  if (!isAuthenticated) {
+  if (!isAdmin) {
     return <Navigate to="/admin" replace />;
   }
   

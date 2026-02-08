@@ -1,9 +1,26 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// Allowed origins for CORS - restrict to your domains only
+const ALLOWED_ORIGINS = [
+  'https://nexperience-explore-journeys.lovable.app',
+  'https://nexyatra.in',
+  'https://www.nexyatra.in',
+  'http://localhost:5173', // for local development
+  'http://localhost:8080', // for local development
+];
+
+function getCorsHeaders(origin: string | null) {
+  // Check if the request origin is in our allowed list
+  const allowedOrigin = origin && ALLOWED_ORIGINS.some(allowed => 
+    origin === allowed || origin.endsWith('.lovable.app')
+  ) ? origin : ALLOWED_ORIGINS[0];
+  
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Credentials': 'true',
+  };
+}
 
 const PHONEPE_CLIENT_ID = Deno.env.get('PHONEPE_CLIENT_ID');
 const PHONEPE_CLIENT_SECRET = Deno.env.get('PHONEPE_CLIENT_SECRET');
@@ -48,9 +65,13 @@ async function getAccessToken(): Promise<string> {
 }
 
 serve(async (req) => {
+  // Get origin for CORS
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
@@ -86,12 +107,28 @@ serve(async (req) => {
         );
       }
 
+      // Validate amount - must be positive and reasonable
+      if (typeof amount !== 'number' || amount <= 0 || amount > 10000000) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid amount' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       // Validate phone number
       const phoneRegex = /^[6-9]\d{9}$/;
       const cleanPhone = phone.replace(/\D/g, '').slice(-10);
       if (!phoneRegex.test(cleanPhone)) {
         return new Response(
           JSON.stringify({ error: 'Invalid phone number' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Validate destination name length
+      if (typeof destinationName !== 'string' || destinationName.length > 200) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid destination name' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -106,15 +143,15 @@ serve(async (req) => {
         amount: Math.round(amount * 100), // Convert to paise
         expireAfter: 1200, // 20 minutes
         metaInfo: {
-          udf1: destinationName,
-          udf2: destinationSlug,
+          udf1: destinationName.substring(0, 200),
+          udf2: destinationSlug ? String(destinationSlug).substring(0, 100) : '',
           udf3: cleanPhone,
         },
         paymentFlow: {
           type: 'PG_CHECKOUT',
-          message: `Payment for ${destinationName}`,
+          message: `Payment for ${destinationName.substring(0, 100)}`,
           merchantUrls: {
-            redirectUrl: `${callbackUrl}?orderId=${merchantOrderId}&destination=${encodeURIComponent(destinationSlug)}`,
+            redirectUrl: `${callbackUrl}?orderId=${merchantOrderId}&destination=${encodeURIComponent(destinationSlug || '')}`,
           },
         },
       };
@@ -172,6 +209,14 @@ serve(async (req) => {
         );
       }
 
+      // Validate order ID format
+      if (typeof merchantOrderId !== 'string' || !merchantOrderId.startsWith('ORDER_') || merchantOrderId.length > 100) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid order ID format' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       // Get OAuth access token
       const accessToken = await getAccessToken();
 
@@ -213,6 +258,8 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('PhonePe payment error:', error);
+    const origin = req.headers.get('origin');
+    const corsHeaders = getCorsHeaders(origin);
     return new Response(
       JSON.stringify({ error: error.message || 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
