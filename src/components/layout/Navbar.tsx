@@ -65,16 +65,16 @@ const Navbar = () => {
       <div className="container-custom">
         <div className="flex items-center justify-between h-20 lg:h-24">
           {/* Logo */}
-          <Link to="/" className="flex items-center group flex-shrink-0">
+          <Link to="/" className="flex items-center group flex-shrink-0" aria-label="NexYatra - Go to homepage">
             <img 
               src="/lovable-uploads/2b127b7a-f8e2-4ed9-b75a-f14f4e215484.png" 
-              alt="NexYatra" 
+              alt="NexYatra - Affordable Travel Packages India" 
               className="h-16 lg:h-20 w-auto transition-all duration-300 group-hover:scale-105 drop-shadow-lg filter brightness-150" 
             />
           </Link>
 
           {/* Desktop Navigation - Centered */}
-          <nav className="hidden lg:flex items-center justify-center flex-1 mx-8">
+          <nav className="hidden lg:flex items-center justify-center flex-1 mx-8" aria-label="Main navigation">
             <div className="flex items-center space-x-8">
               {navLinks.map((link) => (
                 <Link
@@ -95,8 +95,8 @@ const Navbar = () => {
 
           {/* Search & Login - Desktop */}
           <div className="hidden lg:flex items-center space-x-4 flex-shrink-0">
-            <button className="p-2 rounded-full hover:bg-accent transition-colors">
-              <Search size={20} />
+            <button className="p-2 rounded-full hover:bg-accent transition-colors" aria-label="Search destinations">
+              <Search size={20} aria-hidden="true" />
             </button>
             <Button 
               variant="default" 
@@ -112,8 +112,10 @@ const Navbar = () => {
           <button 
             className="lg:hidden p-2 rounded-full hover:bg-accent transition-colors flex-shrink-0" 
             onClick={toggleMobileMenu}
+            aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={isMobileMenuOpen}
           >
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            {isMobileMenuOpen ? <X size={24} aria-hidden="true" /> : <Menu size={24} aria-hidden="true" />}
           </button>
         </div>
 

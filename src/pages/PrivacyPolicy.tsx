@@ -1,9 +1,22 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import SEO, { getBreadcrumbSchema } from "@/components/SEO";
 
 const PrivacyPolicy = () => {
+  const breadcrumbSchema = getBreadcrumbSchema([
+    { name: "Home", url: "https://nexperience-explore-journeys.lovable.app/" },
+    { name: "Privacy Policy", url: "https://nexperience-explore-journeys.lovable.app/privacy" }
+  ]);
+
   return (
+    <>
+      <SEO 
+        title="Privacy Policy | NexYatra Travel Agency"
+        description="NexYatra's privacy policy explains how we collect, use, and protect your personal information when booking travel packages. Your data security is our priority."
+        keywords="NexYatra privacy policy, travel data protection, booking privacy, personal information security, travel agency India"
+        structuredData={breadcrumbSchema}
+      />
     <div className="min-h-screen bg-background py-16">
       <div className="container-custom max-w-4xl">
         <Link to="/">
@@ -91,6 +104,7 @@ const PrivacyPolicy = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
