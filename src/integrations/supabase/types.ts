@@ -205,7 +205,36 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      reviews_public: {
+        Row: {
+          created_at: string | null
+          destination: string | null
+          featured: boolean | null
+          id: string | null
+          name: string | null
+          rating: number | null
+          review_text: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          destination?: string | null
+          featured?: boolean | null
+          id?: string | null
+          name?: string | null
+          rating?: number | null
+          review_text?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          destination?: string | null
+          featured?: boolean | null
+          id?: string | null
+          name?: string | null
+          rating?: number | null
+          review_text?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
