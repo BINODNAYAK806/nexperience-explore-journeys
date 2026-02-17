@@ -142,12 +142,13 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
         total_price: form.total_price,
         travel_start_date: form.travel_start_date,
         travel_end_date: form.travel_end_date || null,
-        description: injectVariables(form.description),
-        days: form.days.map((d) => ({ ...d, title: injectVariables(d.title), description: injectVariables(d.description) })) as any,
-        inclusions: form.inclusions.filter((s) => s.trim()) as any,
-        exclusions: form.exclusions.filter((s) => s.trim()) as any,
+        description: injectVariables(form.description) || null,
+        days: form.days.map((d) => ({ ...d, title: injectVariables(d.title), description: injectVariables(d.description) })) as unknown as import("@/integrations/supabase/types").Json,
+        inclusions: form.inclusions.filter((s) => s.trim()) as unknown as import("@/integrations/supabase/types").Json,
+        exclusions: form.exclusions.filter((s) => s.trim()) as unknown as import("@/integrations/supabase/types").Json,
         status: form.status,
       };
+      console.log("Saving quotation payload:", payload);
 
       if (form.id) {
         const { error } = await supabase.from("quotations").update(payload).eq("id", form.id);
