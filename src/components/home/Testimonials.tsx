@@ -22,15 +22,14 @@ export const Testimonials = () => {
     queryKey: ['featured-reviews'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('reviews')
+        .from('reviews_public' as any)
         .select('*')
-        .eq('approved', true)
         .eq('featured', true)
         .order('created_at', { ascending: false })
         .limit(6);
       
       if (error) throw error;
-      return data as Review[];
+      return (data as unknown as Review[]) || [];
     }
   });
 
