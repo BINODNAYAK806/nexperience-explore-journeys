@@ -6,6 +6,9 @@ interface QuotationForPDF {
   client_contact?: string;
   destination_name: string;
   total_price: number;
+  price_per_person: number;
+  num_persons: number;
+  person_label: string;
   travel_start_date: string;
   travel_end_date?: string;
   description: string;
@@ -241,6 +244,19 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
   doc.text(`₹ ${data.total_price.toLocaleString("en-IN")}`, MARGIN + 35, y + 23);
 
   y += 36;
+
+  // Pricing Breakdown
+  if (data.price_per_person > 0 && data.num_persons > 0) {
+    y = checkPage(doc, y, 20, logoBase64);
+    y = drawSectionTitle(doc, "Pricing", y);
+    doc.setTextColor(...DARK);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    const label = data.person_label || "Person";
+    const line = `${data.num_persons} ${label}: Rs. ${data.price_per_person.toLocaleString("en-IN")} x ${data.num_persons} ${label} = Rs. ${data.total_price.toLocaleString("en-IN")}`;
+    doc.text(line, MARGIN + 3, y);
+    y += 8;
+  }
 
   // Description
   if (data.description) {
