@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DestinationsManager from "./DestinationsManager";
 import ContactMessagesTable from "@/components/dashboard/ContactMessagesTable";
 import { ReviewsTable } from "@/components/dashboard/ReviewsTable";
+import QuotationBuilder from "@/components/dashboard/quotations/QuotationBuilder";
 
 const Dashboard: React.FC = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -154,6 +155,7 @@ const Dashboard: React.FC = () => {
             <TabsTrigger value="destinations">Destinations</TabsTrigger>
             <TabsTrigger value="reviews">Reviews</TabsTrigger>
             <TabsTrigger value="contacts">Contact Messages</TabsTrigger>
+            <TabsTrigger value="quotations">Quotations</TabsTrigger>
           </TabsList>
 
           <TabsContent value="leads" className="space-y-6">
@@ -200,6 +202,10 @@ const Dashboard: React.FC = () => {
 
           <TabsContent value="contacts">
             <ContactMessagesTable />
+          </TabsContent>
+
+          <TabsContent value="quotations">
+            <QuotationBuilder />
           </TabsContent>
         </Tabs>
       </div>

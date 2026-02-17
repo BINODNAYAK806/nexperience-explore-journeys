@@ -110,6 +110,42 @@ export type Database = {
         }
         Relationships: []
       }
+      itinerary_templates: {
+        Row: {
+          created_at: string
+          days: Json
+          default_exclusions: Json
+          default_inclusions: Json
+          description: string | null
+          destination_name: string
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          days?: Json
+          default_exclusions?: Json
+          default_inclusions?: Json
+          description?: string | null
+          destination_name: string
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          days?: Json
+          default_exclusions?: Json
+          default_inclusions?: Json
+          description?: string | null
+          destination_name?: string
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       journey_requests: {
         Row: {
           contact_number: string
@@ -145,6 +181,68 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      quotations: {
+        Row: {
+          client_contact: string | null
+          client_name: string
+          created_at: string
+          days: Json
+          description: string | null
+          destination_name: string
+          exclusions: Json
+          id: string
+          inclusions: Json
+          status: string
+          template_id: string | null
+          total_price: number
+          travel_end_date: string | null
+          travel_start_date: string
+          updated_at: string
+        }
+        Insert: {
+          client_contact?: string | null
+          client_name: string
+          created_at?: string
+          days?: Json
+          description?: string | null
+          destination_name: string
+          exclusions?: Json
+          id?: string
+          inclusions?: Json
+          status?: string
+          template_id?: string | null
+          total_price?: number
+          travel_end_date?: string | null
+          travel_start_date: string
+          updated_at?: string
+        }
+        Update: {
+          client_contact?: string | null
+          client_name?: string
+          created_at?: string
+          days?: Json
+          description?: string | null
+          destination_name?: string
+          exclusions?: Json
+          id?: string
+          inclusions?: Json
+          status?: string
+          template_id?: string | null
+          total_price?: number
+          travel_end_date?: string | null
+          travel_start_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotations_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "itinerary_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reviews: {
         Row: {
