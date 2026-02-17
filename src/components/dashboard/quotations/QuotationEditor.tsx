@@ -24,6 +24,9 @@ export interface QuotationData {
   client_contact: string;
   destination_name: string;
   total_price: number;
+  price_per_person: number;
+  num_persons: number;
+  person_label: string;
   travel_start_date: string;
   travel_end_date: string;
   description: string;
@@ -45,6 +48,9 @@ const emptyQuotation: QuotationData = {
   client_contact: "",
   destination_name: "",
   total_price: 0,
+  price_per_person: 0,
+  num_persons: 2,
+  person_label: "Adult",
   travel_start_date: "",
   travel_end_date: "",
   description: "",
@@ -205,7 +211,10 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
           <div><Label>Client Name *</Label><Input value={form.client_name} onChange={(e) => updateField("client_name", e.target.value)} /></div>
           <div><Label>Client Contact</Label><Input value={form.client_contact} onChange={(e) => updateField("client_contact", e.target.value)} /></div>
           <div><Label>Destination *</Label><Input value={form.destination_name} onChange={(e) => updateField("destination_name", e.target.value)} /></div>
-          <div><Label>Total Price (₹)</Label><Input type="number" value={form.total_price} onChange={(e) => updateField("total_price", Number(e.target.value))} /></div>
+          <div><Label>Price Per Person (₹)</Label><Input type="number" value={form.price_per_person} onChange={(e) => { const pp = Number(e.target.value); updateField("price_per_person", pp); updateField("total_price", pp * form.num_persons); }} /></div>
+          <div><Label>No. of Persons</Label><Input type="number" value={form.num_persons} onChange={(e) => { const n = Number(e.target.value); updateField("num_persons", n); updateField("total_price", form.price_per_person * n); }} /></div>
+          <div><Label>Person Label (e.g. Adult)</Label><Input value={form.person_label} onChange={(e) => updateField("person_label", e.target.value)} /></div>
+          <div><Label>Total Price (₹)</Label><Input type="number" value={form.total_price} readOnly className="bg-muted" /></div>
           <div><Label>Start Date *</Label><Input type="date" value={form.travel_start_date} onChange={(e) => updateField("travel_start_date", e.target.value)} /></div>
           <div><Label>End Date</Label><Input type="date" value={form.travel_end_date} onChange={(e) => updateField("travel_end_date", e.target.value)} /></div>
         </CardContent>
