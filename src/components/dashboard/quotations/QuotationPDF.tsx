@@ -27,7 +27,6 @@ const LIGHT_BG: [number, number, number] = [248, 249, 252];
 const WHITE: [number, number, number] = [255, 255, 255];
 const SUCCESS: [number, number, number] = [34, 139, 80];
 const DANGER: [number, number, number] = [180, 50, 40];
-const BLUE_ACCENT: [number, number, number] = [0, 90, 180];
 
 const PAGE_W = 210;
 const PAGE_H = 297;
@@ -61,8 +60,12 @@ async function loadLogoBase64(): Promise<string | null> {
 const HEADER_H = 38;
 const FOOTER_H = 24;
 
+function formatINR(amount: number): string {
+  return "Rs. " + amount.toLocaleString("en-IN");
+}
+
 function addHeader(doc: jsPDF, logoBase64: string | null) {
-  // Navy header with subtle gradient effect
+  // Navy header
   doc.setFillColor(...NAVY);
   doc.rect(0, 0, PAGE_W, 34, "F");
 
@@ -81,7 +84,7 @@ function addHeader(doc: jsPDF, logoBase64: string | null) {
     } catch { /* fallback */ }
   }
 
-  // Company name - elegant typography
+  // Company name
   const textX = logoBase64 ? MARGIN + 26 : MARGIN;
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(18);
@@ -94,14 +97,14 @@ function addHeader(doc: jsPDF, logoBase64: string | null) {
   doc.setFont("helvetica", "normal");
   doc.text(COMPANY_INFO.tagline.toUpperCase(), textX, 22);
 
-  // Right side - contact details with icons
+  // Right side contact details - use ASCII-safe icons
   const rightX = PAGE_W - MARGIN;
   doc.setTextColor(220, 225, 235);
   doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
-  doc.text(`☎  ${COMPANY_INFO.phone}`, rightX, 11, { align: "right" });
-  doc.text(`✉  ${COMPANY_INFO.email}`, rightX, 16, { align: "right" });
-  doc.text(`⌂  ${COMPANY_INFO.website}`, rightX, 21, { align: "right" });
+  doc.text(COMPANY_INFO.phone, rightX, 11, { align: "right" });
+  doc.text(COMPANY_INFO.email, rightX, 16, { align: "right" });
+  doc.text(COMPANY_INFO.website, rightX, 21, { align: "right" });
 
   doc.setFontSize(5.5);
   doc.setTextColor(170, 175, 190);
@@ -147,22 +150,18 @@ function addFooter(doc: jsPDF, pageNum: number, totalPages: number) {
   doc.setFillColor(...NAVY);
   doc.rect(0, PAGE_H - 21.2, PAGE_W, 21.2, "F");
 
-  // Small gold ornament
-  doc.setFillColor(...GOLD);
-  doc.rect(PAGE_W / 2 - 15, PAGE_H - 22, 30, 0.8, "F");
-
   doc.setTextColor(200, 205, 215);
   doc.setFontSize(6.5);
   doc.setFont("helvetica", "normal");
 
   const footerY = PAGE_H - 13;
-  doc.text(`${COMPANY_INFO.name}  •  ${COMPANY_INFO.phone}  •  ${COMPANY_INFO.email}`, PAGE_W / 2, footerY, { align: "center" });
-  
+  doc.text(`${COMPANY_INFO.name}  |  ${COMPANY_INFO.phone}  |  ${COMPANY_INFO.email}`, PAGE_W / 2, footerY, { align: "center" });
+
   doc.setFontSize(5.5);
   doc.setTextColor(140, 145, 160);
   doc.text(COMPANY_INFO.website, PAGE_W / 2, footerY + 4, { align: "center" });
 
-  // Page number with elegant styling
+  // Page number
   doc.setTextColor(...GOLD);
   doc.setFontSize(7);
   doc.setFont("helvetica", "bold");
@@ -180,10 +179,10 @@ function checkPage(doc: jsPDF, y: number, needed: number, logoBase64: string | n
 }
 
 function drawSectionTitle(doc: jsPDF, title: string, y: number): number {
-  // Elegant section header with left gold bar
+  // Navy bar with gold left accent
   doc.setFillColor(...NAVY);
   doc.roundedRect(MARGIN, y - 5, CONTENT_W, 10, 2, 2, "F");
-  
+
   // Gold left accent bar
   doc.setFillColor(...GOLD);
   doc.rect(MARGIN, y - 5, 3, 10, "F");
@@ -192,11 +191,6 @@ function drawSectionTitle(doc: jsPDF, title: string, y: number): number {
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
   doc.text(title.toUpperCase(), MARGIN + 8, y + 1.5);
-
-  // Gold diamond ornament on right
-  doc.setTextColor(...GOLD);
-  doc.setFontSize(8);
-  doc.text("◆", PAGE_W - MARGIN - 6, y + 1.5);
 
   return y + 12;
 }
@@ -218,28 +212,27 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
 
   let y = HEADER_H + 14;
 
-  // Destination title - large, premium
+  // Destination title
   doc.setTextColor(...NAVY);
   doc.setFontSize(26);
   doc.setFont("helvetica", "bold");
   const destTitle = data.destination_name.toUpperCase();
   doc.text(destTitle, PAGE_W / 2, y, { align: "center" });
 
-  // Gold ornamental line under title
+  // Gold ornamental lines under title
   y += 5;
   doc.setFontSize(22);
   const titleW = doc.getTextWidth(destTitle);
   const lineHalfW = Math.min(titleW / 2 + 5, CONTENT_W / 2 - 5);
-  
+
   doc.setDrawColor(...GOLD);
   doc.setLineWidth(0.8);
   doc.line(PAGE_W / 2 - lineHalfW, y, PAGE_W / 2 - 4, y);
   doc.line(PAGE_W / 2 + 4, y, PAGE_W / 2 + lineHalfW, y);
-  
-  // Center diamond
-  doc.setTextColor(...GOLD);
-  doc.setFontSize(7);
-  doc.text("◆", PAGE_W / 2, y + 1, { align: "center" });
+
+  // Center dot (ASCII safe)
+  doc.setFillColor(...GOLD);
+  doc.circle(PAGE_W / 2, y, 1.2, "F");
 
   // Tour Package subtitle
   y += 8;
@@ -252,13 +245,12 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
   y += 10;
   if (data.days.length > 0) {
     const nights = data.days.length > 1 ? data.days.length - 1 : 0;
-    const durationText = `${data.days.length} Days  &  ${nights} Nights`;
-    
-    // Gold badge background
+    const durationText = `${data.days.length} Days & ${nights} Nights`;
+
     const badgeW = 70;
     doc.setFillColor(...GOLD);
     doc.roundedRect(PAGE_W / 2 - badgeW / 2, y - 5, badgeW, 11, 5.5, 5.5, "F");
-    
+
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
@@ -267,16 +259,17 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
   }
 
   // ---- Client Info Card ----
-  // Card shadow effect
+  const cardH = 40;
+  // Card shadow
   doc.setFillColor(230, 232, 240);
-  doc.roundedRect(MARGIN + 1, y - 3, CONTENT_W, 40, 3, 3, "F");
+  doc.roundedRect(MARGIN + 1, y - 3, CONTENT_W, cardH, 3, 3, "F");
   // Card background
   doc.setFillColor(...WHITE);
-  doc.roundedRect(MARGIN, y - 4, CONTENT_W, 40, 3, 3, "F");
+  doc.roundedRect(MARGIN, y - 4, CONTENT_W, cardH, 3, 3, "F");
   // Card border
   doc.setDrawColor(220, 222, 230);
   doc.setLineWidth(0.3);
-  doc.roundedRect(MARGIN, y - 4, CONTENT_W, 40, 3, 3, "S");
+  doc.roundedRect(MARGIN, y - 4, CONTENT_W, cardH, 3, 3, "S");
   // Top gold accent
   doc.setFillColor(...GOLD);
   doc.rect(MARGIN + 8, y - 4, CONTENT_W - 16, 1.5, "F");
@@ -286,9 +279,8 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
   const col2LabelX = PAGE_W / 2 + 5;
   const col2ValueX = PAGE_W / 2 + 38;
 
+  // Row 1: Guest Name & Contact
   doc.setFontSize(8.5);
-
-  // Row 1
   doc.setTextColor(...GRAY);
   doc.setFont("helvetica", "bold");
   doc.text("GUEST NAME", labelX, y + 6);
@@ -308,12 +300,12 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
     doc.text(data.client_contact, col2ValueX, y + 6);
   }
 
-  // Separator line
+  // Separator
   doc.setDrawColor(...GOLD_LIGHT);
   doc.setLineWidth(0.2);
   doc.line(labelX, y + 11, PAGE_W - MARGIN - 8, y + 11);
 
-  // Row 2
+  // Row 2: Travel Date
   doc.setFontSize(8.5);
   doc.setTextColor(...GRAY);
   doc.setFont("helvetica", "bold");
@@ -325,14 +317,14 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
     ? format(new Date(data.travel_start_date), "dd MMM yyyy")
     : "TBD";
   const endDateStr = data.travel_end_date
-    ? ` — ${format(new Date(data.travel_end_date), "dd MMM yyyy")}`
+    ? ` -- ${format(new Date(data.travel_end_date), "dd MMM yyyy")}`
     : "";
   doc.text(dateStr + endDateStr, valueX, y + 18);
 
   // Separator
   doc.line(labelX, y + 23, PAGE_W - MARGIN - 8, y + 23);
 
-  // Row 3 - Price (highlighted)
+  // Row 3: Total Price
   doc.setFontSize(8.5);
   doc.setTextColor(...GRAY);
   doc.setFont("helvetica", "bold");
@@ -340,16 +332,16 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
   doc.setTextColor(...NAVY);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(13);
-  doc.text(`₹ ${data.total_price.toLocaleString("en-IN")}`, valueX, y + 30);
+  doc.text(formatINR(data.total_price), valueX, y + 30);
 
-  // Pricing breakdown on same row
+  // Pricing breakdown inline
   if (data.price_per_person > 0 && data.num_persons > 0) {
     doc.setFontSize(8.5);
     doc.setTextColor(...GRAY);
     doc.setFont("helvetica", "normal");
     const label = data.person_label || "Person";
     doc.text(
-      `( ${data.num_persons} ${label} × ₹${data.price_per_person.toLocaleString("en-IN")} )`,
+      `(${data.num_persons} ${label} x ${formatINR(data.price_per_person)})`,
       col2LabelX, y + 30
     );
   }
@@ -377,29 +369,31 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
     y = drawSectionTitle(doc, "Price Includes", y);
 
     data.inclusions.forEach((item, idx) => {
-      y = checkPage(doc, y, 6, logoBase64);
-      
+      if (!item.trim()) return;
+      const lines = doc.splitTextToSize(item, CONTENT_W - 14);
+      const blockH = lines.length * 4.5 + 1;
+      y = checkPage(doc, y, blockH, logoBase64);
+
       // Alternating row background
       if (idx % 2 === 0) {
         doc.setFillColor(248, 250, 252);
-        doc.rect(MARGIN, y - 3.5, CONTENT_W, 6, "F");
+        doc.rect(MARGIN, y - 3.5, CONTENT_W, blockH, "F");
       }
 
-      // Green bullet
+      // Green circle bullet
       doc.setFillColor(...SUCCESS);
       doc.circle(MARGIN + 5, y - 0.5, 1.2, "F");
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(5);
-      doc.setFont("helvetica", "bold");
-      doc.text("✓", MARGIN + 4.2, y);
 
       doc.setTextColor(...DARK);
       doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
-      doc.text(item, MARGIN + 10, y);
-      y += 5.5;
+      lines.forEach((line: string) => {
+        doc.text(line, MARGIN + 10, y);
+        y += 4.5;
+      });
+      y += 1;
     });
-    y += 4;
+    y += 3;
   }
 
   // ---- Exclusions ----
@@ -408,38 +402,40 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
     y = drawSectionTitle(doc, "Price Excludes", y);
 
     data.exclusions.forEach((item, idx) => {
-      y = checkPage(doc, y, 6, logoBase64);
-      
+      if (!item.trim()) return;
+      const lines = doc.splitTextToSize(item, CONTENT_W - 14);
+      const blockH = lines.length * 4.5 + 1;
+      y = checkPage(doc, y, blockH, logoBase64);
+
       if (idx % 2 === 0) {
         doc.setFillColor(252, 248, 248);
-        doc.rect(MARGIN, y - 3.5, CONTENT_W, 6, "F");
+        doc.rect(MARGIN, y - 3.5, CONTENT_W, blockH, "F");
       }
 
-      // Red bullet
+      // Red circle bullet
       doc.setFillColor(...DANGER);
       doc.circle(MARGIN + 5, y - 0.5, 1.2, "F");
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(5);
-      doc.setFont("helvetica", "bold");
-      doc.text("✗", MARGIN + 4.2, y);
 
       doc.setTextColor(...DARK);
       doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
-      doc.text(item, MARGIN + 10, y);
-      y += 5.5;
+      lines.forEach((line: string) => {
+        doc.text(line, MARGIN + 10, y);
+        y += 4.5;
+      });
+      y += 1;
     });
-    y += 4;
+    y += 3;
   }
 
-  // ===== ITINERARY PAGES =====
+  // ===== ITINERARY + PRICING + NOTES on next page(s) =====
   if (data.days.length > 0) {
     doc.addPage();
     addHeader(doc, logoBase64);
     addWatermark(doc, logoBase64);
     y = HEADER_H + 8;
 
-    // Itinerary page title
+    // Itinerary title
     doc.setTextColor(...NAVY);
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
@@ -451,7 +447,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
     data.days.forEach((day, idx) => {
       y = checkPage(doc, y, 25, logoBase64);
 
-      // Day number badge (circle)
+      // Day number badge (gold circle)
       doc.setFillColor(...GOLD);
       doc.circle(MARGIN + 6, y, 5, "F");
       doc.setTextColor(255, 255, 255);
@@ -459,7 +455,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       doc.setFont("helvetica", "bold");
       doc.text(`${day.day}`, MARGIN + 6, y + 1.5, { align: "center" });
 
-      // Day title bar
+      // Day title bar (navy)
       doc.setFillColor(...NAVY);
       doc.roundedRect(MARGIN + 14, y - 5, CONTENT_W - 14, 10, 2, 2, "F");
       doc.setTextColor(255, 255, 255);
@@ -470,11 +466,14 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
 
       if (day.description) {
         // Light card for description
-        doc.setFillColor(...LIGHT_BG);
         const descLines = doc.splitTextToSize(day.description, CONTENT_W - 22);
         const descHeight = descLines.length * 4.5 + 4;
+
+        y = checkPage(doc, y, descHeight + 2, logoBase64);
+
+        doc.setFillColor(...LIGHT_BG);
         doc.roundedRect(MARGIN + 14, y - 2, CONTENT_W - 14, descHeight, 1.5, 1.5, "F");
-        
+
         // Left border accent
         doc.setFillColor(...GOLD_LIGHT);
         doc.rect(MARGIN + 14, y - 2, 1.5, descHeight, "F");
@@ -506,13 +505,17 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
 
   // ===== PRICING BREAKDOWN =====
   if (data.price_per_person > 0 && data.num_persons > 0) {
-    y = checkPage(doc, y, 30, logoBase64);
+    y = checkPage(doc, y, 35, logoBase64);
+    y += 2;
     y = drawSectionTitle(doc, "Pricing Breakdown", y);
 
-    // Pricing table
     const tableX = MARGIN;
     const tableW = CONTENT_W;
     const rowH = 9;
+    const col1W = tableW * 0.45;
+    const col2W = tableW * 0.22;
+    const col3W = tableW * 0.11;
+    const col4W = tableW * 0.22;
 
     // Table header
     doc.setFillColor(...NAVY);
@@ -521,8 +524,8 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
     doc.setFontSize(8.5);
     doc.setFont("helvetica", "bold");
     doc.text("DESCRIPTION", tableX + 5, y + 2.5);
-    doc.text("RATE", tableX + tableW * 0.5, y + 2.5);
-    doc.text("QTY", tableX + tableW * 0.7, y + 2.5);
+    doc.text("RATE", tableX + col1W + 5, y + 2.5);
+    doc.text("QTY", tableX + col1W + col2W + 5, y + 2.5);
     doc.text("AMOUNT", tableX + tableW - 5, y + 2.5, { align: "right" });
     y += rowH;
 
@@ -538,10 +541,10 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     doc.text(`${data.num_persons} ${label}`, tableX + 5, y + 2.5);
-    doc.text(`₹ ${data.price_per_person.toLocaleString("en-IN")}`, tableX + tableW * 0.5, y + 2.5);
-    doc.text(`${data.num_persons}`, tableX + tableW * 0.7, y + 2.5);
+    doc.text(formatINR(data.price_per_person), tableX + col1W + 5, y + 2.5);
+    doc.text(`${data.num_persons}`, tableX + col1W + col2W + 5, y + 2.5);
     doc.setFont("helvetica", "bold");
-    doc.text(`₹ ${data.total_price.toLocaleString("en-IN")}`, tableX + tableW - 5, y + 2.5, { align: "right" });
+    doc.text(formatINR(data.total_price), tableX + tableW - 5, y + 2.5, { align: "right" });
     y += rowH;
 
     // Total row
@@ -551,12 +554,13 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.text("TOTAL", tableX + 5, y + 3);
-    doc.text(`₹ ${data.total_price.toLocaleString("en-IN")}`, tableX + tableW - 5, y + 3, { align: "right" });
+    doc.text(formatINR(data.total_price), tableX + tableW - 5, y + 3, { align: "right" });
     y += rowH + 6;
   }
 
-  // ===== NOTE SECTION =====
+  // ===== IMPORTANT NOTES (same page, no forced page break) =====
   y = checkPage(doc, y, 35, logoBase64);
+  y += 2;
   y = drawSectionTitle(doc, "Important Notes", y);
 
   doc.setTextColor(...GRAY);
@@ -568,11 +572,11 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
     "The price already includes applicable Government taxes and Services.",
     "Use the contact form provided to send us a message, ask for information or make a tour booking request.",
   ];
-  notes.forEach((note, idx) => {
+  notes.forEach((note) => {
     y = checkPage(doc, y, 6, logoBase64);
-    doc.setTextColor(...GOLD);
-    doc.setFontSize(6);
-    doc.text("●", MARGIN + 3, y);
+    // Gold bullet dot
+    doc.setFillColor(...GOLD);
+    doc.circle(MARGIN + 4, y - 0.8, 0.8, "F");
     doc.setTextColor(...GRAY);
     doc.setFontSize(7.5);
     doc.setFont("helvetica", "normal");
@@ -584,7 +588,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
     y += 1;
   });
 
-  // ===== Thank you message =====
+  // ===== Thank you =====
   y = checkPage(doc, y, 15, logoBase64);
   y += 5;
   doc.setTextColor(...NAVY);
