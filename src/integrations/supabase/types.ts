@@ -193,6 +193,9 @@ export type Database = {
           exclusions: Json
           id: string
           inclusions: Json
+          num_persons: number | null
+          person_label: string | null
+          price_per_person: number | null
           status: string
           template_id: string | null
           total_price: number
@@ -210,6 +213,9 @@ export type Database = {
           exclusions?: Json
           id?: string
           inclusions?: Json
+          num_persons?: number | null
+          person_label?: string | null
+          price_per_person?: number | null
           status?: string
           template_id?: string | null
           total_price?: number
@@ -227,6 +233,9 @@ export type Database = {
           exclusions?: Json
           id?: string
           inclusions?: Json
+          num_persons?: number | null
+          person_label?: string | null
+          price_per_person?: number | null
           status?: string
           template_id?: string | null
           total_price?: number
