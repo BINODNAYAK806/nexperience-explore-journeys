@@ -26,9 +26,10 @@ const AboutUs = () => {
   return (
     <div className="container max-w-6xl py-12 pt-24 space-y-12">
       <SEO 
-        title="About NexYatra - Your Trusted Travel Partner | Affordable Tours"
-        description="Learn about NexYatra - your trusted travel agency in Surat, Gujarat. Founded by passionate travelers Samir Solanki & Binod Nayak. Stress-free, affordable travel packages."
-        keywords="about NexYatra, travel agency Surat, trusted travel partner, affordable travel, travel experts Gujarat, Samir Solanki, Binod Nayak"
+        title="About NexYatra - Trusted Travel Agency in Surat, Gujarat | Since 2023"
+        description="NexYatra is Surat's trusted travel agency founded by Samir Solanki & Binod Nayak. We offer stress-free, affordable travel packages with no hidden fees. 24/7 support & personalized itineraries."
+        keywords="about NexYatra, travel agency Surat, trusted travel partner Gujarat, affordable travel agency India, best travel agent Surat, Samir Solanki, Binod Nayak, customized holiday planner"
+        url="https://www.nexyatra.in/about"
         structuredData={structuredData}
       />
       {/* Hero Section */}

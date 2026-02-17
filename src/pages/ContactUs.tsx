@@ -72,6 +72,7 @@ const ContactUs = () => {
         title="Contact NexYatra - Get Travel Quotes & Support | Surat, Gujarat"
         description="Contact NexYatra for travel inquiries, package quotes, and support. Located in Vesu, Surat. Call +91 8347015725 or email info@nexyatra.in. We're here to help!"
         keywords="contact NexYatra, travel agency Surat, travel support, travel quotes, NexYatra phone number, NexYatra email, Vesu Surat travel"
+        url="https://www.nexyatra.in/contact"
         structuredData={structuredData}
       />
       {/* Hero Section */}

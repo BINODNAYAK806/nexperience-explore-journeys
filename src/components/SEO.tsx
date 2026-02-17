@@ -14,7 +14,7 @@ const SEO = ({
   title = "NexYatra - Affordable Travel Packages | Book Your Dream Destination",
   description = "Discover affordable travel packages to Dubai, Bali, Kerala, Manali and more. NexYatra offers customized holiday packages with best prices. Book your dream vacation today!",
   keywords = "travel packages, affordable tours, Dubai tour packages, Bali holidays, Kerala backwaters, Manali trips, budget travel, holiday packages India, international tours, domestic tours, adventure travel, luxury travel, family vacation packages",
-  image = "/og-image.png",
+  image = "https://www.nexyatra.in/og-image.png",
   url,
   type = "website",
   structuredData
@@ -49,6 +49,18 @@ const SEO = ({
     if (url) updateMetaTag('og:url', url, true);
     updateMetaTag('og:site_name', 'NexYatra', true);
     updateMetaTag('og:locale', 'en_IN', true);
+    updateMetaTag('og:image:alt', title, true);
+
+    // Update canonical link dynamically
+    if (url) {
+      let canonicalLink = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
+      if (!canonicalLink) {
+        canonicalLink = document.createElement('link');
+        canonicalLink.setAttribute('rel', 'canonical');
+        document.head.appendChild(canonicalLink);
+      }
+      canonicalLink.href = url;
+    }
 
     // Twitter Card tags
     updateMetaTag('twitter:card', 'summary_large_image');

@@ -15,6 +15,7 @@ const RefundPolicy = () => {
         title="Cancellation & Refund Policy | NexYatra Travel Agency"
         description="Learn about NexYatra's cancellation and refund policy. Refunds processed within 8-10 working days. Cancel up to 24 hours before travel for eligible refunds."
         keywords="NexYatra refund policy, travel cancellation, tour package refund, booking cancellation India, travel refund process"
+        url="https://www.nexyatra.in/refund"
         structuredData={breadcrumbSchema}
       />
     <div className="min-h-screen bg-background py-16">
