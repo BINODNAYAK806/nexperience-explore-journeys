@@ -43,7 +43,7 @@ const PAGE_W = 210;
 const PAGE_H = 297;
 const MARGIN = 18;
 const CONTENT_W = PAGE_W - MARGIN * 2;
-const HEADER_H = 42;
+const HEADER_H = 46;
 const FOOTER_H = 18;
 
 const COMPANY = {
@@ -83,54 +83,56 @@ async function loadLogoBase64(): Promise<string | null> {
 
 // ─── Header ───
 function addHeader(doc: jsPDF, logoBase64: string | null) {
+  const headerHeight = 44;
+
   // Navy background
   doc.setFillColor(...NAVY);
-  doc.rect(0, 0, PAGE_W, 38, "F");
+  doc.rect(0, 0, PAGE_W, headerHeight, "F");
 
   // Gold accent line
   doc.setFillColor(...GOLD);
-  doc.rect(0, 38, PAGE_W, 1.5, "F");
+  doc.rect(0, headerHeight, PAGE_W, 1.5, "F");
 
   // Subtle light line
   doc.setFillColor(...GOLD_LIGHT);
-  doc.rect(0, 39.5, PAGE_W, 0.5, "F");
+  doc.rect(0, headerHeight + 1.5, PAGE_W, 0.5, "F");
 
   // Logo
   if (logoBase64) {
     try {
-      doc.addImage(logoBase64, "PNG", MARGIN, 6, 24, 24);
+      doc.addImage(logoBase64, "PNG", MARGIN, 7, 22, 22);
     } catch { /* skip */ }
   }
 
-  const textX = logoBase64 ? MARGIN + 28 : MARGIN;
+  const textX = logoBase64 ? MARGIN + 26 : MARGIN;
 
   // Company name
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(20);
+  doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
-  doc.text(COMPANY.name, textX, 18);
+  doc.text(COMPANY.name, textX, 17);
 
   // Tagline
   doc.setTextColor(...GOLD);
-  doc.setFontSize(7.5);
+  doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
-  doc.text(COMPANY.tagline.toUpperCase(), textX, 24);
+  doc.text(COMPANY.tagline.toUpperCase(), textX, 23);
 
-  // Right side - contact info (well-spaced)
+  // Right side - contact info with proper spacing
   const rightX = PAGE_W - MARGIN;
   doc.setTextColor(220, 225, 235);
-  doc.setFontSize(7.5);
+  doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
-  doc.text(COMPANY.phone, rightX, 12, { align: "right" });
-  doc.text(COMPANY.email, rightX, 17, { align: "right" });
-  doc.text(COMPANY.website, rightX, 22, { align: "right" });
+  doc.text(COMPANY.phone, rightX, 11, { align: "right" });
+  doc.text(COMPANY.email, rightX, 16, { align: "right" });
+  doc.text(COMPANY.website, rightX, 21, { align: "right" });
 
-  // Address - smaller, muted
-  doc.setFontSize(6);
+  // Address - on separate lines with enough width
+  doc.setFontSize(5.5);
   doc.setTextColor(160, 165, 180);
-  const addrLines = doc.splitTextToSize(COMPANY.address, 60);
+  const addrLines = doc.splitTextToSize(COMPANY.address, 80);
   addrLines.forEach((line: string, i: number) => {
-    doc.text(line, rightX, 28 + i * 3, { align: "right" });
+    doc.text(line, rightX, 27 + i * 3.5, { align: "right" });
   });
 }
 
