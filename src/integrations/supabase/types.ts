@@ -184,6 +184,7 @@ export type Database = {
       }
       quotations: {
         Row: {
+          child_label: string | null
           client_contact: string | null
           client_name: string
           created_at: string
@@ -193,17 +194,21 @@ export type Database = {
           exclusions: Json
           id: string
           inclusions: Json
+          num_children: number | null
           num_persons: number | null
           person_label: string | null
+          price_per_child: number | null
           price_per_person: number | null
           status: string
           template_id: string | null
+          terms_conditions: Json | null
           total_price: number
           travel_end_date: string | null
           travel_start_date: string
           updated_at: string
         }
         Insert: {
+          child_label?: string | null
           client_contact?: string | null
           client_name: string
           created_at?: string
@@ -213,17 +218,21 @@ export type Database = {
           exclusions?: Json
           id?: string
           inclusions?: Json
+          num_children?: number | null
           num_persons?: number | null
           person_label?: string | null
+          price_per_child?: number | null
           price_per_person?: number | null
           status?: string
           template_id?: string | null
+          terms_conditions?: Json | null
           total_price?: number
           travel_end_date?: string | null
           travel_start_date: string
           updated_at?: string
         }
         Update: {
+          child_label?: string | null
           client_contact?: string | null
           client_name?: string
           created_at?: string
@@ -233,11 +242,14 @@ export type Database = {
           exclusions?: Json
           id?: string
           inclusions?: Json
+          num_children?: number | null
           num_persons?: number | null
           person_label?: string | null
+          price_per_child?: number | null
           price_per_person?: number | null
           status?: string
           template_id?: string | null
+          terms_conditions?: Json | null
           total_price?: number
           travel_end_date?: string | null
           travel_start_date?: string

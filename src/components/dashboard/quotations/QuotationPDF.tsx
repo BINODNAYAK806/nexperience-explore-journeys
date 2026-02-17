@@ -1,6 +1,13 @@
 import jsPDF from "jspdf";
 import { format } from "date-fns";
 
+interface PricingRow {
+  label: string;
+  rate: number;
+  qty: number;
+  amount: number;
+}
+
 interface QuotationForPDF {
   client_name: string;
   client_contact?: string;
@@ -9,15 +16,19 @@ interface QuotationForPDF {
   price_per_person: number;
   num_persons: number;
   person_label: string;
+  price_per_child?: number;
+  num_children?: number;
+  child_label?: string;
   travel_start_date: string;
   travel_end_date?: string;
   description: string;
   days: { day: number; title: string; description: string }[];
   inclusions: string[];
   exclusions: string[];
+  terms_conditions?: string[];
 }
 
-// Premium color palette
+// ─── Color Palette ───
 const NAVY: [number, number, number] = [15, 32, 65];
 const GOLD: [number, number, number] = [198, 160, 90];
 const GOLD_LIGHT: [number, number, number] = [240, 225, 190];
@@ -32,8 +43,10 @@ const PAGE_W = 210;
 const PAGE_H = 297;
 const MARGIN = 18;
 const CONTENT_W = PAGE_W - MARGIN * 2;
+const HEADER_H = 42;
+const FOOTER_H = 18;
 
-const COMPANY_INFO = {
+const COMPANY = {
   name: "NexYatra",
   tagline: "Premium Travel Experiences",
   address: "320 Exult Shoppers, Nr. Siddhi Vinayak Temple, Vesu Main Road, Vesu, Surat, Gujarat 395007",
@@ -41,6 +54,17 @@ const COMPANY_INFO = {
   phone: "+91 8347015725",
   website: "www.nexyatra.in",
 };
+
+const DEFAULT_TERMS = [
+  "The tour is Private Tours, means there is no other participant, just only you and your companions.",
+  "Time and Tourism site is subject to change based on your request.",
+  "The price already includes applicable Government taxes and Services.",
+  "Use the contact form provided to send us a message, ask for information or make a tour booking request.",
+];
+
+function formatINR(amount: number): string {
+  return "Rs. " + amount.toLocaleString("en-IN");
+}
 
 async function loadLogoBase64(): Promise<string | null> {
   try {
@@ -57,83 +81,100 @@ async function loadLogoBase64(): Promise<string | null> {
   }
 }
 
-const HEADER_H = 38;
-const FOOTER_H = 24;
-
-function formatINR(amount: number): string {
-  return "Rs. " + amount.toLocaleString("en-IN");
-}
-
+// ─── Header ───
 function addHeader(doc: jsPDF, logoBase64: string | null) {
-  // Navy header
+  // Navy background
   doc.setFillColor(...NAVY);
-  doc.rect(0, 0, PAGE_W, 34, "F");
+  doc.rect(0, 0, PAGE_W, 38, "F");
 
-  // Gold accent strip
+  // Gold accent line
   doc.setFillColor(...GOLD);
-  doc.rect(0, 34, PAGE_W, 1.2, "F");
+  doc.rect(0, 38, PAGE_W, 1.5, "F");
 
-  // Thin light line below gold
+  // Subtle light line
   doc.setFillColor(...GOLD_LIGHT);
-  doc.rect(0, 35.2, PAGE_W, 0.4, "F");
+  doc.rect(0, 39.5, PAGE_W, 0.5, "F");
 
   // Logo
   if (logoBase64) {
     try {
-      doc.addImage(logoBase64, "PNG", MARGIN, 5, 22, 22);
-    } catch { /* fallback */ }
+      doc.addImage(logoBase64, "PNG", MARGIN, 6, 24, 24);
+    } catch { /* skip */ }
   }
 
+  const textX = logoBase64 ? MARGIN + 28 : MARGIN;
+
   // Company name
-  const textX = logoBase64 ? MARGIN + 26 : MARGIN;
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(18);
+  doc.setFontSize(20);
   doc.setFont("helvetica", "bold");
-  doc.text(COMPANY_INFO.name, textX, 16);
+  doc.text(COMPANY.name, textX, 18);
 
   // Tagline
   doc.setTextColor(...GOLD);
-  doc.setFontSize(7);
+  doc.setFontSize(7.5);
   doc.setFont("helvetica", "normal");
-  doc.text(COMPANY_INFO.tagline.toUpperCase(), textX, 22);
+  doc.text(COMPANY.tagline.toUpperCase(), textX, 24);
 
-  // Right side contact details - use ASCII-safe icons
+  // Right side - contact info (well-spaced)
   const rightX = PAGE_W - MARGIN;
   doc.setTextColor(220, 225, 235);
-  doc.setFontSize(7);
+  doc.setFontSize(7.5);
   doc.setFont("helvetica", "normal");
-  doc.text(COMPANY_INFO.phone, rightX, 11, { align: "right" });
-  doc.text(COMPANY_INFO.email, rightX, 16, { align: "right" });
-  doc.text(COMPANY_INFO.website, rightX, 21, { align: "right" });
+  doc.text(COMPANY.phone, rightX, 12, { align: "right" });
+  doc.text(COMPANY.email, rightX, 17, { align: "right" });
+  doc.text(COMPANY.website, rightX, 22, { align: "right" });
 
-  doc.setFontSize(5.5);
-  doc.setTextColor(170, 175, 190);
-  const addrLines = doc.splitTextToSize(COMPANY_INFO.address, 65);
+  // Address - smaller, muted
+  doc.setFontSize(6);
+  doc.setTextColor(160, 165, 180);
+  const addrLines = doc.splitTextToSize(COMPANY.address, 60);
   addrLines.forEach((line: string, i: number) => {
-    doc.text(line, rightX, 26 + i * 2.8, { align: "right" });
+    doc.text(line, rightX, 28 + i * 3, { align: "right" });
   });
 }
 
-function addWatermark(doc: jsPDF, logoBase64: string | null) {
-  if (logoBase64) {
-    try {
-      const gState = (doc as any).GState({ opacity: 0.04 });
-      doc.saveGraphicsState();
-      doc.setGState(gState);
-      doc.addImage(logoBase64, "PNG", PAGE_W / 2 - 35, PAGE_H / 2 - 35, 70, 70);
-      doc.restoreGraphicsState();
-    } catch {
-      addTextWatermark(doc);
-    }
-  } else {
-    addTextWatermark(doc);
-  }
+// ─── Footer ───
+function addFooter(doc: jsPDF, pageNum: number, totalPages: number) {
+  const footerY = PAGE_H - FOOTER_H;
+
+  // Gold line
+  doc.setFillColor(...GOLD);
+  doc.rect(0, footerY, PAGE_W, 0.8, "F");
+
+  // Navy bg
+  doc.setFillColor(...NAVY);
+  doc.rect(0, footerY + 0.8, PAGE_W, FOOTER_H - 0.8, "F");
+
+  const textY = footerY + 9;
+  doc.setTextColor(190, 195, 210);
+  doc.setFontSize(6.5);
+  doc.setFont("helvetica", "normal");
+  doc.text(`${COMPANY.name}  |  ${COMPANY.phone}  |  ${COMPANY.email}`, PAGE_W / 2, textY, { align: "center" });
+
+  doc.setFontSize(5.5);
+  doc.setTextColor(140, 145, 160);
+  doc.text(COMPANY.website, PAGE_W / 2, textY + 4, { align: "center" });
+
+  // Page number
+  doc.setTextColor(...GOLD);
+  doc.setFontSize(7);
+  doc.setFont("helvetica", "bold");
+  doc.text(`${pageNum} / ${totalPages}`, PAGE_W - MARGIN, textY, { align: "right" });
 }
 
-function addTextWatermark(doc: jsPDF) {
+// ─── Watermark ───
+function addWatermark(doc: jsPDF, logoBase64: string | null) {
   const gState = (doc as any).GState({ opacity: 0.04 });
   doc.saveGraphicsState();
   doc.setGState(gState);
+  if (logoBase64) {
+    try {
+      doc.addImage(logoBase64, "PNG", PAGE_W / 2 - 35, PAGE_H / 2 - 35, 70, 70);
+      doc.restoreGraphicsState();
+      return;
+    } catch { /* fallback */ }
+  }
   doc.setTextColor(150, 155, 170);
   doc.setFontSize(55);
   doc.setFont("helvetica", "bold");
@@ -141,246 +182,211 @@ function addTextWatermark(doc: jsPDF) {
   doc.restoreGraphicsState();
 }
 
-function addFooter(doc: jsPDF, pageNum: number, totalPages: number) {
-  // Gold line
-  doc.setFillColor(...GOLD);
-  doc.rect(0, PAGE_H - 22, PAGE_W, 0.8, "F");
-
-  // Navy footer
-  doc.setFillColor(...NAVY);
-  doc.rect(0, PAGE_H - 21.2, PAGE_W, 21.2, "F");
-
-  doc.setTextColor(200, 205, 215);
-  doc.setFontSize(6.5);
-  doc.setFont("helvetica", "normal");
-
-  const footerY = PAGE_H - 13;
-  doc.text(`${COMPANY_INFO.name}  |  ${COMPANY_INFO.phone}  |  ${COMPANY_INFO.email}`, PAGE_W / 2, footerY, { align: "center" });
-
-  doc.setFontSize(5.5);
-  doc.setTextColor(140, 145, 160);
-  doc.text(COMPANY_INFO.website, PAGE_W / 2, footerY + 4, { align: "center" });
-
-  // Page number
-  doc.setTextColor(...GOLD);
-  doc.setFontSize(7);
-  doc.setFont("helvetica", "bold");
-  doc.text(`${pageNum} / ${totalPages}`, PAGE_W - MARGIN, footerY, { align: "right" });
-}
-
-function checkPage(doc: jsPDF, y: number, needed: number, logoBase64: string | null): number {
-  if (y + needed > PAGE_H - FOOTER_H - 8) {
+// ─── Helpers ───
+function checkPage(doc: jsPDF, y: number, needed: number, logo: string | null): number {
+  if (y + needed > PAGE_H - FOOTER_H - 10) {
     doc.addPage();
-    addHeader(doc, logoBase64);
-    addWatermark(doc, logoBase64);
-    return HEADER_H + 8;
+    addHeader(doc, logo);
+    addWatermark(doc, logo);
+    return HEADER_H + 10;
   }
   return y;
 }
 
-function drawSectionTitle(doc: jsPDF, title: string, y: number): number {
-  // Navy bar with gold left accent
+function sectionTitle(doc: jsPDF, title: string, y: number): number {
   doc.setFillColor(...NAVY);
-  doc.roundedRect(MARGIN, y - 5, CONTENT_W, 10, 2, 2, "F");
-
-  // Gold left accent bar
+  doc.roundedRect(MARGIN, y, CONTENT_W, 10, 2, 2, "F");
   doc.setFillColor(...GOLD);
-  doc.rect(MARGIN, y - 5, 3, 10, "F");
-
+  doc.rect(MARGIN, y, 3, 10, "F");
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
-  doc.text(title.toUpperCase(), MARGIN + 8, y + 1.5);
-
-  return y + 12;
+  doc.text(title.toUpperCase(), MARGIN + 8, y + 7);
+  return y + 16;
 }
 
-function drawDivider(doc: jsPDF, y: number): number {
+function goldDivider(doc: jsPDF, y: number): number {
   doc.setDrawColor(...GOLD_LIGHT);
   doc.setLineWidth(0.3);
   doc.line(MARGIN + 10, y, PAGE_W - MARGIN - 10, y);
-  return y + 4;
+  return y + 6;
 }
 
+// ─── Main Export ───
 export async function generateQuotationPDF(data: QuotationForPDF) {
-  const logoBase64 = await loadLogoBase64();
+  const logo = await loadLogoBase64();
   const doc = new jsPDF("p", "mm", "a4");
 
-  // ===== PAGE 1: Cover =====
-  addHeader(doc, logoBase64);
-  addWatermark(doc, logoBase64);
+  // ===== PAGE 1 =====
+  addHeader(doc, logo);
+  addWatermark(doc, logo);
 
-  let y = HEADER_H + 14;
+  let y = HEADER_H + 12;
 
-  // Destination title
+  // ── Destination Title ──
   doc.setTextColor(...NAVY);
-  doc.setFontSize(26);
+  doc.setFontSize(24);
   doc.setFont("helvetica", "bold");
   const destTitle = data.destination_name.toUpperCase();
   doc.text(destTitle, PAGE_W / 2, y, { align: "center" });
+  y += 6;
 
-  // Gold ornamental lines under title
-  y += 5;
-  doc.setFontSize(22);
-  const titleW = doc.getTextWidth(destTitle);
-  const lineHalfW = Math.min(titleW / 2 + 5, CONTENT_W / 2 - 5);
-
+  // Ornamental lines
+  doc.setFontSize(24);
+  const tw = Math.min(doc.getTextWidth(destTitle) / 2 + 5, CONTENT_W / 2 - 5);
   doc.setDrawColor(...GOLD);
   doc.setLineWidth(0.8);
-  doc.line(PAGE_W / 2 - lineHalfW, y, PAGE_W / 2 - 4, y);
-  doc.line(PAGE_W / 2 + 4, y, PAGE_W / 2 + lineHalfW, y);
-
-  // Center dot (ASCII safe)
+  doc.line(PAGE_W / 2 - tw, y, PAGE_W / 2 - 4, y);
+  doc.line(PAGE_W / 2 + 4, y, PAGE_W / 2 + tw, y);
   doc.setFillColor(...GOLD);
   doc.circle(PAGE_W / 2, y, 1.2, "F");
 
-  // Tour Package subtitle
   y += 8;
   doc.setTextColor(...GRAY);
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   doc.text("TOUR PACKAGE", PAGE_W / 2, y, { align: "center" });
 
-  // Duration badge
-  y += 10;
+  // ── Duration Badge ──
+  y += 12;
   if (data.days.length > 0) {
     const nights = data.days.length > 1 ? data.days.length - 1 : 0;
-    const durationText = `${data.days.length} Days & ${nights} Nights`;
-
-    const badgeW = 70;
+    const durText = `${data.days.length} Days & ${nights} Nights`;
+    const bw = 70;
     doc.setFillColor(...GOLD);
-    doc.roundedRect(PAGE_W / 2 - badgeW / 2, y - 5, badgeW, 11, 5.5, 5.5, "F");
-
+    doc.roundedRect(PAGE_W / 2 - bw / 2, y - 5, bw, 11, 5.5, 5.5, "F");
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
-    doc.text(durationText, PAGE_W / 2, y + 2, { align: "center" });
-    y += 14;
+    doc.text(durText, PAGE_W / 2, y + 2, { align: "center" });
+    y += 16;
   }
 
-  // ---- Client Info Card ----
-  const cardH = 40;
-  // Card shadow
-  doc.setFillColor(230, 232, 240);
-  doc.roundedRect(MARGIN + 1, y - 3, CONTENT_W, cardH, 3, 3, "F");
-  // Card background
+  // ── Client Info Card ──
+  const cardH = 44;
+  // Shadow
+  doc.setFillColor(225, 228, 236);
+  doc.roundedRect(MARGIN + 1.5, y - 2.5, CONTENT_W, cardH, 3, 3, "F");
+  // Card
   doc.setFillColor(...WHITE);
   doc.roundedRect(MARGIN, y - 4, CONTENT_W, cardH, 3, 3, "F");
-  // Card border
-  doc.setDrawColor(220, 222, 230);
+  // Border
+  doc.setDrawColor(215, 218, 228);
   doc.setLineWidth(0.3);
   doc.roundedRect(MARGIN, y - 4, CONTENT_W, cardH, 3, 3, "S");
-  // Top gold accent
+  // Gold top accent
   doc.setFillColor(...GOLD);
   doc.rect(MARGIN + 8, y - 4, CONTENT_W - 16, 1.5, "F");
 
-  const labelX = MARGIN + 8;
-  const valueX = MARGIN + 42;
-  const col2LabelX = PAGE_W / 2 + 5;
-  const col2ValueX = PAGE_W / 2 + 38;
+  const lx = MARGIN + 8;
+  const vx = MARGIN + 44;
+  const rx = PAGE_W / 2 + 6;
+  const rvx = PAGE_W / 2 + 40;
 
   // Row 1: Guest Name & Contact
-  doc.setFontSize(8.5);
+  let ry = y + 6;
+  doc.setFontSize(7.5);
   doc.setTextColor(...GRAY);
   doc.setFont("helvetica", "bold");
-  doc.text("GUEST NAME", labelX, y + 6);
+  doc.text("GUEST NAME", lx, ry);
   doc.setTextColor(...DARK);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
-  doc.text(data.client_name, valueX, y + 6);
+  doc.text(data.client_name, vx, ry);
 
   if (data.client_contact) {
-    doc.setFontSize(8.5);
+    doc.setFontSize(7.5);
     doc.setTextColor(...GRAY);
     doc.setFont("helvetica", "bold");
-    doc.text("CONTACT", col2LabelX, y + 6);
+    doc.text("CONTACT", rx, ry);
     doc.setTextColor(...DARK);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
-    doc.text(data.client_contact, col2ValueX, y + 6);
+    doc.text(data.client_contact, rvx, ry);
   }
 
-  // Separator
+  // Line
+  ry += 5;
   doc.setDrawColor(...GOLD_LIGHT);
   doc.setLineWidth(0.2);
-  doc.line(labelX, y + 11, PAGE_W - MARGIN - 8, y + 11);
+  doc.line(lx, ry, PAGE_W - MARGIN - 8, ry);
 
   // Row 2: Travel Date
-  doc.setFontSize(8.5);
+  ry += 7;
+  doc.setFontSize(7.5);
   doc.setTextColor(...GRAY);
   doc.setFont("helvetica", "bold");
-  doc.text("TRAVEL DATE", labelX, y + 18);
+  doc.text("TRAVEL DATE", lx, ry);
   doc.setTextColor(...DARK);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
-  const dateStr = data.travel_start_date
-    ? format(new Date(data.travel_start_date), "dd MMM yyyy")
-    : "TBD";
-  const endDateStr = data.travel_end_date
-    ? ` -- ${format(new Date(data.travel_end_date), "dd MMM yyyy")}`
-    : "";
-  doc.text(dateStr + endDateStr, valueX, y + 18);
+  const startStr = data.travel_start_date ? format(new Date(data.travel_start_date), "dd MMM yyyy") : "TBD";
+  const endStr = data.travel_end_date ? ` -- ${format(new Date(data.travel_end_date), "dd MMM yyyy")}` : "";
+  doc.text(startStr + endStr, vx, ry);
 
-  // Separator
-  doc.line(labelX, y + 23, PAGE_W - MARGIN - 8, y + 23);
+  // Line
+  ry += 5;
+  doc.line(lx, ry, PAGE_W - MARGIN - 8, ry);
 
   // Row 3: Total Price
-  doc.setFontSize(8.5);
+  ry += 7;
+  doc.setFontSize(7.5);
   doc.setTextColor(...GRAY);
   doc.setFont("helvetica", "bold");
-  doc.text("TOTAL PRICE", labelX, y + 30);
+  doc.text("TOTAL PRICE", lx, ry);
   doc.setTextColor(...NAVY);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(13);
-  doc.text(formatINR(data.total_price), valueX, y + 30);
+  doc.setFontSize(14);
+  doc.text(formatINR(data.total_price), vx, ry);
 
-  // Pricing breakdown inline
+  // Pricing summary inline
+  const priceParts: string[] = [];
   if (data.price_per_person > 0 && data.num_persons > 0) {
-    doc.setFontSize(8.5);
+    priceParts.push(`${data.num_persons} ${data.person_label || "Adult"} x ${formatINR(data.price_per_person)}`);
+  }
+  if ((data.price_per_child || 0) > 0 && (data.num_children || 0) > 0) {
+    priceParts.push(`${data.num_children} ${data.child_label || "Child"} x ${formatINR(data.price_per_child!)}`);
+  }
+  if (priceParts.length > 0) {
+    doc.setFontSize(8);
     doc.setTextColor(...GRAY);
     doc.setFont("helvetica", "normal");
-    const label = data.person_label || "Person";
-    doc.text(
-      `(${data.num_persons} ${label} x ${formatINR(data.price_per_person)})`,
-      col2LabelX, y + 30
-    );
+    doc.text(`(${priceParts.join(" + ")})`, rx, ry);
   }
 
-  y += 44;
+  y += cardH + 8;
 
-  // Description
+  // ── Description ──
   if (data.description) {
-    y = checkPage(doc, y, 15, logoBase64);
+    y = checkPage(doc, y, 15, logo);
     doc.setTextColor(...DARK);
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    const descLines = doc.splitTextToSize(data.description, CONTENT_W - 4);
-    descLines.forEach((line: string) => {
-      y = checkPage(doc, y, 5, logoBase64);
+    const dLines = doc.splitTextToSize(data.description, CONTENT_W - 4);
+    dLines.forEach((line: string) => {
+      y = checkPage(doc, y, 5, logo);
       doc.text(line, MARGIN + 2, y);
       y += 4.5;
     });
-    y += 5;
+    y += 8;
   }
 
-  // ---- Inclusions ----
-  if (data.inclusions.length > 0) {
-    y = checkPage(doc, y, 20, logoBase64);
-    y = drawSectionTitle(doc, "Price Includes", y);
+  // ── Inclusions ──
+  if (data.inclusions.length > 0 && data.inclusions.some((s) => s.trim())) {
+    y = checkPage(doc, y, 22, logo);
+    y = sectionTitle(doc, "Price Includes", y);
 
     data.inclusions.forEach((item, idx) => {
       if (!item.trim()) return;
       const lines = doc.splitTextToSize(item, CONTENT_W - 14);
-      const blockH = lines.length * 4.5 + 1;
-      y = checkPage(doc, y, blockH, logoBase64);
+      const bh = lines.length * 4.5 + 2;
+      y = checkPage(doc, y, bh, logo);
 
-      // Alternating row background
       if (idx % 2 === 0) {
         doc.setFillColor(248, 250, 252);
-        doc.rect(MARGIN, y - 3.5, CONTENT_W, blockH, "F");
+        doc.rect(MARGIN, y - 3.5, CONTENT_W, bh, "F");
       }
 
-      // Green circle bullet
       doc.setFillColor(...SUCCESS);
       doc.circle(MARGIN + 5, y - 0.5, 1.2, "F");
 
@@ -393,26 +399,25 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       });
       y += 1;
     });
-    y += 3;
+    y += 8;
   }
 
-  // ---- Exclusions ----
-  if (data.exclusions.length > 0) {
-    y = checkPage(doc, y, 20, logoBase64);
-    y = drawSectionTitle(doc, "Price Excludes", y);
+  // ── Exclusions ──
+  if (data.exclusions.length > 0 && data.exclusions.some((s) => s.trim())) {
+    y = checkPage(doc, y, 22, logo);
+    y = sectionTitle(doc, "Price Excludes", y);
 
     data.exclusions.forEach((item, idx) => {
       if (!item.trim()) return;
       const lines = doc.splitTextToSize(item, CONTENT_W - 14);
-      const blockH = lines.length * 4.5 + 1;
-      y = checkPage(doc, y, blockH, logoBase64);
+      const bh = lines.length * 4.5 + 2;
+      y = checkPage(doc, y, bh, logo);
 
       if (idx % 2 === 0) {
         doc.setFillColor(252, 248, 248);
-        doc.rect(MARGIN, y - 3.5, CONTENT_W, blockH, "F");
+        doc.rect(MARGIN, y - 3.5, CONTENT_W, bh, "F");
       }
 
-      // Red circle bullet
       doc.setFillColor(...DANGER);
       doc.circle(MARGIN + 5, y - 0.5, 1.2, "F");
 
@@ -425,29 +430,28 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       });
       y += 1;
     });
-    y += 3;
+    y += 8;
   }
 
-  // ===== ITINERARY + PRICING + NOTES on next page(s) =====
+  // ===== ITINERARY =====
   if (data.days.length > 0) {
     doc.addPage();
-    addHeader(doc, logoBase64);
-    addWatermark(doc, logoBase64);
-    y = HEADER_H + 8;
+    addHeader(doc, logo);
+    addWatermark(doc, logo);
+    y = HEADER_H + 10;
 
-    // Itinerary title
     doc.setTextColor(...NAVY);
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
     doc.text("DETAILED ITINERARY", PAGE_W / 2, y, { align: "center" });
-    y += 3;
-    y = drawDivider(doc, y);
+    y += 4;
+    y = goldDivider(doc, y);
     y += 4;
 
     data.days.forEach((day, idx) => {
-      y = checkPage(doc, y, 25, logoBase64);
+      y = checkPage(doc, y, 28, logo);
 
-      // Day number badge (gold circle)
+      // Day badge
       doc.setFillColor(...GOLD);
       doc.circle(MARGIN + 6, y, 5, "F");
       doc.setTextColor(255, 255, 255);
@@ -455,160 +459,173 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       doc.setFont("helvetica", "bold");
       doc.text(`${day.day}`, MARGIN + 6, y + 1.5, { align: "center" });
 
-      // Day title bar (navy)
+      // Day title bar
       doc.setFillColor(...NAVY);
       doc.roundedRect(MARGIN + 14, y - 5, CONTENT_W - 14, 10, 2, 2, "F");
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(10);
       doc.setFont("helvetica", "bold");
       doc.text(`Day ${day.day}: ${day.title}`, MARGIN + 18, y + 1.5);
-      y += 10;
+      y += 12;
 
       if (day.description) {
-        // Light card for description
-        const descLines = doc.splitTextToSize(day.description, CONTENT_W - 22);
-        const descHeight = descLines.length * 4.5 + 4;
-
-        y = checkPage(doc, y, descHeight + 2, logoBase64);
+        const dLines = doc.splitTextToSize(day.description, CONTENT_W - 22);
+        const dh = dLines.length * 4.5 + 6;
+        y = checkPage(doc, y, dh, logo);
 
         doc.setFillColor(...LIGHT_BG);
-        doc.roundedRect(MARGIN + 14, y - 2, CONTENT_W - 14, descHeight, 1.5, 1.5, "F");
-
-        // Left border accent
+        doc.roundedRect(MARGIN + 14, y - 3, CONTENT_W - 14, dh, 1.5, 1.5, "F");
         doc.setFillColor(...GOLD_LIGHT);
-        doc.rect(MARGIN + 14, y - 2, 1.5, descHeight, "F");
+        doc.rect(MARGIN + 14, y - 3, 1.5, dh, "F");
 
         doc.setTextColor(...DARK);
         doc.setFontSize(8.5);
         doc.setFont("helvetica", "normal");
-        descLines.forEach((line: string) => {
-          y = checkPage(doc, y, 5, logoBase64);
+        dLines.forEach((line: string) => {
+          y = checkPage(doc, y, 5, logo);
           doc.text(line, MARGIN + 19, y + 1);
           y += 4.5;
         });
-        y += 2;
+        y += 4;
       }
 
-      // Connector line between days
+      // Connector line
       if (idx < data.days.length - 1) {
         doc.setDrawColor(...GOLD_LIGHT);
         doc.setLineWidth(0.4);
         doc.setLineDashPattern([1.5, 1.5], 0);
-        doc.line(MARGIN + 6, y, MARGIN + 6, y + 5);
+        doc.line(MARGIN + 6, y, MARGIN + 6, y + 6);
         doc.setLineDashPattern([], 0);
-        y += 6;
+        y += 8;
       } else {
-        y += 4;
+        y += 6;
       }
     });
   }
 
   // ===== PRICING BREAKDOWN =====
+  const pricingRows: PricingRow[] = [];
   if (data.price_per_person > 0 && data.num_persons > 0) {
-    y = checkPage(doc, y, 35, logoBase64);
-    y += 2;
-    y = drawSectionTitle(doc, "Pricing Breakdown", y);
+    pricingRows.push({
+      label: `${data.person_label || "Adult"}`,
+      rate: data.price_per_person,
+      qty: data.num_persons,
+      amount: data.price_per_person * data.num_persons,
+    });
+  }
+  if ((data.price_per_child || 0) > 0 && (data.num_children || 0) > 0) {
+    pricingRows.push({
+      label: `${data.child_label || "Child"}`,
+      rate: data.price_per_child!,
+      qty: data.num_children!,
+      amount: data.price_per_child! * data.num_children!,
+    });
+  }
 
-    const tableX = MARGIN;
-    const tableW = CONTENT_W;
+  if (pricingRows.length > 0) {
+    y = checkPage(doc, y, 45, logo);
+    y += 4;
+    y = sectionTitle(doc, "Pricing Breakdown", y);
+
+    const tX = MARGIN;
+    const tW = CONTENT_W;
     const rowH = 9;
-    const col1W = tableW * 0.45;
-    const col2W = tableW * 0.22;
-    const col3W = tableW * 0.11;
-    const col4W = tableW * 0.22;
 
     // Table header
     doc.setFillColor(...NAVY);
-    doc.roundedRect(tableX, y - 3, tableW, rowH, 1.5, 1.5, "F");
+    doc.roundedRect(tX, y, tW, rowH, 1.5, 1.5, "F");
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(8.5);
     doc.setFont("helvetica", "bold");
-    doc.text("DESCRIPTION", tableX + 5, y + 2.5);
-    doc.text("RATE", tableX + col1W + 5, y + 2.5);
-    doc.text("QTY", tableX + col1W + col2W + 5, y + 2.5);
-    doc.text("AMOUNT", tableX + tableW - 5, y + 2.5, { align: "right" });
+    doc.text("DESCRIPTION", tX + 6, y + 6);
+    doc.text("RATE", tX + tW * 0.45, y + 6);
+    doc.text("QTY", tX + tW * 0.65, y + 6);
+    doc.text("AMOUNT", tX + tW - 6, y + 6, { align: "right" });
     y += rowH;
 
-    // Data row
-    doc.setFillColor(...LIGHT_BG);
-    doc.rect(tableX, y - 3, tableW, rowH, "F");
-    doc.setDrawColor(220, 225, 235);
-    doc.setLineWidth(0.2);
-    doc.rect(tableX, y - 3, tableW, rowH, "S");
+    // Data rows
+    pricingRows.forEach((row, idx) => {
+      const bg = idx % 2 === 0 ? LIGHT_BG : WHITE;
+      doc.setFillColor(...bg);
+      doc.rect(tX, y, tW, rowH, "F");
+      doc.setDrawColor(220, 225, 235);
+      doc.setLineWidth(0.15);
+      doc.rect(tX, y, tW, rowH, "S");
 
-    const label = data.person_label || "Person";
-    doc.setTextColor(...DARK);
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.text(`${data.num_persons} ${label}`, tableX + 5, y + 2.5);
-    doc.text(formatINR(data.price_per_person), tableX + col1W + 5, y + 2.5);
-    doc.text(`${data.num_persons}`, tableX + col1W + col2W + 5, y + 2.5);
-    doc.setFont("helvetica", "bold");
-    doc.text(formatINR(data.total_price), tableX + tableW - 5, y + 2.5, { align: "right" });
-    y += rowH;
+      doc.setTextColor(...DARK);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.text(row.label, tX + 6, y + 6);
+      doc.text(formatINR(row.rate), tX + tW * 0.45, y + 6);
+      doc.text(`${row.qty}`, tX + tW * 0.65, y + 6);
+      doc.setFont("helvetica", "bold");
+      doc.text(formatINR(row.amount), tX + tW - 6, y + 6, { align: "right" });
+      y += rowH;
+    });
 
     // Total row
     doc.setFillColor(...NAVY);
-    doc.roundedRect(tableX, y - 3, tableW, rowH + 1, 1.5, 1.5, "F");
+    doc.roundedRect(tX, y, tW, rowH + 1, 1.5, 1.5, "F");
     doc.setTextColor(...GOLD);
-    doc.setFontSize(10);
+    doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
-    doc.text("TOTAL", tableX + 5, y + 3);
-    doc.text(formatINR(data.total_price), tableX + tableW - 5, y + 3, { align: "right" });
-    y += rowH + 6;
+    doc.text("TOTAL", tX + 6, y + 6.5);
+    doc.text(formatINR(data.total_price), tX + tW - 6, y + 6.5, { align: "right" });
+    y += rowH + 10;
   }
 
-  // ===== IMPORTANT NOTES (same page, no forced page break) =====
-  y = checkPage(doc, y, 35, logoBase64);
-  y += 2;
-  y = drawSectionTitle(doc, "Important Notes", y);
+  // ===== TERMS & CONDITIONS =====
+  const terms = data.terms_conditions && data.terms_conditions.length > 0 && data.terms_conditions.some((t) => t.trim())
+    ? data.terms_conditions.filter((t) => t.trim())
+    : DEFAULT_TERMS;
+
+  y = checkPage(doc, y, 40, logo);
+  y += 4;
+  y = sectionTitle(doc, "Terms & Conditions", y);
 
   doc.setTextColor(...GRAY);
   doc.setFontSize(7.5);
   doc.setFont("helvetica", "normal");
-  const notes = [
-    "The tour is Private Tours, means there is no other participant, just only you and your companions.",
-    "Time and Tourism site is subject to change based on your request.",
-    "The price already includes applicable Government taxes and Services.",
-    "Use the contact form provided to send us a message, ask for information or make a tour booking request.",
-  ];
-  notes.forEach((note) => {
-    y = checkPage(doc, y, 6, logoBase64);
-    // Gold bullet dot
+  terms.forEach((note, idx) => {
+    y = checkPage(doc, y, 8, logo);
+    // Gold number badge
     doc.setFillColor(...GOLD);
-    doc.circle(MARGIN + 4, y - 0.8, 0.8, "F");
+    doc.circle(MARGIN + 4, y - 0.5, 2.5, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(6);
+    doc.setFont("helvetica", "bold");
+    doc.text(`${idx + 1}`, MARGIN + 4, y + 0.5, { align: "center" });
+
     doc.setTextColor(...GRAY);
     doc.setFontSize(7.5);
     doc.setFont("helvetica", "normal");
-    const noteLines = doc.splitTextToSize(note, CONTENT_W - 10);
-    noteLines.forEach((line: string) => {
-      doc.text(line, MARGIN + 8, y);
+    const nLines = doc.splitTextToSize(note, CONTENT_W - 14);
+    nLines.forEach((line: string) => {
+      doc.text(line, MARGIN + 10, y);
       y += 3.8;
     });
-    y += 1;
+    y += 3;
   });
 
-  // ===== Thank you =====
-  y = checkPage(doc, y, 15, logoBase64);
-  y += 5;
+  // ===== Thank You =====
+  y = checkPage(doc, y, 20, logo);
+  y += 8;
   doc.setTextColor(...NAVY);
-  doc.setFontSize(12);
+  doc.setFontSize(13);
   doc.setFont("helvetica", "bold");
   doc.text("Thank you for choosing NexYatra!", PAGE_W / 2, y, { align: "center" });
-  y += 5;
+  y += 6;
   doc.setTextColor(...GOLD);
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   doc.text("We look forward to creating unforgettable memories for you.", PAGE_W / 2, y, { align: "center" });
 
-  // ===== ADD FOOTERS TO ALL PAGES =====
+  // ===== Footers ===== 
   const pages = doc.getNumberOfPages();
   for (let i = 1; i <= pages; i++) {
     doc.setPage(i);
     addFooter(doc, i, pages);
   }
 
-  doc.save(
-    `Quotation_${data.client_name.replace(/\s+/g, "_")}_${data.destination_name.replace(/\s+/g, "_")}.pdf`
-  );
+  doc.save(`Quotation_${data.client_name.replace(/\s+/g, "_")}_${data.destination_name.replace(/\s+/g, "_")}.pdf`);
 }
