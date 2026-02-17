@@ -51,8 +51,8 @@ const QuotationsList: React.FC<QuotationsListProps> = ({ onEdit, refreshKey }) =
     }
   };
 
-  const handleDownload = (q: any) => {
-    generateQuotationPDF({
+  const handleDownload = async (q: any) => {
+    await generateQuotationPDF({
       client_name: q.client_name,
       client_contact: q.client_contact,
       destination_name: q.destination_name,
