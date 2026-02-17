@@ -123,8 +123,8 @@ const Destinations = () => {
   };
 
   const breadcrumbSchema = getBreadcrumbSchema([
-    { name: "Home", url: "https://nexperience-explore-journeys.lovable.app/" },
-    { name: "Destinations", url: "https://nexperience-explore-journeys.lovable.app/destinations" }
+    { name: "Home", url: "https://www.nexyatra.in/" },
+    { name: "Destinations", url: "https://www.nexyatra.in/destinations" }
   ]);
 
   // Generate ItemList schema for destination listings
@@ -152,7 +152,7 @@ const Destinations = () => {
         title="Travel Destinations 2026 | Affordable Tour Packages from ₹8,999 - NexYatra"
         description="Explore 2026 travel packages to Dubai, Bali, Thailand, Kashmir, Kerala & more. Compare prices, read reviews, and book your perfect holiday. Starting from ₹8,999. Best deals from Surat!"
         keywords="travel destinations 2026, tour packages India, Dubai trip, Bali holiday package, Thailand trip, Kashmir tour, Kerala backwaters, Manali trip, adventure travel, luxury resorts, budget travel India, international tours from Surat, domestic tours, honeymoon packages, family vacation"
-        url="https://nexperience-explore-journeys.lovable.app/destinations"
+        url="https://www.nexyatra.in/destinations"
         structuredData={structuredData}
       />
       <section className="relative py-32 flex items-center overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-700">

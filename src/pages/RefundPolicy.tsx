@@ -5,8 +5,8 @@ import SEO, { getBreadcrumbSchema } from "@/components/SEO";
 
 const RefundPolicy = () => {
   const breadcrumbSchema = getBreadcrumbSchema([
-    { name: "Home", url: "https://nexperience-explore-journeys.lovable.app/" },
-    { name: "Refund Policy", url: "https://nexperience-explore-journeys.lovable.app/refund" }
+    { name: "Home", url: "https://www.nexyatra.in/" },
+    { name: "Refund Policy", url: "https://www.nexyatra.in/refund" }
   ]);
 
   return (

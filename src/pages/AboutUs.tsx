@@ -17,8 +17,8 @@ const AboutUs = () => {
     "@graph": [
       getOrganizationSchema(),
       getBreadcrumbSchema([
-        { name: "Home", url: "https://nexperience-explore-journeys.lovable.app/" },
-        { name: "About Us", url: "https://nexperience-explore-journeys.lovable.app/about" }
+        { name: "Home", url: "https://www.nexyatra.in/" },
+        { name: "About Us", url: "https://www.nexyatra.in/about" }
       ])
     ]
   };

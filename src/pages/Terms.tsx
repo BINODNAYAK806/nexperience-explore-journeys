@@ -5,8 +5,8 @@ import SEO, { getBreadcrumbSchema } from "@/components/SEO";
 
 const Terms = () => {
   const breadcrumbSchema = getBreadcrumbSchema([
-    { name: "Home", url: "https://nexperience-explore-journeys.lovable.app/" },
-    { name: "Terms & Conditions", url: "https://nexperience-explore-journeys.lovable.app/terms" }
+    { name: "Home", url: "https://www.nexyatra.in/" },
+    { name: "Terms & Conditions", url: "https://www.nexyatra.in/terms" }
   ]);
 
   return (

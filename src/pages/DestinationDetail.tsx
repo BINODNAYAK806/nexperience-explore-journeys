@@ -126,16 +126,16 @@ const DestinationDetail = () => {
         category: destination.category || 'Travel'
       }),
       getBreadcrumbSchema([
-        { name: "Home", url: "https://nexperience-explore-journeys.lovable.app/" },
-        { name: "Destinations", url: "https://nexperience-explore-journeys.lovable.app/destinations" },
-        { name: destination.name, url: `https://nexperience-explore-journeys.lovable.app/destinations/${cleanSlug}` }
+        { name: "Home", url: "https://www.nexyatra.in/" },
+        { name: "Destinations", url: "https://www.nexyatra.in/destinations" },
+        { name: destination.name, url: `https://www.nexyatra.in/destinations/${cleanSlug}` }
       ]),
       getFAQSchema(destinationFAQs)
     ]
   };
 
   // Canonical URL for this destination
-  const canonicalUrl = `https://nexperience-explore-journeys.lovable.app/destinations/${cleanSlug}`;
+  const canonicalUrl = `https://www.nexyatra.in/destinations/${cleanSlug}`;
 
   return (
     <div>

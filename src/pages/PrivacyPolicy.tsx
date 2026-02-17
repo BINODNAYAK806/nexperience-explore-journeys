@@ -5,8 +5,8 @@ import SEO, { getBreadcrumbSchema } from "@/components/SEO";
 
 const PrivacyPolicy = () => {
   const breadcrumbSchema = getBreadcrumbSchema([
-    { name: "Home", url: "https://nexperience-explore-journeys.lovable.app/" },
-    { name: "Privacy Policy", url: "https://nexperience-explore-journeys.lovable.app/privacy" }
+    { name: "Home", url: "https://www.nexyatra.in/" },
+    { name: "Privacy Policy", url: "https://www.nexyatra.in/privacy" }
   ]);
 
   return (
