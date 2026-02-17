@@ -1,11 +1,11 @@
 # NexYatra Travel Agency - robots.txt
-# https://nexperience-explore-journeys.lovable.app
+# https://www.nexyatra.in
 
 User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://nexperience-explore-journeys.lovable.app/sitemap.xml
+Sitemap: https://www.nexyatra.in/sitemap.xml
 
 # Crawl-delay for all bots
 Crawl-delay: 1

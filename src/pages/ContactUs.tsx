@@ -23,8 +23,8 @@ const ContactUs = () => {
     "@graph": [
       getOrganizationSchema(),
       getBreadcrumbSchema([
-        { name: "Home", url: "https://nexperience-explore-journeys.lovable.app/" },
-        { name: "Contact Us", url: "https://nexperience-explore-journeys.lovable.app/contact" }
+        { name: "Home", url: "https://www.nexyatra.in/" },
+        { name: "Contact Us", url: "https://www.nexyatra.in/contact" }
       ])
     ]
   };

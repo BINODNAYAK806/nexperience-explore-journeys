@@ -92,8 +92,8 @@ export const getOrganizationSchema = () => ({
   "@type": "TravelAgency",
   "name": "NexYatra",
   "alternateName": "NexYatra Travel Agency",
-  "url": "https://nexperience-explore-journeys.lovable.app",
-  "logo": "https://nexperience-explore-journeys.lovable.app/lovable-uploads/2b127b7a-f8e2-4ed9-b75a-f14f4e215484.png",
+  "url": "https://www.nexyatra.in",
+  "logo": "https://www.nexyatra.in/lovable-uploads/2b127b7a-f8e2-4ed9-b75a-f14f4e215484.png",
   "description": "NexYatra offers affordable travel packages to domestic and international destinations. Book customized holiday packages at best prices.",
   "address": {
     "@type": "PostalAddress",
@@ -123,8 +123,8 @@ export const getLocalBusinessSchema = () => ({
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
   "name": "NexYatra Travel Agency",
-  "image": "https://nexperience-explore-journeys.lovable.app/lovable-uploads/2b127b7a-f8e2-4ed9-b75a-f14f4e215484.png",
-  "url": "https://nexperience-explore-journeys.lovable.app",
+  "image": "https://www.nexyatra.in/lovable-uploads/2b127b7a-f8e2-4ed9-b75a-f14f4e215484.png",
+  "url": "https://www.nexyatra.in",
   "telephone": "+91-8347015725",
   "email": "info@nexyatra.in",
   "address": {
@@ -161,10 +161,10 @@ export const getWebsiteSchema = () => ({
   "@context": "https://schema.org",
   "@type": "WebSite",
   "name": "NexYatra",
-  "url": "https://nexperience-explore-journeys.lovable.app",
+  "url": "https://www.nexyatra.in",
   "potentialAction": {
     "@type": "SearchAction",
-    "target": "https://nexperience-explore-journeys.lovable.app/destinations?search={search_term_string}",
+    "target": "https://www.nexyatra.in/destinations?search={search_term_string}",
     "query-input": "required name=search_term_string"
   }
 });
@@ -191,14 +191,14 @@ export const getDestinationSchema = (destination: {
     "price": destination.price,
     "priceCurrency": "INR",
     "availability": "https://schema.org/InStock",
-    "url": `https://nexperience-explore-journeys.lovable.app/destinations/${destination.slug}`,
+    "url": `https://www.nexyatra.in/destinations/${destination.slug}`,
     "validFrom": "2026-01-01",
     "validThrough": "2026-12-31",
     "priceValidUntil": "2026-12-31",
     "seller": {
       "@type": "TravelAgency",
       "name": "NexYatra",
-      "url": "https://nexperience-explore-journeys.lovable.app"
+      "url": "https://www.nexyatra.in"
     }
   },
   "image": destination.image_url,
@@ -247,7 +247,7 @@ export const getProductSchema = (destination: {
     "availability": "https://schema.org/InStock",
     "offerCount": 3,
     "validFrom": "2026-01-01",
-    "url": `https://nexperience-explore-journeys.lovable.app/destinations/${destination.slug}`
+    "url": `https://www.nexyatra.in/destinations/${destination.slug}`
   },
   "aggregateRating": {
     "@type": "AggregateRating",
@@ -275,7 +275,7 @@ export const getDestinationListSchema = (destinations: Array<{
     "@type": "ListItem",
     "position": index + 1,
     "name": dest.name,
-    "url": `https://nexperience-explore-journeys.lovable.app/destinations/${dest.slug}`,
+    "url": `https://www.nexyatra.in/destinations/${dest.slug}`,
     "item": {
       "@type": "Product",
       "name": `${dest.name} Tour Package`,
