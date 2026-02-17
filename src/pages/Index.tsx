@@ -20,9 +20,10 @@ const Index = () => {
   return (
     <div className="opacity-100">
       <SEO 
-        title="NexYatra - Affordable Travel Packages | Dubai, Bali, Kerala Tours"
-        description="Book affordable travel packages to Dubai, Bali, Kerala, Manali & more. NexYatra offers customized holiday packages starting ₹8,999. Best prices guaranteed!"
-        keywords="travel packages, affordable tours, Dubai tour packages, Bali holidays, Kerala backwaters, Manali trips, budget travel, holiday packages India, NexYatra"
+        title="NexYatra - Affordable Travel Packages from Surat | Dubai, Bali, Kerala Tours 2026"
+        description="Book affordable travel packages to Dubai, Bali, Kerala, Manali & more starting ₹8,999. NexYatra - Surat's trusted travel agency. Customized holiday packages with best prices. Free cancellation!"
+        keywords="travel packages from Surat, affordable tours 2026, Dubai tour packages, Bali holidays, Kerala backwaters trip, Manali trips, budget travel India, holiday packages, NexYatra travel agency, international tours from Gujarat, domestic tour packages, honeymoon packages, family vacation deals"
+        url="https://www.nexyatra.in"
         structuredData={structuredData}
       />
       {/* Hero Section */}
@@ -48,10 +49,10 @@ const Index = () => {
               Next-level Travel Experiences
             </span>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-              Discover Your Perfect <span className="text-primary">Journey</span>
+              Affordable Travel Packages from <span className="text-primary">Surat</span>
             </h1>
             <p className="text-lg md:text-xl text-white/90 mb-8">
-              Immersive, personalized travel experiences tailored to your unique preferences.
+              Book customized holiday packages to Dubai, Bali, Kerala, Manali & more. Best prices guaranteed from NexYatra!
             </p>
 
             <JourneyRequestForm />

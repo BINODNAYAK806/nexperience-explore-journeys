@@ -15,6 +15,7 @@ const Terms = () => {
         title="Terms & Conditions | NexYatra Travel Agency"
         description="Read NexYatra's terms and conditions for booking travel packages. Learn about our policies on payments, cancellations, and customer responsibilities."
         keywords="NexYatra terms, travel booking terms, tour package conditions, travel agency policies, booking terms India"
+        url="https://www.nexyatra.in/terms"
         structuredData={breadcrumbSchema}
       />
     <div className="min-h-screen bg-background py-16">

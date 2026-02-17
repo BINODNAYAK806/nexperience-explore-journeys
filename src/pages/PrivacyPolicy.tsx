@@ -15,6 +15,7 @@ const PrivacyPolicy = () => {
         title="Privacy Policy | NexYatra Travel Agency"
         description="NexYatra's privacy policy explains how we collect, use, and protect your personal information when booking travel packages. Your data security is our priority."
         keywords="NexYatra privacy policy, travel data protection, booking privacy, personal information security, travel agency India"
+        url="https://www.nexyatra.in/privacy"
         structuredData={breadcrumbSchema}
       />
     <div className="min-h-screen bg-background py-16">

@@ -360,7 +360,8 @@ const Destinations = () => {
                       <div className="relative h-56 overflow-hidden">
                         <img 
                           src={destination.image_url || '/placeholder.svg'} 
-                          alt={destination.name} 
+                          alt={`${destination.name} tour package - ${destination.category} trip to ${destination.country} from ₹${destination.price?.toLocaleString()} | NexYatra`}
+                          loading="lazy"
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
                         />
                         {destination.trending && (
