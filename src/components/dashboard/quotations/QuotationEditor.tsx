@@ -166,13 +166,13 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
     }
   };
 
-  const handleGeneratePDF = () => {
+  const handleGeneratePDF = async () => {
     const injected = {
       ...form,
       description: injectVariables(form.description),
       days: form.days.map((d) => ({ ...d, title: injectVariables(d.title), description: injectVariables(d.description) })),
     };
-    generateQuotationPDF(injected);
+    await generateQuotationPDF(injected);
   };
 
   return (
