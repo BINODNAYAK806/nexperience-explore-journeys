@@ -27,12 +27,16 @@ export interface QuotationData {
   price_per_person: number;
   num_persons: number;
   person_label: string;
+  price_per_child: number;
+  num_children: number;
+  child_label: string;
   travel_start_date: string;
   travel_end_date: string;
   description: string;
   days: DayItem[];
   inclusions: string[];
   exclusions: string[];
+  terms_conditions: string[];
   status: string;
 }
 
@@ -43,6 +47,13 @@ interface QuotationEditorProps {
   onCancel: () => void;
 }
 
+const DEFAULT_TERMS = [
+  "The tour is Private Tours, means there is no other participant, just only you and your companions.",
+  "Time and Tourism site is subject to change based on your request.",
+  "The price already includes applicable Government taxes and Services.",
+  "Use the contact form provided to send us a message, ask for information or make a tour booking request.",
+];
+
 const emptyQuotation: QuotationData = {
   client_name: "",
   client_contact: "",
@@ -51,12 +62,16 @@ const emptyQuotation: QuotationData = {
   price_per_person: 0,
   num_persons: 2,
   person_label: "Adult",
+  price_per_child: 0,
+  num_children: 0,
+  child_label: "Child",
   travel_start_date: "",
   travel_end_date: "",
   description: "",
   days: [{ day: 1, title: "", description: "" }],
   inclusions: [""],
   exclusions: [""],
+  terms_conditions: [...DEFAULT_TERMS],
   status: "draft",
 };
 
@@ -78,11 +93,15 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
     }
   }, [preloadTemplate]);
 
+  const recalcTotal = (pp: number, np: number, pc: number, nc: number) => {
+    return pp * np + pc * nc;
+  };
+
   const injectVariables = (text: string) => {
     return text
       .replace(/\{\{CLIENT_NAME\}\}/g, form.client_name || "{{CLIENT_NAME}}")
       .replace(/\{\{START_DATE\}\}/g, form.travel_start_date ? format(new Date(form.travel_start_date), "dd MMM yyyy") : "{{START_DATE}}")
-      .replace(/\{\{TOTAL_PRICE\}\}/g, form.total_price ? `₹${form.total_price.toLocaleString("en-IN")}` : "{{TOTAL_PRICE}}");
+      .replace(/\{\{TOTAL_PRICE\}\}/g, form.total_price ? `Rs. ${form.total_price.toLocaleString("en-IN")}` : "{{TOTAL_PRICE}}");
   };
 
   const loadTemplate = (template: any) => {
@@ -99,6 +118,14 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
 
   const updateField = (field: keyof QuotationData, value: any) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const updatePricing = (field: string, value: number) => {
+    setForm((prev) => {
+      const next = { ...prev, [field]: value };
+      next.total_price = recalcTotal(next.price_per_person, next.num_persons, next.price_per_child, next.num_children);
+      return next;
+    });
   };
 
   const addDay = () => updateField("days", [...form.days, { day: form.days.length + 1, title: "", description: "" }]);
@@ -121,15 +148,15 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
     updateField("days", updated);
   };
 
-  const updateListItem = (field: "inclusions" | "exclusions", i: number, value: string) => {
+  const updateListItem = (field: "inclusions" | "exclusions" | "terms_conditions", i: number, value: string) => {
     const updated = [...form[field]];
     updated[i] = value;
     updateField(field, updated);
   };
 
-  const addListItem = (field: "inclusions" | "exclusions") => updateField(field, [...form[field], ""]);
+  const addListItem = (field: "inclusions" | "exclusions" | "terms_conditions") => updateField(field, [...form[field], ""]);
 
-  const removeListItem = (field: "inclusions" | "exclusions", i: number) => {
+  const removeListItem = (field: "inclusions" | "exclusions" | "terms_conditions", i: number) => {
     updateField(field, form[field].filter((_, idx) => idx !== i));
   };
 
@@ -149,15 +176,18 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
         price_per_person: form.price_per_person,
         num_persons: form.num_persons,
         person_label: form.person_label,
+        price_per_child: form.price_per_child,
+        num_children: form.num_children,
+        child_label: form.child_label,
         travel_start_date: form.travel_start_date,
         travel_end_date: form.travel_end_date || null,
         description: injectVariables(form.description) || null,
         days: form.days.map((d) => ({ ...d, title: injectVariables(d.title), description: injectVariables(d.description) })) as unknown as import("@/integrations/supabase/types").Json,
         inclusions: form.inclusions.filter((s) => s.trim()) as unknown as import("@/integrations/supabase/types").Json,
         exclusions: form.exclusions.filter((s) => s.trim()) as unknown as import("@/integrations/supabase/types").Json,
+        terms_conditions: form.terms_conditions.filter((s) => s.trim()) as unknown as import("@/integrations/supabase/types").Json,
         status: form.status,
       };
-      console.log("Saving quotation payload:", payload);
 
       if (form.id) {
         const { error } = await supabase.from("quotations").update(payload).eq("id", form.id);
@@ -214,12 +244,36 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
           <div><Label>Client Name *</Label><Input value={form.client_name} onChange={(e) => updateField("client_name", e.target.value)} /></div>
           <div><Label>Client Contact</Label><Input value={form.client_contact} onChange={(e) => updateField("client_contact", e.target.value)} /></div>
           <div><Label>Destination *</Label><Input value={form.destination_name} onChange={(e) => updateField("destination_name", e.target.value)} /></div>
-          <div><Label>Price Per Person (₹)</Label><Input type="number" value={form.price_per_person} onChange={(e) => { const pp = Number(e.target.value); updateField("price_per_person", pp); updateField("total_price", pp * form.num_persons); }} /></div>
-          <div><Label>No. of Persons</Label><Input type="number" value={form.num_persons} onChange={(e) => { const n = Number(e.target.value); updateField("num_persons", n); updateField("total_price", form.price_per_person * n); }} /></div>
-          <div><Label>Person Label (e.g. Adult)</Label><Input value={form.person_label} onChange={(e) => updateField("person_label", e.target.value)} /></div>
-          <div><Label>Total Price (₹)</Label><Input type="number" value={form.total_price} readOnly className="bg-muted" /></div>
           <div><Label>Start Date *</Label><Input type="date" value={form.travel_start_date} onChange={(e) => updateField("travel_start_date", e.target.value)} /></div>
           <div><Label>End Date</Label><Input type="date" value={form.travel_end_date} onChange={(e) => updateField("travel_end_date", e.target.value)} /></div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle className="text-sm">Adult Pricing</CardTitle></CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div><Label>Price Per Adult (Rs.)</Label><Input type="number" value={form.price_per_person} onChange={(e) => updatePricing("price_per_person", Number(e.target.value))} /></div>
+          <div><Label>No. of Adults</Label><Input type="number" value={form.num_persons} onChange={(e) => updatePricing("num_persons", Number(e.target.value))} /></div>
+          <div><Label>Label</Label><Input value={form.person_label} onChange={(e) => updateField("person_label", e.target.value)} /></div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle className="text-sm">Child Pricing</CardTitle></CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div><Label>Price Per Child (Rs.)</Label><Input type="number" value={form.price_per_child} onChange={(e) => updatePricing("price_per_child", Number(e.target.value))} /></div>
+          <div><Label>No. of Children</Label><Input type="number" value={form.num_children} onChange={(e) => updatePricing("num_children", Number(e.target.value))} /></div>
+          <div><Label>Label</Label><Input value={form.child_label} onChange={(e) => updateField("child_label", e.target.value)} /></div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle className="text-sm">Total</CardTitle></CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4">
+            <Label>Total Price (Rs.)</Label>
+            <Input type="number" value={form.total_price} readOnly className="bg-muted max-w-[200px] font-bold text-lg" />
+          </div>
         </CardContent>
       </Card>
 
@@ -269,6 +323,21 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
           </div>
         </div>
       ))}
+
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <Label className="text-base font-semibold">Terms & Conditions</Label>
+          <Button type="button" variant="outline" size="sm" onClick={() => addListItem("terms_conditions")}><Plus className="h-4 w-4 mr-1" /> Add</Button>
+        </div>
+        <div className="space-y-2">
+          {form.terms_conditions.map((item, i) => (
+            <div key={i} className="flex gap-2">
+              <Textarea value={item} onChange={(e) => updateListItem("terms_conditions", i, e.target.value)} rows={2} />
+              <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => removeListItem("terms_conditions", i)}><Trash2 className="h-4 w-4" /></Button>
+            </div>
+          ))}
+        </div>
+      </div>
 
       <div className="flex gap-3 justify-end">
         <Button variant="outline" onClick={onCancel}>Cancel</Button>
