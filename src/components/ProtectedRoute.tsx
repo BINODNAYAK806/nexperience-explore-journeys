@@ -11,23 +11,18 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkAdminAuth = async () => {
+    let mounted = true;
+
+    const checkAdmin = async (userId: string) => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
-          setIsAdmin(false);
-          setLoading(false);
-          return;
-        }
-        
-        // Check if user has admin role in user_roles table
         const { data: userRole, error } = await supabase
           .from('user_roles')
           .select('role')
-          .eq('user_id', session.user.id)
+          .eq('user_id', userId)
           .eq('role', 'admin')
           .maybeSingle();
+
+        if (!mounted) return;
         
         if (error) {
           console.error("Error checking admin role:", error);
@@ -37,43 +32,39 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         }
       } catch (error) {
         console.error("Error checking authentication:", error);
-        setIsAdmin(false);
+        if (mounted) setIsAdmin(false);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
-    // Set up auth state listener
+    // Check current session first
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      if (!session) {
+        setIsAdmin(false);
+        setLoading(false);
+        return;
+      }
+      checkAdmin(session.user.id);
+    });
+
+    // Listen for future auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
+        if (!mounted) return;
         if (!session) {
           setIsAdmin(false);
           setLoading(false);
           return;
         }
-        
-        // Re-check admin role on auth state change
-        const { data: userRole, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .eq('role', 'admin')
-          .maybeSingle();
-        
-        if (error) {
-          console.error("Error checking admin role:", error);
-          setIsAdmin(false);
-        } else {
-          setIsAdmin(!!userRole);
-        }
-        setLoading(false);
+        setLoading(true);
+        checkAdmin(session.user.id);
       }
     );
 
-    checkAdminAuth();
-
-    // Cleanup subscription
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
