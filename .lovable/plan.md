@@ -1,207 +1,111 @@
 
 
-# Destination-Specific SEO Ranking Plan for NexYatra
+# Dynamic Itinerary & Quotation Builder
 
-## Goal
-Make NexYatra rank higher when people search for specific destination trips like "Thailand trip", "Kashmir tour package", "Bali holiday package", etc.
+## Overview
+Add a complete quotation builder system to the Nexyatra admin dashboard. Admins will create reusable "Master Templates" for destinations (with day-by-day itineraries), then generate client-specific quotations by cloning a template, customizing the content inline, and exporting a branded PDF.
 
----
+## Database Schema
 
-## Current State Analysis
+Two new tables will be created:
 
-Your site already has:
-- SEO component with structured data
-- TouristTrip schema for individual destinations
-- Sitemap with destination URLs
-- Basic meta tags on destination detail pages
+**`itinerary_templates`** (Master Templates)
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid (PK) | auto-generated |
+| destination_name | text | e.g. "Kerala Backwaters" |
+| title | text | Template title |
+| description | text | Default overview text with optional placeholders like `{{CLIENT_NAME}}`, `{{START_DATE}}` |
+| days | jsonb | Array of day objects: `[{ day: 1, title: "Arrival in Kochi", description: "..." }, ...]` |
+| default_inclusions | jsonb | Array of strings |
+| default_exclusions | jsonb | Array of strings |
+| created_at | timestamptz | default now() |
+| updated_at | timestamptz | default now() |
 
-However, there are significant gaps preventing high rankings for destination-specific searches.
+**`quotations`** (Generated Quotations / Instances)
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid (PK) | auto-generated |
+| template_id | uuid (FK) | References itinerary_templates.id, nullable (for fully custom quotes) |
+| client_name | text | |
+| client_contact | text | nullable |
+| destination_name | text | |
+| total_price | numeric | |
+| travel_start_date | date | |
+| travel_end_date | date | nullable |
+| description | text | Cloned + edited overview |
+| days | jsonb | Cloned + edited day-by-day itinerary |
+| inclusions | jsonb | |
+| exclusions | jsonb | |
+| status | text | default 'draft' (draft / sent / accepted) |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
 
----
+Both tables will have RLS policies restricting all operations to admin users only.
 
-## Key Improvements
+## Frontend Architecture
 
-### 1. Enhanced Destination Page Titles & Meta Descriptions
+### New Files
 
-**Problem**: Current title format `"Dubai Tour Package - ₹33,999 | NexYatra"` doesn't include key search terms people use.
+1. **`src/pages/QuotationBuilder.tsx`** -- Main page with two sub-views managed by local state:
+   - Template Manager (CRUD for master templates)
+   - Quotation Creator/Editor
 
-**Solution**: Update title and meta patterns to include:
-- "trip", "tour", "package", "holiday" variations
-- Year reference (2025/2026 for freshness signals)
-- Price indicators for click-through
-- City-specific keywords
+2. **`src/components/dashboard/quotations/TemplateManager.tsx`** -- List, create, edit, delete master templates. Each template has a "Create Quotation" button.
 
-**New Format Examples**:
-- "Thailand Trip Package 2026 | Starting ₹22,599 | NexYatra"
-- "Kashmir Tour Package | 5 Days Trip ₹14,999 | Best Kashmir Holiday"
-- "Bali Holiday Package 2026 | Beach Vacation from ₹33,700"
+3. **`src/components/dashboard/quotations/TemplateForm.tsx`** -- Form for creating/editing a master template. Includes dynamic day-card management (add/remove/reorder days).
 
----
+4. **`src/components/dashboard/quotations/QuotationEditor.tsx`** -- The main quotation builder UI:
+   - Header section: Client Name, Contact, Total Price, Travel Dates (using date pickers)
+   - "Load Template" dropdown to clone a master template's data into the form
+   - Day-by-day itinerary cards with inline-editable text areas
+   - Add/Remove day buttons
+   - Inclusions/Exclusions editable lists
+   - Variable injection: auto-replace `{{CLIENT_NAME}}`, `{{START_DATE}}`, `{{TOTAL_PRICE}}` placeholders when a template is loaded
+   - "Save as Draft" and "Generate PDF" buttons
 
-### 2. Add Destination-Specific Long-Tail Keywords
+5. **`src/components/dashboard/quotations/QuotationsList.tsx`** -- Table of previously generated quotations with status, client name, destination, date, and actions (edit, download PDF, delete).
 
-**Problem**: Missing keywords for how people actually search.
+6. **`src/components/dashboard/quotations/QuotationPDF.tsx`** -- The PDF rendering logic using jsPDF. Generates a branded, print-ready PDF with:
+   - Nexyatra header with logo on every page
+   - Watermark: Nexyatra logo at center, opacity 0.1
+   - Client info header block
+   - Day-by-day itinerary sections
+   - Inclusions/Exclusions section
+   - Footer with contact info
 
-**Add to each destination page**:
-- "[Destination] trip from Surat"
-- "[Destination] tour package from India"
-- "[Destination] honeymoon package"
-- "[Destination] family vacation"
-- "cheap [Destination] trip"
-- "best time to visit [Destination]"
+### Dashboard Integration
 
----
+A new tab "Quotations" will be added to `src/pages/Dashboard.tsx` alongside the existing Leads, Destinations, Reviews, and Contacts tabs.
 
-### 3. Create FAQ Section with Schema
+### Routing
 
-**Problem**: No FAQ content that Google can display as rich snippets.
+No new routes needed -- the quotation builder lives within the existing `/dashboard` protected route as a tab.
 
-**Add for each destination**:
-- "How much does a [Destination] trip cost?"
-- "What is the best time to visit [Destination]?"
-- "How many days are enough for [Destination]?"
-- "Is [Destination] safe for tourists?"
-- "What to pack for [Destination] trip?"
+## PDF Generation
 
-This enables FAQ rich snippets in Google search results.
+Will use **jsPDF** (client-side, no server dependency needed). The PDF layout will include:
+- Page 1: Cover page with Nexyatra branding, client name, destination, dates, price
+- Subsequent pages: Day-by-day itinerary cards styled with proper typography
+- Every page: Header with Nexyatra logo, centered watermark at 10% opacity, footer with contact details
+- Final page: Inclusions, exclusions, terms
 
----
+## Master vs Instance Logic
 
-### 4. Enhanced Product Schema for Destinations
+When "Create Quotation from Template" is clicked:
+1. The template's `days`, `description`, `inclusions`, `exclusions` are deep-cloned into the quotation form
+2. Placeholders (`{{CLIENT_NAME}}`, `{{START_DATE}}`, `{{TOTAL_PRICE}}`) are replaced with actual values as the admin fills in the header fields
+3. The master template is never modified -- all edits happen on the cloned quotation data
+4. The quotation is saved independently with a reference back to `template_id`
 
-**Problem**: Current TouristTrip schema is basic.
+## Implementation Steps
 
-**Add**:
-- Multiple offer variations (budget, standard, luxury)
-- Review snippets from approved reviews
-- Availability status
-- Valid price dates
-- Return policy information
-
-This enables price display in search results.
-
----
-
-### 5. Image SEO Optimization
-
-**Problem**: Images don't have destination-specific alt tags.
-
-**Update all destination images with**:
-- Descriptive alt: "Thailand beach resort tour package - NexYatra"
-- Title attributes with keywords
-- Image filenames (can't change dynamically, but alt is key)
-
----
-
-### 6. Add Visible Breadcrumb Navigation
-
-**Problem**: Breadcrumb schema exists but no visible breadcrumbs for users.
-
-**Add visible breadcrumb component**:
-```
-Home > Destinations > Thailand
-```
-This improves UX and signals page hierarchy to Google.
-
----
-
-### 7. Internal Linking Strategy
-
-**Problem**: Limited cross-linking between destination pages.
-
-**Add**:
-- "Similar Destinations" section (already partial)
-- "Travelers also searched for" section
-- Links from category pages to destinations
-- Related blog/content links (future)
-
----
-
-### 8. Canonical URLs for Clean Indexing
-
-**Problem**: No canonical URL being set dynamically.
-
-**Add**: 
-- Proper canonical link in head for each destination
-- Prevent duplicate content issues
-
----
-
-## Implementation Summary
-
-| File | Changes |
-|------|---------|
-| `src/pages/DestinationDetail.tsx` | Enhanced SEO titles with search terms, FAQ section with schema, visible breadcrumbs, better image alt texts, canonical URL |
-| `src/components/SEO.tsx` | Add `getProductSchema()` for destinations with offers, update `getDestinationSchema()` with more fields |
-| `src/pages/Destinations.tsx` | Add destination-specific meta keywords, ItemList schema for all destinations |
-| `src/components/Breadcrumb.tsx` | New visible breadcrumb component |
-| `public/sitemap.xml` | Add image sitemap entries for each destination |
-
----
-
-## Technical Details
-
-### New SEO Title Pattern
-
-```text
-{destination.name} Trip Package 2026 | {duration} from ₹{price} | NexYatra
-```
-
-### New Meta Description Pattern
-
-```text
-Book {destination.name} tour package starting ₹{price}. {duration} trip with hotels, transfers & sightseeing. Best {destination.name} holiday deals from Surat. Free customization!
-```
-
-### New Keywords Pattern
-
-```text
-{destination.name} trip, {destination.name} tour package, {destination.name} holiday,
-{destination.name} vacation, {destination.name} trip from Surat, {destination.name} tour from India,
-cheap {destination.name} trip, best {destination.name} package, {destination.name} {category} trip
-```
-
-### FAQ Schema Example (for each destination)
-
-```text
-Q: How much does a Thailand trip cost?
-A: Thailand trip packages from NexYatra start at ₹22,599 per person including flights, hotels, and sightseeing.
-
-Q: What is the best time to visit Thailand?
-A: The best time to visit Thailand is November to February when the weather is pleasant.
-
-Q: How many days are enough for Thailand?
-A: 5-7 days are ideal to explore popular destinations like Bangkok, Pattaya, and Phuket.
-```
-
-### Enhanced Product/Offer Schema
-
-```text
-{
-  "@type": "Product",
-  "name": "Thailand Tour Package",
-  "offers": {
-    "@type": "AggregateOffer",
-    "lowPrice": "22599",
-    "highPrice": "45000",
-    "priceCurrency": "INR",
-    "availability": "InStock",
-    "validFrom": "2026-01-01",
-    "validThrough": "2026-12-31"
-  },
-  "aggregateRating": {...},
-  "review": [...]
-}
-```
-
----
-
-## Expected Outcomes
-
-1. **Rich Snippets**: FAQ dropdowns, star ratings, and prices in search results
-2. **Better Keyword Targeting**: Rank for "Thailand trip", "Kashmir tour package", etc.
-3. **Higher Click-Through Rate**: More attractive search listings with prices and ratings
-4. **Improved Local Relevance**: "Thailand trip from Surat" searches
-5. **Fresh Content Signals**: Year references show up-to-date packages
-6. **Better User Experience**: Visible breadcrumbs and FAQ sections
+1. Run database migration to create `itinerary_templates` and `quotations` tables with admin-only RLS policies
+2. Install jsPDF dependency
+3. Create `TemplateForm.tsx` and `TemplateManager.tsx` for master template CRUD
+4. Create `QuotationEditor.tsx` with inline editing, day management, and template loading
+5. Create `QuotationPDF.tsx` with branded PDF generation logic
+6. Create `QuotationsList.tsx` for viewing/managing saved quotations
+7. Create `QuotationBuilder.tsx` page that ties the above components together with sub-navigation
+8. Add "Quotations" tab to `Dashboard.tsx`
 
