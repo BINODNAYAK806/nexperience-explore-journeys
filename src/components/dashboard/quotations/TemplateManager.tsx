@@ -49,32 +49,34 @@ const TemplateManager: React.FC<TemplateManagerProps> = ({ onCreateQuotation }) 
   const handleSubmit = async (formData: TemplateFormData) => {
     setSaving(true);
     try {
+      const payload = {
+        destination_name: formData.destination_name,
+        title: formData.title,
+        description: formData.description || null,
+        days: formData.days as unknown as import("@/integrations/supabase/types").Json,
+        default_inclusions: formData.default_inclusions as unknown as import("@/integrations/supabase/types").Json,
+        default_exclusions: formData.default_exclusions as unknown as import("@/integrations/supabase/types").Json,
+      };
+      console.log("Saving template payload:", payload);
+
       if (editingTemplate) {
         const { error } = await supabase
           .from("itinerary_templates")
-          .update({
-            destination_name: formData.destination_name,
-            title: formData.title,
-            description: formData.description,
-            days: formData.days as any,
-            default_inclusions: formData.default_inclusions as any,
-            default_exclusions: formData.default_exclusions as any,
-          })
+          .update(payload)
           .eq("id", editingTemplate.id);
-        if (error) throw error;
+        if (error) {
+          console.error("Template update error:", error);
+          throw error;
+        }
         toast({ title: "Template updated" });
       } else {
         const { error } = await supabase
           .from("itinerary_templates")
-          .insert({
-            destination_name: formData.destination_name,
-            title: formData.title,
-            description: formData.description,
-            days: formData.days as any,
-            default_inclusions: formData.default_inclusions as any,
-            default_exclusions: formData.default_exclusions as any,
-          });
-        if (error) throw error;
+          .insert(payload);
+        if (error) {
+          console.error("Template insert error:", error);
+          throw error;
+        }
         toast({ title: "Template created" });
       }
       setShowForm(false);
