@@ -55,7 +55,6 @@ async function getAccessToken(): Promise<string> {
 
   const data = await response.json();
   console.log('Auth Response Status:', response.status);
-  console.log('Auth Response:', JSON.stringify(data, null, 2));
 
   if (!response.ok || !data.access_token) {
     throw new Error(data.message || 'Failed to get access token');
@@ -95,10 +94,8 @@ serve(async (req) => {
       const { amount, phone, destinationName, destinationSlug, callbackUrl } = await req.json();
 
       console.log('=== PhonePe Create Order Request ===');
-      console.log('Amount:', amount);
-      console.log('Phone:', phone);
-      console.log('Destination:', destinationName);
-      console.log('Callback URL:', callbackUrl);
+      console.log('Amount: [redacted]');
+      console.log('Destination:', destinationName?.substring(0, 20));
 
       if (!amount || !phone || !destinationName) {
         return new Response(
@@ -157,9 +154,7 @@ serve(async (req) => {
       };
 
       console.log('=== PhonePe v2 API Request ===');
-      console.log('Merchant ID:', PHONEPE_MERCHANT_ID);
       console.log('Order ID:', merchantOrderId);
-      console.log('Payload:', JSON.stringify(payload, null, 2));
 
       const response = await fetch(PHONEPE_PAYMENT_URL, {
         method: 'POST',
@@ -175,7 +170,6 @@ serve(async (req) => {
       
       console.log('=== PhonePe API Response ===');
       console.log('Status:', response.status);
-      console.log('Response:', JSON.stringify(responseData, null, 2));
 
       if (response.ok && responseData.redirectUrl) {
         console.log('Payment order created successfully');
@@ -221,7 +215,6 @@ serve(async (req) => {
       const accessToken = await getAccessToken();
 
       console.log('=== PhonePe Status Check ===');
-      console.log('Order ID:', merchantOrderId);
 
       const response = await fetch(`${PHONEPE_STATUS_URL}/${merchantOrderId}/status`, {
         method: 'GET',
@@ -236,7 +229,6 @@ serve(async (req) => {
       
       console.log('=== PhonePe Status Response ===');
       console.log('Status:', response.status);
-      console.log('Response:', JSON.stringify(responseData, null, 2));
 
       const isSuccess = responseData.state === 'COMPLETED';
 
