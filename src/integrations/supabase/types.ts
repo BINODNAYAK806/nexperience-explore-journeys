@@ -112,10 +112,15 @@ export type Database = {
       }
       itinerary_templates: {
         Row: {
+          cities_covered: string[]
           created_at: string
           days: Json
+          default_brief_itinerary: Json
           default_exclusions: Json
+          default_hotel_details: Json
+          default_important_notes: Json
           default_inclusions: Json
+          default_terms_conditions: Json
           description: string | null
           destination_name: string
           id: string
@@ -123,10 +128,15 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          cities_covered?: string[]
           created_at?: string
           days?: Json
+          default_brief_itinerary?: Json
           default_exclusions?: Json
+          default_hotel_details?: Json
+          default_important_notes?: Json
           default_inclusions?: Json
+          default_terms_conditions?: Json
           description?: string | null
           destination_name: string
           id?: string
@@ -134,10 +144,15 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          cities_covered?: string[]
           created_at?: string
           days?: Json
+          default_brief_itinerary?: Json
           default_exclusions?: Json
+          default_hotel_details?: Json
+          default_important_notes?: Json
           default_inclusions?: Json
+          default_terms_conditions?: Json
           description?: string | null
           destination_name?: string
           id?: string
@@ -184,7 +199,10 @@ export type Database = {
       }
       quotations: {
         Row: {
+          bank_details: string | null
+          brief_itinerary: Json
           child_label: string | null
+          cities_covered: string[]
           client_contact: string | null
           client_name: string
           created_at: string
@@ -192,7 +210,9 @@ export type Database = {
           description: string | null
           destination_name: string
           exclusions: Json
+          hotel_details: Json
           id: string
+          important_notes: Json
           inclusions: Json
           num_children: number | null
           num_persons: number | null
@@ -208,7 +228,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          bank_details?: string | null
+          brief_itinerary?: Json
           child_label?: string | null
+          cities_covered?: string[]
           client_contact?: string | null
           client_name: string
           created_at?: string
@@ -216,7 +239,9 @@ export type Database = {
           description?: string | null
           destination_name: string
           exclusions?: Json
+          hotel_details?: Json
           id?: string
+          important_notes?: Json
           inclusions?: Json
           num_children?: number | null
           num_persons?: number | null
@@ -232,7 +257,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          bank_details?: string | null
+          brief_itinerary?: Json
           child_label?: string | null
+          cities_covered?: string[]
           client_contact?: string | null
           client_name?: string
           created_at?: string
@@ -240,7 +268,9 @@ export type Database = {
           description?: string | null
           destination_name?: string
           exclusions?: Json
+          hotel_details?: Json
           id?: string
+          important_notes?: Json
           inclusions?: Json
           num_children?: number | null
           num_persons?: number | null

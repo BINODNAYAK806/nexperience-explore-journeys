@@ -28,6 +28,7 @@ const QuotationBuilder: React.FC = () => {
       client_name: quotation.client_name,
       client_contact: quotation.client_contact || "",
       destination_name: quotation.destination_name,
+      cities_covered: quotation.cities_covered?.length ? quotation.cities_covered : [""],
       total_price: Number(quotation.total_price),
       price_per_person: Number(quotation.price_per_person || 0),
       num_persons: Number(quotation.num_persons || 2),
@@ -38,10 +39,14 @@ const QuotationBuilder: React.FC = () => {
       travel_start_date: quotation.travel_start_date,
       travel_end_date: quotation.travel_end_date || "",
       description: quotation.description || "",
+      brief_itinerary: (quotation.brief_itinerary as any[])?.length ? quotation.brief_itinerary as any[] : [{ day: 1, description: "" }],
+      hotel_details: (quotation.hotel_details as any[])?.length ? quotation.hotel_details as any[] : [{ city: "", hotel_name: "", room_type: "", nights: 1 }],
       days: (quotation.days || []) as any[],
       inclusions: (quotation.inclusions as string[])?.length ? quotation.inclusions as string[] : [""],
       exclusions: (quotation.exclusions as string[])?.length ? quotation.exclusions as string[] : [""],
       terms_conditions: (quotation.terms_conditions as string[])?.length ? quotation.terms_conditions as string[] : [],
+      important_notes: (quotation.important_notes as string[])?.length ? quotation.important_notes as string[] : [""],
+      bank_details: quotation.bank_details || "",
       status: quotation.status,
     });
     setView("editor");

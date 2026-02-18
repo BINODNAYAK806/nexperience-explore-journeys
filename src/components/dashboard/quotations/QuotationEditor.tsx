@@ -17,12 +17,25 @@ interface DayItem {
   description: string;
 }
 
+interface BriefItem {
+  day: number;
+  description: string;
+}
+
+interface HotelItem {
+  city: string;
+  hotel_name: string;
+  room_type: string;
+  nights: number;
+}
+
 export interface QuotationData {
   id?: string;
   template_id?: string | null;
   client_name: string;
   client_contact: string;
   destination_name: string;
+  cities_covered: string[];
   total_price: number;
   price_per_person: number;
   num_persons: number;
@@ -33,10 +46,14 @@ export interface QuotationData {
   travel_start_date: string;
   travel_end_date: string;
   description: string;
+  brief_itinerary: BriefItem[];
+  hotel_details: HotelItem[];
   days: DayItem[];
   inclusions: string[];
   exclusions: string[];
   terms_conditions: string[];
+  important_notes: string[];
+  bank_details: string;
   status: string;
 }
 
@@ -54,10 +71,13 @@ const DEFAULT_TERMS = [
   "Use the contact form provided to send us a message, ask for information or make a tour booking request.",
 ];
 
+const DEFAULT_BANK = `Bank Name: HDFC Bank\nAccount Name: NexYatra\nAccount No: XXXXXXXXXXXX\nIFSC: HDFC0XXXXXX\nBranch: Vesu, Surat`;
+
 const emptyQuotation: QuotationData = {
   client_name: "",
   client_contact: "",
   destination_name: "",
+  cities_covered: [""],
   total_price: 0,
   price_per_person: 0,
   num_persons: 2,
@@ -68,10 +88,14 @@ const emptyQuotation: QuotationData = {
   travel_start_date: "",
   travel_end_date: "",
   description: "",
+  brief_itinerary: [{ day: 1, description: "" }],
+  hotel_details: [{ city: "", hotel_name: "", room_type: "", nights: 1 }],
   days: [{ day: 1, title: "", description: "" }],
   inclusions: [""],
   exclusions: [""],
   terms_conditions: [...DEFAULT_TERMS],
+  important_notes: [""],
+  bank_details: DEFAULT_BANK,
   status: "draft",
 };
 
@@ -88,14 +112,10 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
   }, []);
 
   useEffect(() => {
-    if (preloadTemplate) {
-      loadTemplate(preloadTemplate);
-    }
+    if (preloadTemplate) loadTemplate(preloadTemplate);
   }, [preloadTemplate]);
 
-  const recalcTotal = (pp: number, np: number, pc: number, nc: number) => {
-    return pp * np + pc * nc;
-  };
+  const recalcTotal = (pp: number, np: number, pc: number, nc: number) => pp * np + pc * nc;
 
   const injectVariables = (text: string) => {
     return text
@@ -110,15 +130,18 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
       template_id: template.id,
       destination_name: template.destination_name,
       description: template.description || "",
+      cities_covered: template.cities_covered?.length ? [...template.cities_covered] : [""],
       days: JSON.parse(JSON.stringify(template.days || [])),
+      brief_itinerary: template.default_brief_itinerary?.length ? JSON.parse(JSON.stringify(template.default_brief_itinerary)) : [{ day: 1, description: "" }],
+      hotel_details: template.default_hotel_details?.length ? JSON.parse(JSON.stringify(template.default_hotel_details)) : [{ city: "", hotel_name: "", room_type: "", nights: 1 }],
       inclusions: template.default_inclusions?.length ? [...template.default_inclusions] : [""],
       exclusions: template.default_exclusions?.length ? [...template.default_exclusions] : [""],
+      terms_conditions: template.default_terms_conditions?.length ? [...template.default_terms_conditions] : [...DEFAULT_TERMS],
+      important_notes: template.default_important_notes?.length ? [...template.default_important_notes] : [""],
     }));
   };
 
-  const updateField = (field: keyof QuotationData, value: any) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  };
+  const updateField = (field: keyof QuotationData, value: any) => setForm((prev) => ({ ...prev, [field]: value }));
 
   const updatePricing = (field: string, value: number) => {
     setForm((prev) => {
@@ -128,12 +151,9 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
     });
   };
 
+  // Day helpers
   const addDay = () => updateField("days", [...form.days, { day: form.days.length + 1, title: "", description: "" }]);
-
-  const removeDay = (i: number) => {
-    updateField("days", form.days.filter((_, idx) => idx !== i).map((d, idx) => ({ ...d, day: idx + 1 })));
-  };
-
+  const removeDay = (i: number) => updateField("days", form.days.filter((_, idx) => idx !== i).map((d, idx) => ({ ...d, day: idx + 1 })));
   const moveDay = (i: number, dir: "up" | "down") => {
     const arr = [...form.days];
     const t = dir === "up" ? i - 1 : i + 1;
@@ -141,24 +161,47 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
     [arr[i], arr[t]] = [arr[t], arr[i]];
     updateField("days", arr.map((d, idx) => ({ ...d, day: idx + 1 })));
   };
-
   const updateDay = (i: number, field: "title" | "description", value: string) => {
     const updated = [...form.days];
     updated[i] = { ...updated[i], [field]: value };
     updateField("days", updated);
   };
 
-  const updateListItem = (field: "inclusions" | "exclusions" | "terms_conditions", i: number, value: string) => {
+  // Brief itinerary helpers
+  const addBrief = () => updateField("brief_itinerary", [...form.brief_itinerary, { day: form.brief_itinerary.length + 1, description: "" }]);
+  const removeBrief = (i: number) => updateField("brief_itinerary", form.brief_itinerary.filter((_, idx) => idx !== i).map((b, idx) => ({ ...b, day: idx + 1 })));
+  const updateBrief = (i: number, value: string) => {
+    const updated = [...form.brief_itinerary];
+    updated[i] = { ...updated[i], description: value };
+    updateField("brief_itinerary", updated);
+  };
+
+  // Hotel helpers
+  const addHotel = () => updateField("hotel_details", [...form.hotel_details, { city: "", hotel_name: "", room_type: "", nights: 1 }]);
+  const removeHotel = (i: number) => updateField("hotel_details", form.hotel_details.filter((_, idx) => idx !== i));
+  const updateHotel = (i: number, field: keyof HotelItem, value: any) => {
+    const updated = [...form.hotel_details];
+    updated[i] = { ...updated[i], [field]: value };
+    updateField("hotel_details", updated);
+  };
+
+  // Cities helpers
+  const addCity = () => updateField("cities_covered", [...form.cities_covered, ""]);
+  const removeCity = (i: number) => updateField("cities_covered", form.cities_covered.filter((_, idx) => idx !== i));
+  const updateCity = (i: number, value: string) => {
+    const updated = [...form.cities_covered];
+    updated[i] = value;
+    updateField("cities_covered", updated);
+  };
+
+  // List helpers
+  const updateListItem = (field: "inclusions" | "exclusions" | "terms_conditions" | "important_notes", i: number, value: string) => {
     const updated = [...form[field]];
     updated[i] = value;
     updateField(field, updated);
   };
-
-  const addListItem = (field: "inclusions" | "exclusions" | "terms_conditions") => updateField(field, [...form[field], ""]);
-
-  const removeListItem = (field: "inclusions" | "exclusions" | "terms_conditions", i: number) => {
-    updateField(field, form[field].filter((_, idx) => idx !== i));
-  };
+  const addListItem = (field: "inclusions" | "exclusions" | "terms_conditions" | "important_notes") => updateField(field, [...form[field], ""]);
+  const removeListItem = (field: "inclusions" | "exclusions" | "terms_conditions" | "important_notes", i: number) => updateField(field, form[field].filter((_, idx) => idx !== i));
 
   const handleSave = async () => {
     if (!form.client_name || !form.destination_name || !form.travel_start_date) {
@@ -172,6 +215,7 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
         client_name: form.client_name,
         client_contact: form.client_contact || null,
         destination_name: form.destination_name,
+        cities_covered: form.cities_covered.filter((s) => s.trim()),
         total_price: form.total_price,
         price_per_person: form.price_per_person,
         num_persons: form.num_persons,
@@ -182,10 +226,14 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
         travel_start_date: form.travel_start_date,
         travel_end_date: form.travel_end_date || null,
         description: injectVariables(form.description) || null,
+        brief_itinerary: form.brief_itinerary as unknown as import("@/integrations/supabase/types").Json,
+        hotel_details: form.hotel_details as unknown as import("@/integrations/supabase/types").Json,
         days: form.days.map((d) => ({ ...d, title: injectVariables(d.title), description: injectVariables(d.description) })) as unknown as import("@/integrations/supabase/types").Json,
         inclusions: form.inclusions.filter((s) => s.trim()) as unknown as import("@/integrations/supabase/types").Json,
         exclusions: form.exclusions.filter((s) => s.trim()) as unknown as import("@/integrations/supabase/types").Json,
         terms_conditions: form.terms_conditions.filter((s) => s.trim()) as unknown as import("@/integrations/supabase/types").Json,
+        important_notes: form.important_notes.filter((s) => s.trim()) as unknown as import("@/integrations/supabase/types").Json,
+        bank_details: form.bank_details || null,
         status: form.status,
       };
 
@@ -213,6 +261,9 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
     };
     await generateQuotationPDF(injected);
   };
+
+  // Display empty string instead of 0 for number inputs
+  const numDisplay = (val: number) => (val === 0 ? "" : val);
 
   return (
     <div className="space-y-6">
@@ -249,11 +300,28 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
         </CardContent>
       </Card>
 
+      {/* Cities Covered */}
+      <Card>
+        <CardHeader><CardTitle className="text-sm">Cities Covered</CardTitle></CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {form.cities_covered.map((city, i) => (
+              <div key={i} className="flex gap-2">
+                <Input value={city} onChange={(e) => updateCity(i, e.target.value)} placeholder="e.g. Srinagar" />
+                <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => removeCity(i)}><Trash2 className="h-4 w-4" /></Button>
+              </div>
+            ))}
+            <Button type="button" variant="outline" size="sm" onClick={addCity}><Plus className="h-4 w-4 mr-1" /> Add City</Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Pricing */}
       <Card>
         <CardHeader><CardTitle className="text-sm">Adult Pricing</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div><Label>Price Per Adult (Rs.)</Label><Input type="number" value={form.price_per_person} onChange={(e) => updatePricing("price_per_person", Number(e.target.value))} /></div>
-          <div><Label>No. of Adults</Label><Input type="number" value={form.num_persons} onChange={(e) => updatePricing("num_persons", Number(e.target.value))} /></div>
+          <div><Label>Price Per Adult (Rs.)</Label><Input type="number" value={numDisplay(form.price_per_person)} onChange={(e) => updatePricing("price_per_person", Number(e.target.value))} placeholder="0" /></div>
+          <div><Label>No. of Adults</Label><Input type="number" value={numDisplay(form.num_persons)} onChange={(e) => updatePricing("num_persons", Number(e.target.value))} placeholder="0" /></div>
           <div><Label>Label</Label><Input value={form.person_label} onChange={(e) => updateField("person_label", e.target.value)} /></div>
         </CardContent>
       </Card>
@@ -261,8 +329,8 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
       <Card>
         <CardHeader><CardTitle className="text-sm">Child Pricing</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div><Label>Price Per Child (Rs.)</Label><Input type="number" value={form.price_per_child} onChange={(e) => updatePricing("price_per_child", Number(e.target.value))} /></div>
-          <div><Label>No. of Children</Label><Input type="number" value={form.num_children} onChange={(e) => updatePricing("num_children", Number(e.target.value))} /></div>
+          <div><Label>Price Per Child (Rs.)</Label><Input type="number" value={numDisplay(form.price_per_child)} onChange={(e) => updatePricing("price_per_child", Number(e.target.value))} placeholder="0" /></div>
+          <div><Label>No. of Children</Label><Input type="number" value={numDisplay(form.num_children)} onChange={(e) => updatePricing("num_children", Number(e.target.value))} placeholder="0" /></div>
           <div><Label>Label</Label><Input value={form.child_label} onChange={(e) => updateField("child_label", e.target.value)} /></div>
         </CardContent>
       </Card>
@@ -282,9 +350,50 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
         <Textarea value={form.description} onChange={(e) => updateField("description", e.target.value)} rows={3} />
       </div>
 
+      {/* Brief Itinerary */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <Label className="text-base font-semibold">Itinerary</Label>
+          <Label className="text-base font-semibold">Brief Itinerary</Label>
+          <Button type="button" variant="outline" size="sm" onClick={addBrief}><Plus className="h-4 w-4 mr-1" /> Add</Button>
+        </div>
+        <div className="space-y-2">
+          {form.brief_itinerary.map((b, i) => (
+            <div key={i} className="flex gap-2 items-center">
+              <span className="text-sm font-medium w-14 shrink-0">Day {b.day}</span>
+              <Input value={b.description} onChange={(e) => updateBrief(i, e.target.value)} placeholder="e.g. Arrival in Srinagar" />
+              <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => removeBrief(i)}><Trash2 className="h-4 w-4" /></Button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Hotel Details */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <Label className="text-base font-semibold">Hotel Details</Label>
+          <Button type="button" variant="outline" size="sm" onClick={addHotel}><Plus className="h-4 w-4 mr-1" /> Add Hotel</Button>
+        </div>
+        <div className="space-y-3">
+          {form.hotel_details.map((h, i) => (
+            <Card key={i}>
+              <CardContent className="py-3 px-4 grid grid-cols-2 md:grid-cols-4 gap-3 items-end">
+                <div><Label className="text-xs">City</Label><Input value={h.city} onChange={(e) => updateHotel(i, "city", e.target.value)} placeholder="City" /></div>
+                <div><Label className="text-xs">Hotel Name</Label><Input value={h.hotel_name} onChange={(e) => updateHotel(i, "hotel_name", e.target.value)} placeholder="Hotel name" /></div>
+                <div><Label className="text-xs">Room Type</Label><Input value={h.room_type} onChange={(e) => updateHotel(i, "room_type", e.target.value)} placeholder="Deluxe/Premium" /></div>
+                <div className="flex gap-2">
+                  <div className="flex-1"><Label className="text-xs">Nights</Label><Input type="number" value={h.nights} onChange={(e) => updateHotel(i, "nights", Number(e.target.value))} /></div>
+                  <Button type="button" variant="ghost" size="icon" className="text-destructive mt-5" onClick={() => removeHotel(i)}><Trash2 className="h-4 w-4" /></Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* Detailed Itinerary */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <Label className="text-base font-semibold">Detailed Itinerary</Label>
           <Button type="button" variant="outline" size="sm" onClick={addDay}><Plus className="h-4 w-4 mr-1" /> Add Day</Button>
         </div>
         <div className="space-y-3">
@@ -307,6 +416,7 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
         </div>
       </div>
 
+      {/* Inclusions & Exclusions */}
       {(["inclusions", "exclusions"] as const).map((field) => (
         <div key={field}>
           <div className="flex items-center justify-between mb-2">
@@ -324,6 +434,7 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
         </div>
       ))}
 
+      {/* Terms & Conditions */}
       <div>
         <div className="flex items-center justify-between mb-2">
           <Label className="text-base font-semibold">Terms & Conditions</Label>
@@ -337,6 +448,28 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Important Notes */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <Label className="text-base font-semibold">Important Notes</Label>
+          <Button type="button" variant="outline" size="sm" onClick={() => addListItem("important_notes")}><Plus className="h-4 w-4 mr-1" /> Add</Button>
+        </div>
+        <div className="space-y-2">
+          {form.important_notes.map((item, i) => (
+            <div key={i} className="flex gap-2">
+              <Textarea value={item} onChange={(e) => updateListItem("important_notes", i, e.target.value)} rows={2} />
+              <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => removeListItem("important_notes", i)}><Trash2 className="h-4 w-4" /></Button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Bank Details */}
+      <div>
+        <Label className="text-base font-semibold">Bank Details</Label>
+        <Textarea value={form.bank_details} onChange={(e) => updateField("bank_details", e.target.value)} rows={4} placeholder="Bank name, Account No, IFSC, Branch..." />
       </div>
 
       <div className="flex gap-3 justify-end">
