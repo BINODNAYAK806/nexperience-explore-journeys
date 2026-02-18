@@ -20,6 +20,7 @@ const Dashboard: React.FC = () => {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("leads");
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -149,7 +150,7 @@ const Dashboard: React.FC = () => {
           </Button>
         </div>
 
-        <Tabs defaultValue="leads" className="mt-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-8">
           <TabsList>
             <TabsTrigger value="leads">Leads</TabsTrigger>
             <TabsTrigger value="destinations">Destinations</TabsTrigger>
