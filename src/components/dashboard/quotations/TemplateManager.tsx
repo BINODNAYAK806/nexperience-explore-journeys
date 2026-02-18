@@ -12,9 +12,14 @@ interface Template {
   destination_name: string;
   title: string;
   description: string | null;
+  cities_covered: string[];
   days: any[];
+  default_brief_itinerary: any[];
+  default_hotel_details: any[];
   default_inclusions: string[];
   default_exclusions: string[];
+  default_terms_conditions: string[];
+  default_important_notes: string[];
   created_at: string;
 }
 
@@ -53,30 +58,23 @@ const TemplateManager: React.FC<TemplateManagerProps> = ({ onCreateQuotation }) 
         destination_name: formData.destination_name,
         title: formData.title,
         description: formData.description || null,
+        cities_covered: formData.cities_covered,
         days: formData.days as unknown as import("@/integrations/supabase/types").Json,
+        default_brief_itinerary: formData.default_brief_itinerary as unknown as import("@/integrations/supabase/types").Json,
+        default_hotel_details: formData.default_hotel_details as unknown as import("@/integrations/supabase/types").Json,
         default_inclusions: formData.default_inclusions as unknown as import("@/integrations/supabase/types").Json,
         default_exclusions: formData.default_exclusions as unknown as import("@/integrations/supabase/types").Json,
+        default_terms_conditions: formData.default_terms_conditions as unknown as import("@/integrations/supabase/types").Json,
+        default_important_notes: formData.default_important_notes as unknown as import("@/integrations/supabase/types").Json,
       };
-      console.log("Saving template payload:", payload);
 
       if (editingTemplate) {
-        const { error } = await supabase
-          .from("itinerary_templates")
-          .update(payload)
-          .eq("id", editingTemplate.id);
-        if (error) {
-          console.error("Template update error:", error);
-          throw error;
-        }
+        const { error } = await supabase.from("itinerary_templates").update(payload).eq("id", editingTemplate.id);
+        if (error) throw error;
         toast({ title: "Template updated" });
       } else {
-        const { error } = await supabase
-          .from("itinerary_templates")
-          .insert(payload);
-        if (error) {
-          console.error("Template insert error:", error);
-          throw error;
-        }
+        const { error } = await supabase.from("itinerary_templates").insert(payload);
+        if (error) throw error;
         toast({ title: "Template created" });
       }
       setShowForm(false);
@@ -113,9 +111,14 @@ const TemplateManager: React.FC<TemplateManagerProps> = ({ onCreateQuotation }) 
             destination_name: editingTemplate.destination_name,
             title: editingTemplate.title,
             description: editingTemplate.description || "",
+            cities_covered: editingTemplate.cities_covered?.length ? editingTemplate.cities_covered : [""],
             days: editingTemplate.days as any[],
-            default_inclusions: editingTemplate.default_inclusions.length ? editingTemplate.default_inclusions : [""],
-            default_exclusions: editingTemplate.default_exclusions.length ? editingTemplate.default_exclusions : [""],
+            default_brief_itinerary: (editingTemplate.default_brief_itinerary as any[])?.length ? editingTemplate.default_brief_itinerary as any[] : [{ day: 1, description: "" }],
+            default_hotel_details: (editingTemplate.default_hotel_details as any[])?.length ? editingTemplate.default_hotel_details as any[] : [{ city: "", hotel_name: "", room_type: "", nights: 1 }],
+            default_inclusions: editingTemplate.default_inclusions?.length ? editingTemplate.default_inclusions : [""],
+            default_exclusions: editingTemplate.default_exclusions?.length ? editingTemplate.default_exclusions : [""],
+            default_terms_conditions: editingTemplate.default_terms_conditions?.length ? editingTemplate.default_terms_conditions : [""],
+            default_important_notes: editingTemplate.default_important_notes?.length ? editingTemplate.default_important_notes : [""],
           } : undefined}
           onSubmit={handleSubmit}
           onCancel={() => { setShowForm(false); setEditingTemplate(null); }}
@@ -143,7 +146,7 @@ const TemplateManager: React.FC<TemplateManagerProps> = ({ onCreateQuotation }) 
               <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
                 <div>
                   <CardTitle className="text-sm">{t.title}</CardTitle>
-                  <p className="text-xs text-muted-foreground">{t.destination_name} · {(t.days as any[]).length} days</p>
+                  <p className="text-xs text-muted-foreground">{t.destination_name} · {(t.days as any[]).length} days{t.cities_covered?.length ? ` · ${t.cities_covered.join(", ")}` : ""}</p>
                 </div>
                 <div className="flex gap-1">
                   <Button variant="outline" size="sm" onClick={() => onCreateQuotation(t)}>
