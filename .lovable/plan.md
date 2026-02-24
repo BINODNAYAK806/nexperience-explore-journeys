@@ -1,111 +1,34 @@
 
 
-# Dynamic Itinerary & Quotation Builder
+## Problem
 
-## Overview
-Add a complete quotation builder system to the Nexyatra admin dashboard. Admins will create reusable "Master Templates" for destinations (with day-by-day itineraries), then generate client-specific quotations by cloning a template, customizing the content inline, and exporting a branded PDF.
+When you switch to another browser tab and come back, the dashboard reloads and resets to the "Leads" tab. This happens because of **two issues working together**:
 
-## Database Schema
+1. **ProtectedRoute unmounts the Dashboard**: The `ProtectedRoute` component listens for Supabase auth state changes. When you return to the tab, Supabase's client fires an auth event (token refresh). The ProtectedRoute sets `loading = true` on every auth event, which unmounts the entire Dashboard and shows "Loading..." temporarily.
 
-Two new tables will be created:
+2. **Dashboard state resets on remount**: When the Dashboard unmounts and remounts, all its state (including `activeTab`) resets to the default value `"leads"`.
 
-**`itinerary_templates`** (Master Templates)
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid (PK) | auto-generated |
-| destination_name | text | e.g. "Kerala Backwaters" |
-| title | text | Template title |
-| description | text | Default overview text with optional placeholders like `{{CLIENT_NAME}}`, `{{START_DATE}}` |
-| days | jsonb | Array of day objects: `[{ day: 1, title: "Arrival in Kochi", description: "..." }, ...]` |
-| default_inclusions | jsonb | Array of strings |
-| default_exclusions | jsonb | Array of strings |
-| created_at | timestamptz | default now() |
-| updated_at | timestamptz | default now() |
+## Fix
 
-**`quotations`** (Generated Quotations / Instances)
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid (PK) | auto-generated |
-| template_id | uuid (FK) | References itinerary_templates.id, nullable (for fully custom quotes) |
-| client_name | text | |
-| client_contact | text | nullable |
-| destination_name | text | |
-| total_price | numeric | |
-| travel_start_date | date | |
-| travel_end_date | date | nullable |
-| description | text | Cloned + edited overview |
-| days | jsonb | Cloned + edited day-by-day itinerary |
-| inclusions | jsonb | |
-| exclusions | jsonb | |
-| status | text | default 'draft' (draft / sent / accepted) |
-| created_at | timestamptz | |
-| updated_at | timestamptz | |
+### 1. ProtectedRoute.tsx -- Stop resetting loading after initial auth check
 
-Both tables will have RLS policies restricting all operations to admin users only.
+Add a `hasChecked` ref so that after the first successful auth check, subsequent auth events (like token refreshes when returning to the tab) update the admin status quietly **without** unmounting the Dashboard.
 
-## Frontend Architecture
+- Add `useRef` to track whether the initial auth check is complete
+- After the first check, skip setting `loading = true` on subsequent `onAuthStateChange` events
+- This prevents the Dashboard from being unmounted and remounted
 
-### New Files
+### 2. Dashboard.tsx -- Stabilize fetchLeads dependencies
 
-1. **`src/pages/QuotationBuilder.tsx`** -- Main page with two sub-views managed by local state:
-   - Template Manager (CRUD for master templates)
-   - Quotation Creator/Editor
+The `fetchLeads` callback currently depends on `startDate`, `endDate`, and `toast`, causing it to be recreated frequently. This triggers the `useEffect` to re-run and re-fetch data unnecessarily.
 
-2. **`src/components/dashboard/quotations/TemplateManager.tsx`** -- List, create, edit, delete master templates. Each template has a "Create Quotation" button.
+- Move `startDate`/`endDate` reads inside the function body using refs, or remove them from the dependency array
+- Use `useRef` for toast to keep the callback stable
+- This prevents unnecessary data refetches that can cause flickering
 
-3. **`src/components/dashboard/quotations/TemplateForm.tsx`** -- Form for creating/editing a master template. Includes dynamic day-card management (add/remove/reorder days).
+---
 
-4. **`src/components/dashboard/quotations/QuotationEditor.tsx`** -- The main quotation builder UI:
-   - Header section: Client Name, Contact, Total Price, Travel Dates (using date pickers)
-   - "Load Template" dropdown to clone a master template's data into the form
-   - Day-by-day itinerary cards with inline-editable text areas
-   - Add/Remove day buttons
-   - Inclusions/Exclusions editable lists
-   - Variable injection: auto-replace `{{CLIENT_NAME}}`, `{{START_DATE}}`, `{{TOTAL_PRICE}}` placeholders when a template is loaded
-   - "Save as Draft" and "Generate PDF" buttons
-
-5. **`src/components/dashboard/quotations/QuotationsList.tsx`** -- Table of previously generated quotations with status, client name, destination, date, and actions (edit, download PDF, delete).
-
-6. **`src/components/dashboard/quotations/QuotationPDF.tsx`** -- The PDF rendering logic using jsPDF. Generates a branded, print-ready PDF with:
-   - Nexyatra header with logo on every page
-   - Watermark: Nexyatra logo at center, opacity 0.1
-   - Client info header block
-   - Day-by-day itinerary sections
-   - Inclusions/Exclusions section
-   - Footer with contact info
-
-### Dashboard Integration
-
-A new tab "Quotations" will be added to `src/pages/Dashboard.tsx` alongside the existing Leads, Destinations, Reviews, and Contacts tabs.
-
-### Routing
-
-No new routes needed -- the quotation builder lives within the existing `/dashboard` protected route as a tab.
-
-## PDF Generation
-
-Will use **jsPDF** (client-side, no server dependency needed). The PDF layout will include:
-- Page 1: Cover page with Nexyatra branding, client name, destination, dates, price
-- Subsequent pages: Day-by-day itinerary cards styled with proper typography
-- Every page: Header with Nexyatra logo, centered watermark at 10% opacity, footer with contact details
-- Final page: Inclusions, exclusions, terms
-
-## Master vs Instance Logic
-
-When "Create Quotation from Template" is clicked:
-1. The template's `days`, `description`, `inclusions`, `exclusions` are deep-cloned into the quotation form
-2. Placeholders (`{{CLIENT_NAME}}`, `{{START_DATE}}`, `{{TOTAL_PRICE}}`) are replaced with actual values as the admin fills in the header fields
-3. The master template is never modified -- all edits happen on the cloned quotation data
-4. The quotation is saved independently with a reference back to `template_id`
-
-## Implementation Steps
-
-1. Run database migration to create `itinerary_templates` and `quotations` tables with admin-only RLS policies
-2. Install jsPDF dependency
-3. Create `TemplateForm.tsx` and `TemplateManager.tsx` for master template CRUD
-4. Create `QuotationEditor.tsx` with inline editing, day management, and template loading
-5. Create `QuotationPDF.tsx` with branded PDF generation logic
-6. Create `QuotationsList.tsx` for viewing/managing saved quotations
-7. Create `QuotationBuilder.tsx` page that ties the above components together with sub-navigation
-8. Add "Quotations" tab to `Dashboard.tsx`
+**Summary of changes:**
+- `src/components/ProtectedRoute.tsx` -- Add a ref to prevent re-showing the loading screen on token refresh events
+- `src/pages/Dashboard.tsx` -- Stabilize the `fetchLeads` callback to prevent unnecessary re-renders
 
