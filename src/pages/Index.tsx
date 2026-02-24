@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ChevronRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { JourneyRequestForm } from '@/components/home/JourneyRequestForm';
 import { TravelCategories } from '@/components/home/TravelCategories';
@@ -26,43 +26,40 @@ const Index = () => {
         url="https://www.nexyatra.in"
         structuredData={structuredData}
       />
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center pt-16 overflow-hidden">
-        {/* Video Background */}
-        <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/30 to-indigo-600/30 z-10"></div>
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="w-full h-full object-cover"
-          >
-            <source src="https://cdn.coverr.co/videos/coverr-aerial-view-of-beautiful-resort-island-in-the-maldives-4507/1080p.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
-        </div>
 
-        <div className="container-custom relative z-10 py-20">
-          <div className="max-w-3xl">
-            <span className="inline-block px-3 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full mb-4">
-              Next-level Travel Experiences
-            </span>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-              Affordable Travel Packages from <span className="text-primary">Surat</span>
-            </h1>
-            <p className="text-lg md:text-xl text-white/90 mb-8">
-              Book customized holiday packages to Dubai, Bali, Kerala, Manali & more. Best prices guaranteed from NexYatra!
-            </p>
+      {/* Hero Section — Left-aligned, text-first */}
+      <section className="min-h-screen flex items-end pb-20 pt-32 section-border">
+        <div className="container-custom w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-end">
+            <div className="flex flex-col">
+              <span className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-6">
+                Next-level Travel Experiences
+              </span>
+              <h1 className="text-5xl md:text-7xl lg:text-[5.5rem] xl:text-[6.5rem] font-bold text-foreground leading-[0.9] tracking-tight mb-8">
+                Affordable Travel Packages from <span className="italic font-light">Surat</span>
+              </h1>
+              <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-xl leading-relaxed">
+                Book customized holiday packages to Dubai, Bali, Kerala, Manali & more. Best prices guaranteed from NexYatra!
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <JourneyRequestForm />
+              </div>
+            </div>
 
-            <JourneyRequestForm />
-          </div>
-        </div>
-
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
-          <div className="w-8 h-12 rounded-full border-2 border-white flex items-center justify-center">
-            <div className="w-1 h-3 bg-white rounded-full"></div>
+            {/* Right side — abstract minimal visual */}
+            <div className="hidden lg:flex items-end justify-end">
+              <div className="w-full max-w-md aspect-square border border-border relative">
+                <div className="absolute inset-4 border border-border"></div>
+                <div className="absolute inset-8 border border-border"></div>
+                <div className="absolute inset-12 border border-border"></div>
+                <div className="absolute bottom-4 left-4 text-xs text-muted-foreground font-mono">
+                  395007 — Surat, GJ
+                </div>
+                <div className="absolute top-4 right-4 text-xs text-muted-foreground font-mono">
+                  21.1702°N
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -72,25 +69,27 @@ const Index = () => {
       <Testimonials />
 
       {/* CTA Section */}
-      <section className="py-24 bg-gradient-to-br from-blue-600 to-indigo-700 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1493246507139-91e8fad9978e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2940&q=80')] bg-no-repeat bg-cover opacity-20"></div>
-        <div className="container-custom relative z-10">
-          <div className="max-w-3xl mx-auto text-center text-white">
-            <span className="inline-block px-3 py-1 text-xs font-medium bg-white/20 text-white rounded-full mb-4">
+      <section className="py-24 section-border-top">
+        <div className="container-custom">
+          <div className="max-w-4xl">
+            <span className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-6 block">
               Begin Your Journey
             </span>
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">Ready to Discover Your Next Adventure?</h2>
-            <p className="text-white/90 text-lg mb-8 max-w-2xl mx-auto">
+            <h2 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-8 leading-[0.95] tracking-tight">
+              Ready to Discover Your Next Adventure?
+            </h2>
+            <p className="text-muted-foreground text-lg mb-10 max-w-2xl leading-relaxed">
               Start planning your personalized travel experience today and create memories that will last a lifetime.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4">
               <Link to="/destinations">
-                <Button variant="secondary" size="lg" className="rounded-full text-primary font-medium w-full sm:w-auto">
+                <Button className="rounded-none px-8 py-6 text-base font-medium">
                   Explore Destinations
+                  <ArrowRight size={18} className="ml-2" />
                 </Button>
               </Link>
               <Link to="/contact">
-                <Button variant="outline" size="lg" className="rounded-full text-white border-white hover:bg-white/10 w-full sm:w-auto">
+                <Button variant="outline" className="rounded-none px-8 py-6 text-base font-medium border-foreground text-foreground hover:bg-foreground hover:text-background">
                   Contact Us
                 </Button>
               </Link>
