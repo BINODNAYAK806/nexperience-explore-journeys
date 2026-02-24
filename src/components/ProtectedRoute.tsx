@@ -9,6 +9,7 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
+  const hasChecked = useRef(false);
 
   useEffect(() => {
     let mounted = true;
@@ -34,7 +35,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         console.error("Error checking authentication:", error);
         if (mounted) setIsAdmin(false);
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+          hasChecked.current = true;
+        }
       }
     };
 
@@ -44,12 +48,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
       if (!session) {
         setIsAdmin(false);
         setLoading(false);
+        hasChecked.current = true;
         return;
       }
       checkAdmin(session.user.id);
     });
 
-    // Listen for future auth changes
+    // Listen for future auth changes — skip loading flash after initial check
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (!mounted) return;
@@ -58,7 +63,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
           setLoading(false);
           return;
         }
-        setLoading(true);
+        if (!hasChecked.current) {
+          setLoading(true);
+        }
         checkAdmin(session.user.id);
       }
     );
