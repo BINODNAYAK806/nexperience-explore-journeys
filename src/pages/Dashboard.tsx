@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -25,26 +25,25 @@ const Dashboard: React.FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const startDateRef = useRef(startDate);
+  const endDateRef = useRef(endDate);
+  startDateRef.current = startDate;
+  endDateRef.current = endDate;
+
   const fetchLeads = useCallback(async () => {
     setLoading(true);
     try {
-      console.log("Fetching leads from Supabase...");
       const { data, error } = await supabase
         .from("journey_requests")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Supabase fetch error:", error);
-        throw error;
-      }
-
-      console.log("Fetched lead data:", data);
+      if (error) throw error;
       
       if (data) {
         setLeads(data as Lead[]);
-        if (startDate && endDate) {
-          applyDateFilter(data as Lead[], startDate, endDate);
+        if (startDateRef.current && endDateRef.current) {
+          applyDateFilter(data as Lead[], startDateRef.current, endDateRef.current);
         } else {
           setFilteredLeads(data as Lead[]);
         }
@@ -59,7 +58,7 @@ const Dashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [startDate, endDate, toast]);
+  }, [toast]);
 
   const applyDateFilter = (data: Lead[], start: Date, end: Date) => {
     const startCopy = new Date(start);
