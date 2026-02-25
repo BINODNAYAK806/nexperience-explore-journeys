@@ -6,28 +6,20 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, ArrowUp, ArrowDown, Save, FileDown } from "lucide-react";
+import {
+  Plus, Trash2, ArrowUp, ArrowDown, Save, FileDown, ChevronDown, ChevronRight,
+  User, MapPin, Hotel, Calendar, IndianRupee, FileText, ListChecks, ListX,
+  ScrollText, AlertTriangle, Building2, GripVertical
+} from "lucide-react";
 import { generateQuotationPDF } from "./QuotationPDF";
 import { format } from "date-fns";
 
-interface DayItem {
-  day: number;
-  title: string;
-  description: string;
-}
-
-interface BriefItem {
-  day: number;
-  description: string;
-}
-
-interface HotelItem {
-  city: string;
-  hotel_name: string;
-  room_type: string;
-  nights: number;
-}
+interface DayItem { day: number; title: string; description: string; }
+interface BriefItem { day: number; description: string; }
+interface HotelItem { city: string; hotel_name: string; room_type: string; nights: number; }
 
 export interface QuotationData {
   id?: string;
@@ -74,29 +66,50 @@ const DEFAULT_TERMS = [
 const DEFAULT_BANK = `Bank Name: HDFC Bank\nAccount Name: NexYatra\nAccount No: XXXXXXXXXXXX\nIFSC: HDFC0XXXXXX\nBranch: Vesu, Surat`;
 
 const emptyQuotation: QuotationData = {
-  client_name: "",
-  client_contact: "",
-  destination_name: "",
-  cities_covered: [""],
-  total_price: 0,
-  price_per_person: 0,
-  num_persons: 2,
-  person_label: "Adult",
-  price_per_child: 0,
-  num_children: 0,
-  child_label: "Child",
-  travel_start_date: "",
-  travel_end_date: "",
-  description: "",
+  client_name: "", client_contact: "", destination_name: "",
+  cities_covered: [""], total_price: 0, price_per_person: 0, num_persons: 2,
+  person_label: "Adult", price_per_child: 0, num_children: 0, child_label: "Child",
+  travel_start_date: "", travel_end_date: "", description: "",
   brief_itinerary: [{ day: 1, description: "" }],
   hotel_details: [{ city: "", hotel_name: "", room_type: "", nights: 1 }],
   days: [{ day: 1, title: "", description: "" }],
-  inclusions: [""],
-  exclusions: [""],
-  terms_conditions: [...DEFAULT_TERMS],
-  important_notes: [""],
-  bank_details: DEFAULT_BANK,
-  status: "draft",
+  inclusions: [""], exclusions: [""],
+  terms_conditions: [...DEFAULT_TERMS], important_notes: [""],
+  bank_details: DEFAULT_BANK, status: "draft",
+};
+
+// Collapsible Section wrapper
+const Section: React.FC<{
+  title: string;
+  icon: React.ReactNode;
+  badge?: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+  actions?: React.ReactNode;
+}> = ({ title, icon, badge, defaultOpen = false, children, actions }) => {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <Card className="overflow-hidden">
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="py-3 px-4 cursor-pointer hover:bg-muted/50 transition-colors">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {open ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                <span className="text-muted-foreground">{icon}</span>
+                <CardTitle className="text-sm font-semibold">{title}</CardTitle>
+                {badge && <Badge variant="secondary" className="text-xs">{badge}</Badge>}
+              </div>
+              {actions && <div onClick={(e) => e.stopPropagation()}>{actions}</div>}
+            </div>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="pt-0 pb-4 px-4">{children}</CardContent>
+        </CollapsibleContent>
+      </Collapsible>
+    </Card>
+  );
 };
 
 const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadTemplate, onSaved, onCancel }) => {
@@ -167,7 +180,7 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
     updateField("days", updated);
   };
 
-  // Brief itinerary helpers
+  // Brief helpers
   const addBrief = () => updateField("brief_itinerary", [...form.brief_itinerary, { day: form.brief_itinerary.length + 1, description: "" }]);
   const removeBrief = (i: number) => updateField("brief_itinerary", form.brief_itinerary.filter((_, idx) => idx !== i).map((b, idx) => ({ ...b, day: idx + 1 })));
   const updateBrief = (i: number, value: string) => {
@@ -244,7 +257,7 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
         const { error } = await supabase.from("quotations").insert(payload);
         if (error) throw error;
       }
-      toast({ title: "Quotation saved" });
+      toast({ title: "Quotation saved successfully!" });
       onSaved();
     } catch (error: any) {
       toast({ title: "Error saving quotation", description: error.message, variant: "destructive" });
@@ -262,220 +275,327 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
     await generateQuotationPDF(injected);
   };
 
-  // Display empty string instead of 0 for number inputs
   const numDisplay = (val: number) => (val === 0 ? "" : val);
 
+  const filledSections = {
+    client: !!(form.client_name && form.travel_start_date),
+    cities: form.cities_covered.some(c => c.trim()),
+    pricing: form.price_per_person > 0,
+    brief: form.brief_itinerary.some(b => b.description.trim()),
+    hotels: form.hotel_details.some(h => h.city.trim() || h.hotel_name.trim()),
+    days: form.days.some(d => d.title.trim()),
+    inclusions: form.inclusions.some(i => i.trim()),
+    exclusions: form.exclusions.some(e => e.trim()),
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">{form.id ? "Edit Quotation" : "New Quotation"}</h3>
-        <Button variant="outline" onClick={onCancel}>Back</Button>
+    <div className="space-y-4">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-10 bg-card border rounded-lg p-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <h3 className="text-lg font-semibold">{form.id ? "Edit Quotation" : "New Quotation"}</h3>
+            <Select value={form.status} onValueChange={(v) => updateField("status", v)}>
+              <SelectTrigger className="w-[130px] h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="draft">📝 Draft</SelectItem>
+                <SelectItem value="sent">📤 Sent</SelectItem>
+                <SelectItem value="accepted">✅ Accepted</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <Button variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
+            <Button variant="secondary" size="sm" onClick={handleGeneratePDF} disabled={!form.client_name}>
+              <FileDown className="h-4 w-4 mr-1" /> PDF
+            </Button>
+            <Button size="sm" onClick={handleSave} disabled={saving}>
+              <Save className="h-4 w-4 mr-1" /> {saving ? "Saving..." : "Save"}
+            </Button>
+          </div>
+        </div>
+
+        {/* Quick Summary */}
+        {form.client_name && (
+          <div className="flex flex-wrap gap-2 mt-3 text-xs text-muted-foreground">
+            <span className="bg-muted px-2 py-1 rounded">{form.client_name}</span>
+            {form.destination_name && <span className="bg-muted px-2 py-1 rounded">{form.destination_name}</span>}
+            {form.total_price > 0 && <span className="bg-primary/10 text-primary px-2 py-1 rounded font-medium">₹{form.total_price.toLocaleString("en-IN")}</span>}
+            {form.days.length > 0 && <span className="bg-muted px-2 py-1 rounded">{form.days.length}D/{form.days.length > 1 ? form.days.length - 1 : 0}N</span>}
+          </div>
+        )}
       </div>
 
+      {/* Template Selector */}
       {!initialData && !preloadTemplate && (
-        <div>
-          <Label>Load from Template</Label>
-          <Select onValueChange={(id) => {
-            const t = templates.find((t) => t.id === id);
-            if (t) loadTemplate(t);
-          }}>
-            <SelectTrigger><SelectValue placeholder="Select a template..." /></SelectTrigger>
-            <SelectContent>
-              {templates.map((t) => (
-                <SelectItem key={t.id} value={t.id}>{t.title} — {t.destination_name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Card>
+          <CardContent className="py-4 px-4">
+            <Label className="text-sm font-medium mb-2 block">Load from Master Template</Label>
+            <Select onValueChange={(id) => {
+              const t = templates.find((t) => t.id === id);
+              if (t) loadTemplate(t);
+            }}>
+              <SelectTrigger><SelectValue placeholder="Select a template to pre-fill data..." /></SelectTrigger>
+              <SelectContent>
+                {templates.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>{t.title} — {t.destination_name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
       )}
 
-      <Card>
-        <CardHeader><CardTitle className="text-sm">Client & Trip Info</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div><Label>Client Name *</Label><Input value={form.client_name} onChange={(e) => updateField("client_name", e.target.value)} /></div>
-          <div><Label>Client Contact</Label><Input value={form.client_contact} onChange={(e) => updateField("client_contact", e.target.value)} /></div>
-          <div><Label>Destination *</Label><Input value={form.destination_name} onChange={(e) => updateField("destination_name", e.target.value)} /></div>
-          <div><Label>Start Date *</Label><Input type="date" value={form.travel_start_date} onChange={(e) => updateField("travel_start_date", e.target.value)} /></div>
-          <div><Label>End Date</Label><Input type="date" value={form.travel_end_date} onChange={(e) => updateField("travel_end_date", e.target.value)} /></div>
-        </CardContent>
-      </Card>
-
-      {/* Cities Covered */}
-      <Card>
-        <CardHeader><CardTitle className="text-sm">Cities Covered</CardTitle></CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {form.cities_covered.map((city, i) => (
-              <div key={i} className="flex gap-2">
-                <Input value={city} onChange={(e) => updateCity(i, e.target.value)} placeholder="e.g. Srinagar" />
-                <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => removeCity(i)}><Trash2 className="h-4 w-4" /></Button>
-              </div>
-            ))}
-            <Button type="button" variant="outline" size="sm" onClick={addCity}><Plus className="h-4 w-4 mr-1" /> Add City</Button>
+      {/* 1. Client & Trip Info */}
+      <Section title="Client & Trip Info" icon={<User className="h-4 w-4" />} defaultOpen={true}
+        badge={filledSections.client ? "✓" : "Required"}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Client Name *</Label>
+            <Input value={form.client_name} onChange={(e) => updateField("client_name", e.target.value)} placeholder="Guest full name" />
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Pricing */}
-      <Card>
-        <CardHeader><CardTitle className="text-sm">Adult Pricing</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div><Label>Price Per Adult (Rs.)</Label><Input type="number" value={numDisplay(form.price_per_person)} onChange={(e) => updatePricing("price_per_person", Number(e.target.value))} placeholder="0" /></div>
-          <div><Label>No. of Adults</Label><Input type="number" value={numDisplay(form.num_persons)} onChange={(e) => updatePricing("num_persons", Number(e.target.value))} placeholder="0" /></div>
-          <div><Label>Label</Label><Input value={form.person_label} onChange={(e) => updateField("person_label", e.target.value)} /></div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader><CardTitle className="text-sm">Child Pricing</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div><Label>Price Per Child (Rs.)</Label><Input type="number" value={numDisplay(form.price_per_child)} onChange={(e) => updatePricing("price_per_child", Number(e.target.value))} placeholder="0" /></div>
-          <div><Label>No. of Children</Label><Input type="number" value={numDisplay(form.num_children)} onChange={(e) => updatePricing("num_children", Number(e.target.value))} placeholder="0" /></div>
-          <div><Label>Label</Label><Input value={form.child_label} onChange={(e) => updateField("child_label", e.target.value)} /></div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader><CardTitle className="text-sm">Total</CardTitle></CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4">
-            <Label>Total Price (Rs.)</Label>
-            <Input type="number" value={form.total_price} readOnly className="bg-muted max-w-[200px] font-bold text-lg" />
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Client Contact</Label>
+            <Input value={form.client_contact} onChange={(e) => updateField("client_contact", e.target.value)} placeholder="+91 98765 43210" />
           </div>
-        </CardContent>
-      </Card>
-
-      <div>
-        <Label>Overview / Description</Label>
-        <Textarea value={form.description} onChange={(e) => updateField("description", e.target.value)} rows={3} />
-      </div>
-
-      {/* Brief Itinerary */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <Label className="text-base font-semibold">Brief Itinerary</Label>
-          <Button type="button" variant="outline" size="sm" onClick={addBrief}><Plus className="h-4 w-4 mr-1" /> Add</Button>
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Destination *</Label>
+            <Input value={form.destination_name} onChange={(e) => updateField("destination_name", e.target.value)} placeholder="e.g. Kashmir" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Travel Start Date *</Label>
+            <Input type="date" value={form.travel_start_date} onChange={(e) => updateField("travel_start_date", e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Travel End Date</Label>
+            <Input type="date" value={form.travel_end_date} onChange={(e) => updateField("travel_end_date", e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Description / Overview</Label>
+            <Textarea value={form.description} onChange={(e) => updateField("description", e.target.value)} rows={2} placeholder="Brief tour overview..." />
+          </div>
         </div>
-        <div className="space-y-2">
-          {form.brief_itinerary.map((b, i) => (
-            <div key={i} className="flex gap-2 items-center">
-              <span className="text-sm font-medium w-14 shrink-0">Day {b.day}</span>
-              <Input value={b.description} onChange={(e) => updateBrief(i, e.target.value)} placeholder="e.g. Arrival in Srinagar" />
-              <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => removeBrief(i)}><Trash2 className="h-4 w-4" /></Button>
+      </Section>
+
+      {/* 2. Cities Covered */}
+      <Section title="Cities Covered" icon={<MapPin className="h-4 w-4" />}
+        badge={`${form.cities_covered.filter(c => c.trim()).length} cities`}
+        actions={<Button type="button" variant="outline" size="sm" onClick={addCity}><Plus className="h-3 w-3 mr-1" /> Add</Button>}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+          {form.cities_covered.map((city, i) => (
+            <div key={i} className="flex gap-1">
+              <Input value={city} onChange={(e) => updateCity(i, e.target.value)} placeholder="City name" className="h-9" />
+              {form.cities_covered.length > 1 && (
+                <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-destructive shrink-0" onClick={() => removeCity(i)}><Trash2 className="h-3 w-3" /></Button>
+              )}
             </div>
           ))}
         </div>
-      </div>
+      </Section>
 
-      {/* Hotel Details */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <Label className="text-base font-semibold">Hotel Details</Label>
-          <Button type="button" variant="outline" size="sm" onClick={addHotel}><Plus className="h-4 w-4 mr-1" /> Add Hotel</Button>
+      {/* 3. Pricing */}
+      <Section title="Pricing" icon={<IndianRupee className="h-4 w-4" />} defaultOpen={true}
+        badge={form.total_price > 0 ? `₹${form.total_price.toLocaleString("en-IN")}` : undefined}>
+        <div className="space-y-4">
+          {/* Adult Pricing Row */}
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-2">Adult Pricing</p>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Price/Person (₹)</Label>
+                <Input type="number" value={numDisplay(form.price_per_person)} onChange={(e) => updatePricing("price_per_person", Number(e.target.value))} placeholder="0" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">No. of Adults</Label>
+                <Input type="number" value={numDisplay(form.num_persons)} onChange={(e) => updatePricing("num_persons", Number(e.target.value))} placeholder="0" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Label</Label>
+                <Input value={form.person_label} onChange={(e) => updateField("person_label", e.target.value)} />
+              </div>
+            </div>
+          </div>
+
+          {/* Child Pricing Row */}
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-2">Child Pricing</p>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Price/Child (₹)</Label>
+                <Input type="number" value={numDisplay(form.price_per_child)} onChange={(e) => updatePricing("price_per_child", Number(e.target.value))} placeholder="0" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">No. of Children</Label>
+                <Input type="number" value={numDisplay(form.num_children)} onChange={(e) => updatePricing("num_children", Number(e.target.value))} placeholder="0" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Label</Label>
+                <Input value={form.child_label} onChange={(e) => updateField("child_label", e.target.value)} />
+              </div>
+            </div>
+          </div>
+
+          {/* Total */}
+          <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 flex items-center justify-between">
+            <span className="font-semibold text-sm">Total Package Amount</span>
+            <span className="text-xl font-bold text-primary">₹{form.total_price.toLocaleString("en-IN")}</span>
+          </div>
         </div>
-        <div className="space-y-3">
-          {form.hotel_details.map((h, i) => (
-            <Card key={i}>
-              <CardContent className="py-3 px-4 grid grid-cols-2 md:grid-cols-4 gap-3 items-end">
-                <div><Label className="text-xs">City</Label><Input value={h.city} onChange={(e) => updateHotel(i, "city", e.target.value)} placeholder="City" /></div>
-                <div><Label className="text-xs">Hotel Name</Label><Input value={h.hotel_name} onChange={(e) => updateHotel(i, "hotel_name", e.target.value)} placeholder="Hotel name" /></div>
-                <div><Label className="text-xs">Room Type</Label><Input value={h.room_type} onChange={(e) => updateHotel(i, "room_type", e.target.value)} placeholder="Deluxe/Premium" /></div>
-                <div className="flex gap-2">
-                  <div className="flex-1"><Label className="text-xs">Nights</Label><Input type="number" value={h.nights} onChange={(e) => updateHotel(i, "nights", Number(e.target.value))} /></div>
-                  <Button type="button" variant="ghost" size="icon" className="text-destructive mt-5" onClick={() => removeHotel(i)}><Trash2 className="h-4 w-4" /></Button>
-                </div>
-              </CardContent>
-            </Card>
+      </Section>
+
+      {/* 4. Brief Itinerary */}
+      <Section title="Brief Itinerary" icon={<Calendar className="h-4 w-4" />}
+        badge={`${form.brief_itinerary.filter(b => b.description.trim()).length} days`}
+        actions={<Button type="button" variant="outline" size="sm" onClick={addBrief}><Plus className="h-3 w-3 mr-1" /> Add</Button>}>
+        <div className="space-y-2">
+          {form.brief_itinerary.map((b, i) => (
+            <div key={i} className="flex gap-2 items-center">
+              <Badge variant="outline" className="shrink-0 w-14 justify-center">Day {b.day}</Badge>
+              <Input value={b.description} onChange={(e) => updateBrief(i, e.target.value)} placeholder="e.g. Arrival in Srinagar, check-in to houseboat" className="h-9" />
+              <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-destructive shrink-0" onClick={() => removeBrief(i)}><Trash2 className="h-3 w-3" /></Button>
+            </div>
           ))}
         </div>
-      </div>
+      </Section>
 
-      {/* Detailed Itinerary */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <Label className="text-base font-semibold">Detailed Itinerary</Label>
-          <Button type="button" variant="outline" size="sm" onClick={addDay}><Plus className="h-4 w-4 mr-1" /> Add Day</Button>
+      {/* 5. Hotel Details */}
+      <Section title="Hotel Details" icon={<Hotel className="h-4 w-4" />}
+        badge={`${form.hotel_details.filter(h => h.hotel_name.trim()).length} hotels`}
+        actions={<Button type="button" variant="outline" size="sm" onClick={addHotel}><Plus className="h-3 w-3 mr-1" /> Add</Button>}>
+        <div className="space-y-3">
+          {form.hotel_details.map((h, i) => (
+            <div key={i} className="grid grid-cols-2 md:grid-cols-5 gap-2 p-3 bg-muted/30 rounded-lg items-end">
+              <div className="space-y-1">
+                <Label className="text-xs">City</Label>
+                <Input value={h.city} onChange={(e) => updateHotel(i, "city", e.target.value)} placeholder="City" className="h-9" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Hotel Name</Label>
+                <Input value={h.hotel_name} onChange={(e) => updateHotel(i, "hotel_name", e.target.value)} placeholder="Hotel name" className="h-9" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Room Type</Label>
+                <Input value={h.room_type} onChange={(e) => updateHotel(i, "room_type", e.target.value)} placeholder="Deluxe" className="h-9" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Nights</Label>
+                <Input type="number" value={h.nights} onChange={(e) => updateHotel(i, "nights", Number(e.target.value))} className="h-9" />
+              </div>
+              <div className="flex items-end">
+                <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-destructive" onClick={() => removeHotel(i)}><Trash2 className="h-3 w-3" /></Button>
+              </div>
+            </div>
+          ))}
         </div>
+      </Section>
+
+      {/* 6. Detailed Itinerary */}
+      <Section title="Detailed Itinerary" icon={<FileText className="h-4 w-4" />}
+        badge={`${form.days.length} days`}
+        actions={<Button type="button" variant="outline" size="sm" onClick={addDay}><Plus className="h-3 w-3 mr-1" /> Add Day</Button>}>
         <div className="space-y-3">
           {form.days.map((day, i) => (
-            <Card key={i}>
-              <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
-                <CardTitle className="text-sm">Day {day.day}</CardTitle>
+            <div key={i} className="border rounded-lg overflow-hidden">
+              <div className="flex items-center justify-between bg-muted/40 px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <GripVertical className="h-4 w-4 text-muted-foreground" />
+                  <Badge variant="default" className="text-xs">Day {day.day}</Badge>
+                </div>
                 <div className="flex gap-1">
                   <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveDay(i, "up")} disabled={i === 0}><ArrowUp className="h-3 w-3" /></Button>
                   <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveDay(i, "down")} disabled={i === form.days.length - 1}><ArrowDown className="h-3 w-3" /></Button>
                   <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeDay(i)} disabled={form.days.length <= 1}><Trash2 className="h-3 w-3" /></Button>
                 </div>
-              </CardHeader>
-              <CardContent className="px-4 pb-3 pt-0 space-y-2">
-                <Input placeholder="Day title" value={day.title} onChange={(e) => updateDay(i, "title", e.target.value)} />
-                <Textarea placeholder="Day description" value={day.description} onChange={(e) => updateDay(i, "description", e.target.value)} rows={2} />
-              </CardContent>
-            </Card>
+              </div>
+              <div className="p-3 space-y-2">
+                <Input placeholder="Day title (e.g. Arrival in Srinagar)" value={day.title} onChange={(e) => updateDay(i, "title", e.target.value)} className="h-9" />
+                <Textarea placeholder="Detailed description of the day's activities..." value={day.description} onChange={(e) => updateDay(i, "description", e.target.value)} rows={3} />
+              </div>
+            </div>
           ))}
         </div>
-      </div>
+      </Section>
 
-      {/* Inclusions & Exclusions */}
-      {(["inclusions", "exclusions"] as const).map((field) => (
-        <div key={field}>
-          <div className="flex items-center justify-between mb-2">
-            <Label className="text-base font-semibold capitalize">{field}</Label>
-            <Button type="button" variant="outline" size="sm" onClick={() => addListItem(field)}><Plus className="h-4 w-4 mr-1" /> Add</Button>
-          </div>
-          <div className="space-y-2">
-            {form[field].map((item, i) => (
-              <div key={i} className="flex gap-2">
-                <Input value={item} onChange={(e) => updateListItem(field, i, e.target.value)} />
-                <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => removeListItem(field, i)}><Trash2 className="h-4 w-4" /></Button>
-              </div>
-            ))}
-          </div>
+      {/* 7. Inclusions */}
+      <Section title="Inclusions" icon={<ListChecks className="h-4 w-4" />}
+        badge={`${form.inclusions.filter(i => i.trim()).length} items`}
+        actions={<Button type="button" variant="outline" size="sm" onClick={() => addListItem("inclusions")}><Plus className="h-3 w-3 mr-1" /> Add</Button>}>
+        <div className="space-y-2">
+          {form.inclusions.map((item, i) => (
+            <div key={i} className="flex gap-2 items-center">
+              <span className="text-green-500 shrink-0">✓</span>
+              <Input value={item} onChange={(e) => updateListItem("inclusions", i, e.target.value)} placeholder="e.g. All meals included" className="h-9" />
+              <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-destructive shrink-0" onClick={() => removeListItem("inclusions", i)}><Trash2 className="h-3 w-3" /></Button>
+            </div>
+          ))}
         </div>
-      ))}
+      </Section>
 
-      {/* Terms & Conditions */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <Label className="text-base font-semibold">Terms & Conditions</Label>
-          <Button type="button" variant="outline" size="sm" onClick={() => addListItem("terms_conditions")}><Plus className="h-4 w-4 mr-1" /> Add</Button>
+      {/* 8. Exclusions */}
+      <Section title="Exclusions" icon={<ListX className="h-4 w-4" />}
+        badge={`${form.exclusions.filter(e => e.trim()).length} items`}
+        actions={<Button type="button" variant="outline" size="sm" onClick={() => addListItem("exclusions")}><Plus className="h-3 w-3 mr-1" /> Add</Button>}>
+        <div className="space-y-2">
+          {form.exclusions.map((item, i) => (
+            <div key={i} className="flex gap-2 items-center">
+              <span className="text-destructive shrink-0">✕</span>
+              <Input value={item} onChange={(e) => updateListItem("exclusions", i, e.target.value)} placeholder="e.g. Airfare not included" className="h-9" />
+              <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-destructive shrink-0" onClick={() => removeListItem("exclusions", i)}><Trash2 className="h-3 w-3" /></Button>
+            </div>
+          ))}
         </div>
+      </Section>
+
+      {/* 9. Terms & Conditions */}
+      <Section title="Terms & Conditions" icon={<ScrollText className="h-4 w-4" />}
+        badge={`${form.terms_conditions.filter(t => t.trim()).length} terms`}
+        actions={<Button type="button" variant="outline" size="sm" onClick={() => addListItem("terms_conditions")}><Plus className="h-3 w-3 mr-1" /> Add</Button>}>
         <div className="space-y-2">
           {form.terms_conditions.map((item, i) => (
             <div key={i} className="flex gap-2">
-              <Textarea value={item} onChange={(e) => updateListItem("terms_conditions", i, e.target.value)} rows={2} />
-              <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => removeListItem("terms_conditions", i)}><Trash2 className="h-4 w-4" /></Button>
+              <Badge variant="outline" className="shrink-0 mt-1">{i + 1}</Badge>
+              <Textarea value={item} onChange={(e) => updateListItem("terms_conditions", i, e.target.value)} rows={2} className="text-sm" />
+              <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-destructive shrink-0 mt-1" onClick={() => removeListItem("terms_conditions", i)}><Trash2 className="h-3 w-3" /></Button>
             </div>
           ))}
         </div>
-      </div>
+      </Section>
 
-      {/* Important Notes */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <Label className="text-base font-semibold">Important Notes</Label>
-          <Button type="button" variant="outline" size="sm" onClick={() => addListItem("important_notes")}><Plus className="h-4 w-4 mr-1" /> Add</Button>
-        </div>
+      {/* 10. Important Notes */}
+      <Section title="Important Notes" icon={<AlertTriangle className="h-4 w-4" />}
+        badge={`${form.important_notes.filter(n => n.trim()).length} notes`}
+        actions={<Button type="button" variant="outline" size="sm" onClick={() => addListItem("important_notes")}><Plus className="h-3 w-3 mr-1" /> Add</Button>}>
         <div className="space-y-2">
           {form.important_notes.map((item, i) => (
             <div key={i} className="flex gap-2">
-              <Textarea value={item} onChange={(e) => updateListItem("important_notes", i, e.target.value)} rows={2} />
-              <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => removeListItem("important_notes", i)}><Trash2 className="h-4 w-4" /></Button>
+              <Textarea value={item} onChange={(e) => updateListItem("important_notes", i, e.target.value)} rows={2} className="text-sm" />
+              <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-destructive shrink-0 mt-1" onClick={() => removeListItem("important_notes", i)}><Trash2 className="h-3 w-3" /></Button>
             </div>
           ))}
         </div>
-      </div>
+      </Section>
 
-      {/* Bank Details */}
-      <div>
-        <Label className="text-base font-semibold">Bank Details</Label>
-        <Textarea value={form.bank_details} onChange={(e) => updateField("bank_details", e.target.value)} rows={4} placeholder="Bank name, Account No, IFSC, Branch..." />
-      </div>
+      {/* 11. Bank Details */}
+      <Section title="Bank Details" icon={<Building2 className="h-4 w-4" />}>
+        <Textarea value={form.bank_details} onChange={(e) => updateField("bank_details", e.target.value)} rows={4} placeholder="Bank name, Account No, IFSC, Branch..." className="text-sm font-mono" />
+      </Section>
 
-      <div className="flex gap-3 justify-end">
-        <Button variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button variant="secondary" onClick={handleGeneratePDF} disabled={!form.client_name}><FileDown className="h-4 w-4 mr-1" /> Generate PDF</Button>
-        <Button onClick={handleSave} disabled={saving}><Save className="h-4 w-4 mr-1" /> {saving ? "Saving..." : "Save Draft"}</Button>
+      {/* Bottom Action Bar */}
+      <div className="sticky bottom-0 bg-card border rounded-lg p-4 shadow-lg flex justify-between items-center">
+        <div className="text-sm text-muted-foreground">
+          {form.client_name ? `${form.client_name} · ${form.destination_name || "No destination"}` : "Fill in client details to get started"}
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={onCancel}>Cancel</Button>
+          <Button variant="secondary" onClick={handleGeneratePDF} disabled={!form.client_name}>
+            <FileDown className="h-4 w-4 mr-1" /> Generate PDF
+          </Button>
+          <Button onClick={handleSave} disabled={saving}>
+            <Save className="h-4 w-4 mr-1" /> {saving ? "Saving..." : "Save Quotation"}
+          </Button>
+        </div>
       </div>
     </div>
   );
