@@ -3,40 +3,45 @@ import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } from "luci
 
 const Footer = () => {
   return (
-    <footer className="section-border-top" role="contentinfo" itemScope itemType="https://schema.org/WPFooter">
+    <footer className="bg-gray-50 dark:bg-gray-900 pt-16 pb-8" role="contentinfo" itemScope itemType="https://schema.org/WPFooter">
       <div className="container-custom">
-        {/* Massive brand name */}
-        <div className="py-16 section-border">
-          <h3 className="text-[12vw] md:text-[10vw] lg:text-[8vw] font-bold leading-none tracking-tighter text-foreground">
-            NexYatra
-          </h3>
-        </div>
+        {/* Main Footer Content */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+          {/* Company Info */}
+          <div className="space-y-6">
+            <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-500 bg-clip-text text-transparent">
+              NexYatra
+            </h3>
+            <p className="text-muted-foreground">
+              Redefining travel experiences with immersive storytelling and personalized journeys.
+            </p>
+            <nav className="flex space-x-4" aria-label="Social media links">
+              <a href="https://www.facebook.com/nexyatra.2025" className="text-gray-500 hover:text-primary transition-colors" aria-label="Follow NexYatra on Facebook" rel="noopener noreferrer" target="_blank">
+                <Facebook size={20} aria-hidden="true" />
+              </a>
+              <a href="https://x.com/NexYatra89312" className="text-gray-500 hover:text-primary transition-colors" aria-label="Follow NexYatra on X (Twitter)" rel="noopener noreferrer" target="_blank">
+                <Twitter size={20} aria-hidden="true" />
+              </a>
+              <a href="https://www.instagram.com/nexyatra" className="text-gray-500 hover:text-primary transition-colors" aria-label="Follow NexYatra on Instagram" rel="noopener noreferrer" target="_blank">
+                <Instagram size={20} aria-hidden="true" />
+              </a>
+              <a href="https://www.youtube.com/@nexyatra" className="text-gray-500 hover:text-primary transition-colors" aria-label="Subscribe to NexYatra on YouTube" rel="noopener noreferrer" target="_blank">
+                <Youtube size={20} aria-hidden="true" />
+              </a>
+            </nav>
+          </div>
 
-        {/* Four columns */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
-          {/* Destinations */}
-          <nav className="p-6 md:p-8 border-b sm:border-r border-border" aria-label="Quick links">
-            <h4 className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-6">Destinations</h4>
-            <ul className="space-y-3">
+          {/* Quick Links */}
+          <nav aria-label="Quick links">
+            <h4 className="font-semibold text-lg mb-6">Quick Links</h4>
+            <ul className="space-y-4">
               <li>
-                <Link to="/destinations" className="text-sm text-foreground hover:text-muted-foreground transition-colors hover-underline">
-                  All Destinations
+                <Link to="/destinations" className="text-muted-foreground hover:text-primary transition-colors hover-underline">
+                  Destinations
                 </Link>
               </li>
               <li>
-                <Link to="/destinations" className="text-sm text-foreground hover:text-muted-foreground transition-colors hover-underline">
-                  Featured
-                </Link>
-              </li>
-            </ul>
-          </nav>
-
-          {/* About */}
-          <nav className="p-6 md:p-8 border-b lg:border-r border-border" aria-label="About links">
-            <h4 className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-6">About</h4>
-            <ul className="space-y-3">
-              <li>
-                <Link to="/about" className="text-sm text-foreground hover:text-muted-foreground transition-colors hover-underline">
+                <Link to="/about" className="text-muted-foreground hover:text-primary transition-colors hover-underline">
                   About Us
                 </Link>
               </li>
@@ -44,26 +49,26 @@ const Footer = () => {
           </nav>
 
           {/* Support */}
-          <nav className="p-6 md:p-8 border-b sm:border-r border-border" aria-label="Support links">
-            <h4 className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-6">Support</h4>
-            <ul className="space-y-3">
+          <nav aria-label="Support links">
+            <h4 className="font-semibold text-lg mb-6">Support</h4>
+            <ul className="space-y-4">
               <li>
-                <Link to="/privacy" className="text-sm text-foreground hover:text-muted-foreground transition-colors hover-underline">
+                <Link to="/privacy" className="text-muted-foreground hover:text-primary transition-colors hover-underline">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link to="/terms" className="text-sm text-foreground hover:text-muted-foreground transition-colors hover-underline">
+                <Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors hover-underline">
                   Terms & Conditions
                 </Link>
               </li>
               <li>
-                <Link to="/refund" className="text-sm text-foreground hover:text-muted-foreground transition-colors hover-underline">
+                <Link to="/refund" className="text-muted-foreground hover:text-primary transition-colors hover-underline">
                   Refund & Cancellation
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-sm text-foreground hover:text-muted-foreground transition-colors hover-underline">
+                <Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors hover-underline">
                   Contact Us
                 </Link>
               </li>
@@ -71,60 +76,59 @@ const Footer = () => {
           </nav>
 
           {/* Contact */}
-          <div className="p-6 md:p-8 border-b border-border">
-            <h4 className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-6">Contact</h4>
-            <address className="not-italic space-y-3" itemScope itemType="https://schema.org/LocalBusiness">
-              <meta itemProp="name" content="NexYatra Travel Agency" />
-              <a href="tel:+918347015725" className="flex items-center gap-2 text-sm text-foreground hover:text-muted-foreground transition-colors" itemProp="telephone">
-                <Phone size={14} aria-hidden="true" />
-                +91 8347015725
-              </a>
-              <a href="mailto:info@nexyatra.in" className="flex items-center gap-2 text-sm text-foreground hover:text-muted-foreground transition-colors" itemProp="email">
-                <Mail size={14} aria-hidden="true" />
-                info@nexyatra.in
-              </a>
-            </address>
-            {/* Social */}
-            <div className="flex gap-4 mt-6">
-              <a href="https://www.facebook.com/nexyatra.2025" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Follow NexYatra on Facebook" rel="noopener noreferrer" target="_blank">
-                <Facebook size={16} aria-hidden="true" />
-              </a>
-              <a href="https://x.com/NexYatra89312" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Follow NexYatra on X (Twitter)" rel="noopener noreferrer" target="_blank">
-                <Twitter size={16} aria-hidden="true" />
-              </a>
-              <a href="https://www.instagram.com/nexyatra" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Follow NexYatra on Instagram" rel="noopener noreferrer" target="_blank">
-                <Instagram size={16} aria-hidden="true" />
-              </a>
-              <a href="https://www.youtube.com/@nexyatra" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Subscribe to NexYatra on YouTube" rel="noopener noreferrer" target="_blank">
-                <Youtube size={16} aria-hidden="true" />
-              </a>
+          <address className="not-italic" itemScope itemType="https://schema.org/LocalBusiness">
+            <meta itemProp="name" content="NexYatra Travel Agency" />
+            <h4 className="font-semibold text-lg mb-6">Contact Us</h4>
+            <ul className="space-y-4">
+              <li className="flex items-center space-x-3">
+                <Phone size={20} className="text-primary" aria-hidden="true" />
+                <a href="tel:+918347015725" className="text-muted-foreground hover:text-primary transition-colors" itemProp="telephone">+91 8347015725</a>
+              </li>
+              <li className="flex items-center space-x-3">
+                <Mail size={20} className="text-primary" aria-hidden="true" />
+                <a href="mailto:info@nexyatra.in" className="text-muted-foreground hover:text-primary transition-colors" itemProp="email">info@nexyatra.in</a>
+              </li>
+              <li className="flex items-start space-x-3" itemProp="address" itemScope itemType="https://schema.org/PostalAddress">
+                <MapPin size={20} className="text-primary mt-1" aria-hidden="true" />
+                <span className="text-muted-foreground text-sm">
+                  <span itemProp="streetAddress">320 Exult Shoppers, Nr. Siddhi Vinayak Temple, Vesu Main Road</span><br />
+                  <span itemProp="addressLocality">Vesu, Surat</span>, <span itemProp="addressRegion">Gujarat</span> <span itemProp="postalCode">395007</span>
+                </span>
+              </li>
+            </ul>
+          </address>
+        </div>
+
+        {/* Newsletter */}
+        <div className="py-8 border-t border-b border-border mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div>
+              <h4 className="text-xl font-semibold mb-2">Subscribe to Our Newsletter</h4>
+              <p className="text-muted-foreground">Stay updated with exclusive travel offers and destination insights.</p>
+            </div>
+            <div className="flex w-full max-w-md">
+              <input
+                type="email"
+                placeholder="Your email address"
+                className="flex-1 min-w-0 px-4 py-3 bg-background border border-r-0 border-input rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <button className="bg-primary text-primary-foreground px-6 py-3 rounded-r-md font-medium hover:bg-primary/90 transition-colors">
+                Subscribe
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Bottom bar — copyright + address badge */}
-        <div className="py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="text-xs text-muted-foreground">
-            <p>© {new Date().getFullYear()} NexYatra. All rights reserved.</p>
-            <p className="mt-1">
-              Designed with{" "}
-              <span role="img" aria-label="love">❤️</span>{" "}
-              for explorers worldwide.
-            </p>
-          </div>
-
-          {/* Address badge — "Server Location" style */}
-          <div className="border border-border px-4 py-3 text-xs font-mono text-muted-foreground" itemProp="address" itemScope itemType="https://schema.org/PostalAddress">
-            <div className="flex items-center gap-2">
-              <MapPin size={12} aria-hidden="true" />
-              <span>
-                <span itemProp="streetAddress">320 Exult Shoppers, Nr. Siddhi Vinayak Temple, Vesu Main Road</span>{" · "}
-                <span itemProp="addressLocality">Vesu, Surat</span>{", "}
-                <span itemProp="addressRegion">Gujarat</span>{" "}
-                <span itemProp="postalCode">395007</span>
-              </span>
-            </div>
-          </div>
+        {/* Copyright */}
+        <div className="text-center text-muted-foreground text-sm">
+          <p>© {new Date().getFullYear()} NexYatra. All rights reserved.</p>
+          <p className="mt-2">
+            Designed with{" "}
+            <span role="img" aria-label="love">
+              ❤️
+            </span>{" "}
+            for explorers worldwide.
+          </p>
         </div>
       </div>
     </footer>
