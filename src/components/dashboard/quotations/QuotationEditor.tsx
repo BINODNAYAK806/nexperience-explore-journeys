@@ -13,7 +13,8 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Plus, Trash2, ArrowUp, ArrowDown, Save, FileDown, ChevronDown, ChevronRight,
   User, MapPin, Hotel, Calendar, IndianRupee, FileText, ListChecks, ListX,
-  ScrollText, AlertTriangle, Building2, GripVertical, Settings2, Palette, MessageSquare
+  ScrollText, AlertTriangle, Building2, GripVertical, Settings2, Palette, MessageSquare,
+  ImagePlus, X
 } from "lucide-react";
 import { generateQuotationPDF, DEFAULT_COMPANY, DEFAULT_SECTION_TOGGLES, type CompanyInfo, type PDFSectionToggles } from "./QuotationPDF";
 import { format } from "date-fns";
@@ -120,6 +121,7 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo>({ ...DEFAULT_COMPANY });
   const [sectionToggles, setSectionToggles] = useState<PDFSectionToggles>({ ...DEFAULT_SECTION_TOGGLES });
   const [closingMessage, setClosingMessage] = useState(`Thank you for choosing ${DEFAULT_COMPANY.name}!`);
+  const [customLogo, setCustomLogo] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -278,8 +280,17 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
       company: companyInfo,
       sections: sectionToggles,
       closing_message: closingMessage,
+      custom_logo: customLogo,
     };
     await generateQuotationPDF(injected);
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => setCustomLogo(reader.result as string);
+    reader.readAsDataURL(file);
   };
 
   const numDisplay = (val: number) => (val === 0 ? "" : val);
@@ -594,6 +605,29 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
         badge="Customize PDF header/footer">
         <div className="space-y-4">
           <p className="text-xs text-muted-foreground">These details appear in the PDF header, footer, and watermark. Changes here only affect the PDF output, not saved data.</p>
+          
+          {/* Logo Upload */}
+          <div className="space-y-2">
+            <Label className="text-xs font-medium">Company Logo (for PDF)</Label>
+            <div className="flex items-center gap-3">
+              {customLogo ? (
+                <div className="relative">
+                  <img src={customLogo} alt="Logo" className="h-14 w-14 object-contain rounded border bg-background p-1" />
+                  <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-5 w-5 rounded-full" onClick={() => setCustomLogo(null)}>
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ) : (
+                <label className="flex items-center gap-2 cursor-pointer border border-dashed rounded-lg px-4 py-3 hover:bg-muted/50 transition-colors">
+                  <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Upload Logo</span>
+                  <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+                </label>
+              )}
+              <p className="text-xs text-muted-foreground">PNG or JPG recommended. Replaces default NexYatra logo in PDF.</p>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Company Name</Label>
