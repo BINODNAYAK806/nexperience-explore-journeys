@@ -91,20 +91,17 @@ export interface QuotationForPDF {
   company?: CompanyInfo;
   sections?: PDFSectionToggles;
   closing_message?: string;
-  custom_logo?: string | null; // base64 data URL for custom logo
+  custom_logo?: string | null;
 }
 
 // ─── Color Palette ───
 const DEEP_NAVY: [number, number, number] = [12, 25, 55];
 const NAVY: [number, number, number] = [20, 40, 80];
-const ROYAL_BLUE: [number, number, number] = [30, 58, 110];
 const GOLD: [number, number, number] = [212, 175, 85];
 const GOLD_DARK: [number, number, number] = [180, 140, 60];
 const GOLD_LIGHT: [number, number, number] = [245, 235, 205];
 const CREAM: [number, number, number] = [252, 249, 242];
 const DARK: [number, number, number] = [25, 25, 30];
-const GRAY: [number, number, number] = [100, 105, 115];
-const LIGHT_GRAY: [number, number, number] = [160, 165, 175];
 const LIGHT_BG: [number, number, number] = [248, 249, 253];
 const WHITE: [number, number, number] = [255, 255, 255];
 const SUCCESS_GREEN: [number, number, number] = [34, 139, 80];
@@ -124,7 +121,23 @@ const DEFAULT_TERMS = [
 ];
 
 function formatINR(amount: number): string {
-  return "\u20B9 " + amount.toLocaleString("en-IN");
+  return "Rs. " + amount.toLocaleString("en-IN");
+}
+
+/** Calculate total hotel nights from hotel_details array */
+function getTotalNights(data: QuotationForPDF): number {
+  const hotels = data.hotel_details?.filter(h => h.city?.trim() || h.hotel_name?.trim()) || [];
+  if (hotels.length > 0) {
+    const total = hotels.reduce((sum, h) => sum + (h.nights || 0), 0);
+    if (total > 0) return total;
+  }
+  // Fallback: days - 1
+  return Math.max(0, data.days.length - 1);
+}
+
+/** Strip "Day X:" prefix from title to avoid duplication */
+function cleanDayTitle(title: string): string {
+  return title.replace(/^Day\s*\d+\s*:\s*/i, "").trim();
 }
 
 async function loadLogoBase64(): Promise<string | null> {
@@ -142,6 +155,28 @@ async function loadLogoBase64(): Promise<string | null> {
   }
 }
 
+// ─── Draw a checkmark manually (no unicode) ───
+function drawCheck(doc: jsPDF, cx: number, cy: number, r: number) {
+  doc.setFillColor(...SUCCESS_GREEN);
+  doc.circle(cx, cy, r, "F");
+  // Draw checkmark as lines
+  doc.setDrawColor(255, 255, 255);
+  doc.setLineWidth(0.5);
+  doc.line(cx - r * 0.4, cy, cx - r * 0.05, cy + r * 0.4);
+  doc.line(cx - r * 0.05, cy + r * 0.4, cx + r * 0.45, cy - r * 0.35);
+}
+
+// ─── Draw an X mark manually (no unicode) ───
+function drawCross(doc: jsPDF, cx: number, cy: number, r: number) {
+  doc.setFillColor(...DANGER_RED);
+  doc.circle(cx, cy, r, "F");
+  doc.setDrawColor(255, 255, 255);
+  doc.setLineWidth(0.45);
+  const s = r * 0.35;
+  doc.line(cx - s, cy - s, cx + s, cy + s);
+  doc.line(cx + s, cy - s, cx - s, cy + s);
+}
+
 // ─── Premium Cover Page ───
 function drawCoverPage(
   doc: jsPDF,
@@ -150,15 +185,15 @@ function drawCoverPage(
   company: CompanyInfo,
   sections: PDFSectionToggles
 ) {
-  // Full page navy background with subtle gradient effect
+  // Full page navy background
   doc.setFillColor(...DEEP_NAVY);
   doc.rect(0, 0, PAGE_W, PAGE_H, "F");
 
-  // Decorative top accent
+  // Decorative top gold strip
   doc.setFillColor(...GOLD);
   doc.rect(0, 0, PAGE_W, 3, "F");
 
-  // Subtle geometric pattern - diagonal lines
+  // Subtle geometric pattern
   const gState = (doc as any).GState({ opacity: 0.03 });
   doc.saveGraphicsState();
   doc.setGState(gState);
@@ -169,12 +204,21 @@ function drawCoverPage(
   }
   doc.restoreGraphicsState();
 
-  // Logo - larger and centered
-  let logoY = 55;
+  // Decorative side borders
+  const sideGState = (doc as any).GState({ opacity: 0.15 });
+  doc.saveGraphicsState();
+  doc.setGState(sideGState);
+  doc.setDrawColor(...GOLD);
+  doc.setLineWidth(0.3);
+  doc.rect(8, 8, PAGE_W - 16, PAGE_H - 16, "S");
+  doc.restoreGraphicsState();
+
+  // Logo
+  let logoY = 50;
   if (logo) {
     try {
-      doc.addImage(logo, "PNG", PAGE_W / 2 - 25, logoY, 50, 50);
-      logoY += 58;
+      doc.addImage(logo, "PNG", PAGE_W / 2 - 22, logoY, 44, 44);
+      logoY += 52;
     } catch {
       logoY += 10;
     }
@@ -196,7 +240,7 @@ function drawCoverPage(
   doc.text(tagLetters, PAGE_W / 2, logoY, { align: "center" });
   logoY += 16;
 
-  // Gold divider line
+  // Gold divider with diamond
   const divW = 80;
   doc.setDrawColor(...GOLD);
   doc.setLineWidth(0.6);
@@ -208,12 +252,12 @@ function drawCoverPage(
 
   // Destination name - hero text
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(32);
+  doc.setFontSize(30);
   doc.setFont("helvetica", "bold");
   const destLines = doc.splitTextToSize(data.destination_name.toUpperCase(), CONTENT_W + 10);
   destLines.forEach((line: string) => {
     doc.text(line, PAGE_W / 2, logoY, { align: "center" });
-    logoY += 14;
+    logoY += 13;
   });
   logoY += 2;
 
@@ -222,7 +266,7 @@ function drawCoverPage(
   doc.setFontSize(12);
   doc.setFont("helvetica", "normal");
   doc.text("TOUR PACKAGE", PAGE_W / 2, logoY, { align: "center" });
-  logoY += 16;
+  logoY += 14;
 
   // Cities covered
   if (sections.show_cities) {
@@ -230,38 +274,37 @@ function drawCoverPage(
     if (cities.length > 0) {
       doc.setTextColor(200, 210, 230);
       doc.setFontSize(9);
-      doc.text(cities.join("  \u2022  "), PAGE_W / 2, logoY, { align: "center" });
+      doc.text(cities.join("  •  "), PAGE_W / 2, logoY, { align: "center" });
       logoY += 12;
     }
   }
 
   // Duration badge
   if (data.days.length > 0) {
-    const nights = data.days.length > 1 ? data.days.length - 1 : 0;
+    const nights = getTotalNights(data);
     const totalPax = (data.num_persons || 0) + (data.num_children || 0);
-    const durText = `${data.days.length} Days & ${nights} Nights  |  ${totalPax} Pax`;
+    const durText = `${data.days.length} Days & ${nights} Nights   |   ${totalPax} Pax`;
 
-    const badgeW = 100;
-    const badgeH = 12;
+    const badgeW = 110;
+    const badgeH = 13;
     const badgeX = PAGE_W / 2 - badgeW / 2;
-    // Gold outline badge
     doc.setDrawColor(...GOLD);
     doc.setLineWidth(0.5);
-    doc.roundedRect(badgeX, logoY - 8, badgeW, badgeH, 6, 6, "S");
+    doc.roundedRect(badgeX, logoY - 8.5, badgeW, badgeH, 6, 6, "S");
     doc.setTextColor(...GOLD);
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
-    doc.text(durText, PAGE_W / 2, logoY - 1, { align: "center" });
-    logoY += 18;
+    doc.text(durText, PAGE_W / 2, logoY - 0.5, { align: "center" });
+    logoY += 20;
   }
 
-  // Guest Info Card - elegant card on dark background
+  // Guest Info Card
   const cardX = MARGIN + 10;
   const cardW = CONTENT_W - 20;
-  const cardH = 42;
+  const cardH = 44;
   const cardY = logoY + 2;
 
-  // Card background with subtle border
+  // Semi-transparent card bg
   const cardGState = (doc as any).GState({ opacity: 0.12 });
   doc.saveGraphicsState();
   doc.setGState(cardGState);
@@ -269,11 +312,12 @@ function drawCoverPage(
   doc.roundedRect(cardX, cardY, cardW, cardH, 4, 4, "F");
   doc.restoreGraphicsState();
 
+  // Card border
   doc.setDrawColor(...GOLD_DARK);
   doc.setLineWidth(0.4);
   doc.roundedRect(cardX, cardY, cardW, cardH, 4, 4, "S");
 
-  // Gold top line on card
+  // Gold top accent on card
   doc.setFillColor(...GOLD);
   doc.rect(cardX + 15, cardY, cardW - 30, 1.2, "F");
 
@@ -282,7 +326,7 @@ function drawCoverPage(
   const rx = PAGE_W / 2 + 4;
   const rvx = PAGE_W / 2 + 36;
 
-  let ry = cardY + 12;
+  let ry = cardY + 13;
   doc.setFontSize(7);
   doc.setTextColor(...GOLD);
   doc.setFont("helvetica", "bold");
@@ -312,7 +356,7 @@ function drawCoverPage(
   doc.line(lx, ry, cardX + cardW - 10, ry);
   doc.restoreGraphicsState();
 
-  ry += 8;
+  ry += 9;
   doc.setFontSize(7);
   doc.setTextColor(...GOLD);
   doc.setFont("helvetica", "bold");
@@ -342,7 +386,7 @@ function drawCoverPage(
     paxParts.push(`${data.num_children} ${data.child_label || "Child"}`);
   doc.text(paxParts.join(" + ") || "0", rvx, ry);
 
-  // Bottom footer bar on cover
+  // Cover bottom footer
   const footY = PAGE_H - 35;
   doc.setFillColor(...GOLD);
   doc.rect(0, footY, PAGE_W, 0.8, "F");
@@ -351,7 +395,7 @@ function drawCoverPage(
   doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
   doc.text(
-    `${company.phone}  |  ${company.email}  |  ${company.website}`,
+    `${company.phone}   |   ${company.email}   |   ${company.website}`,
     PAGE_W / 2,
     footY + 8,
     { align: "center" }
@@ -362,12 +406,7 @@ function drawCoverPage(
 }
 
 // ─── Content Page Utilities ───
-function addContentHeader(
-  doc: jsPDF,
-  logo: string | null,
-  company: CompanyInfo
-) {
-  // Slim elegant header
+function addContentHeader(doc: jsPDF, logo: string | null, company: CompanyInfo) {
   doc.setFillColor(...DEEP_NAVY);
   doc.rect(0, 0, PAGE_W, 16, "F");
   doc.setFillColor(...GOLD);
@@ -391,12 +430,7 @@ function addContentHeader(
   doc.text(company.tagline, textX + doc.getTextWidth(company.name) + 4, 10);
 }
 
-function addContentFooter(
-  doc: jsPDF,
-  pageNum: number,
-  totalPages: number,
-  company: CompanyInfo
-) {
+function addContentFooter(doc: jsPDF, pageNum: number, totalPages: number, company: CompanyInfo) {
   const footerY = PAGE_H - FOOTER_H;
   doc.setFillColor(...GOLD);
   doc.rect(0, footerY, PAGE_W, 0.5, "F");
@@ -410,7 +444,7 @@ function addContentFooter(
   doc.setFontSize(6);
   doc.setFont("helvetica", "normal");
   doc.text(
-    `${company.phone}  |  ${company.email}  |  ${company.website}  |  Instagram: ${company.instagram}`,
+    `${company.phone}   |   ${company.email}   |   ${company.website}   |   Instagram: ${company.instagram}`,
     PAGE_W / 2,
     y1,
     { align: "center" }
@@ -420,33 +454,19 @@ function addContentFooter(
   doc.setFontSize(5);
   doc.text(company.address, PAGE_W / 2, y2, { align: "center" });
 
-  // Page number
   doc.setTextColor(...GOLD);
   doc.setFontSize(7);
   doc.setFont("helvetica", "bold");
-  doc.text(`${pageNum} / ${totalPages}`, PAGE_W - MARGIN, y1, {
-    align: "right",
-  });
+  doc.text(`${pageNum} / ${totalPages}`, PAGE_W - MARGIN, y1, { align: "right" });
 }
 
-function addWatermark(
-  doc: jsPDF,
-  logo: string | null,
-  company: CompanyInfo
-) {
+function addWatermark(doc: jsPDF, logo: string | null, company: CompanyInfo) {
   const gState = (doc as any).GState({ opacity: 0.03 });
   doc.saveGraphicsState();
   doc.setGState(gState);
   if (logo) {
     try {
-      doc.addImage(
-        logo,
-        "PNG",
-        PAGE_W / 2 - 30,
-        PAGE_H / 2 - 30,
-        60,
-        60
-      );
+      doc.addImage(logo, "PNG", PAGE_W / 2 - 30, PAGE_H / 2 - 30, 60, 60);
       doc.restoreGraphicsState();
       return;
     } catch {}
@@ -478,8 +498,7 @@ function checkPage(
   return y;
 }
 
-function sectionTitle(doc: jsPDF, title: string, y: number, icon?: string): number {
-  // Elegant section header with gold accent
+function sectionTitle(doc: jsPDF, title: string, y: number): number {
   doc.setFillColor(...DEEP_NAVY);
   doc.roundedRect(MARGIN, y, CONTENT_W, 11, 2, 2, "F");
 
@@ -488,18 +507,16 @@ function sectionTitle(doc: jsPDF, title: string, y: number, icon?: string): numb
   doc.roundedRect(MARGIN, y, 3, 11, 1.5, 0, "F");
   doc.rect(MARGIN + 1.5, y, 1.5, 11, "F");
 
-  // Small gold diamond decoration
+  // Small gold circle decoration
   doc.setFillColor(...GOLD);
-  const diamondX = MARGIN + 9;
-  const diamondY = y + 5.5;
-  doc.circle(diamondX, diamondY, 1.5, "F");
+  doc.circle(MARGIN + 9, y + 5.5, 1.5, "F");
 
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(9.5);
   doc.setFont("helvetica", "bold");
   doc.text(title.toUpperCase(), MARGIN + 14, y + 7.5);
 
-  // Right side subtle decoration
+  // Right side decorative line
   doc.setDrawColor(...GOLD);
   doc.setLineWidth(0.3);
   const rightEnd = PAGE_W - MARGIN - 5;
@@ -598,8 +615,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
 
   // Brief Itinerary
   if (sections.show_brief_itinerary) {
-    const briefs =
-      data.brief_itinerary?.filter((b) => b.description?.trim()) || [];
+    const briefs = data.brief_itinerary?.filter((b) => b.description?.trim()) || [];
     if (briefs.length > 0) {
       y = checkPage(doc, y, 22, logo, company, showWM);
       y = sectionTitle(doc, "Brief Itinerary", y);
@@ -633,10 +649,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
 
   // Hotel Details
   if (sections.show_hotel_details) {
-    const hotels =
-      data.hotel_details?.filter(
-        (h) => h.city?.trim() || h.hotel_name?.trim()
-      ) || [];
+    const hotels = data.hotel_details?.filter((h) => h.city?.trim() || h.hotel_name?.trim()) || [];
     if (hotels.length > 0) {
       y = checkPage(doc, y, 30, logo, company, showWM);
       y = sectionTitle(doc, "Hotel Details", y);
@@ -685,7 +698,6 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
   if (sections.show_detailed_itinerary && data.days.length > 0) {
     y = checkPage(doc, y, 25, logo, company, showWM);
 
-    // Centered title
     doc.setTextColor(...NAVY);
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
@@ -705,13 +717,16 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       doc.setFont("helvetica", "bold");
       doc.text(`${day.day}`, MARGIN + 7, y + 2.5, { align: "center" });
 
-      // Title bar
+      // Title bar - clean the title to avoid "Day 1: Day 1:" duplication
+      const cleanTitle = cleanDayTitle(day.title);
       doc.setFillColor(...NAVY);
       doc.roundedRect(MARGIN + 15, y - 4, CONTENT_W - 15, 11, 2, 2, "F");
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(9.5);
       doc.setFont("helvetica", "bold");
-      doc.text(`Day ${day.day}: ${day.title}`, MARGIN + 19, y + 2.5);
+      const titleText = cleanTitle ? `Day ${day.day}: ${cleanTitle}` : `Day ${day.day}`;
+      const titleLines = doc.splitTextToSize(titleText, CONTENT_W - 22);
+      doc.text(titleLines[0], MARGIN + 19, y + 2.5);
       y += 14;
 
       if (day.description) {
@@ -751,7 +766,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
     y += 4;
   }
 
-  // Inclusions
+  // Inclusions - using drawn checkmarks instead of unicode
   if (
     sections.show_inclusions &&
     data.inclusions.length > 0 &&
@@ -771,13 +786,8 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
         doc.rect(MARGIN, y - 3.5, CONTENT_W, bh + 1, "F");
       }
 
-      // Green check circle
-      doc.setFillColor(...SUCCESS_GREEN);
-      doc.circle(MARGIN + 5, y - 0.5, 1.5, "F");
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(5);
-      doc.setFont("helvetica", "bold");
-      doc.text("\u2713", MARGIN + 5, y + 0.3, { align: "center" });
+      // Green check circle (drawn manually)
+      drawCheck(doc, MARGIN + 5, y - 0.5, 2);
 
       doc.setTextColor(...DARK);
       doc.setFontSize(8.5);
@@ -791,7 +801,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
     y += 8;
   }
 
-  // Exclusions
+  // Exclusions - using drawn X marks instead of unicode
   if (
     sections.show_exclusions &&
     data.exclusions.length > 0 &&
@@ -811,13 +821,8 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
         doc.rect(MARGIN, y - 3.5, CONTENT_W, bh + 1, "F");
       }
 
-      // Red X circle
-      doc.setFillColor(...DANGER_RED);
-      doc.circle(MARGIN + 5, y - 0.5, 1.5, "F");
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(5);
-      doc.setFont("helvetica", "bold");
-      doc.text("x", MARGIN + 5, y + 0.3, { align: "center" });
+      // Red X circle (drawn manually)
+      drawCross(doc, MARGIN + 5, y - 0.5, 2);
 
       doc.setTextColor(...DARK);
       doc.setFontSize(8.5);
@@ -833,12 +838,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
 
   // Pricing Table
   if (sections.show_pricing_table) {
-    const pricingRows: {
-      label: string;
-      rate: number;
-      qty: number;
-      amount: number;
-    }[] = [];
+    const pricingRows: { label: string; rate: number; qty: number; amount: number }[] = [];
     if (data.price_per_person > 0 && data.num_persons > 0) {
       pricingRows.push({
         label: data.person_label || "Adult",
@@ -891,13 +891,11 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
         doc.text(formatINR(row.rate), tX + tW * 0.4, y + 6.5);
         doc.text(`${row.qty}`, tX + tW * 0.6, y + 6.5);
         doc.setFont("helvetica", "bold");
-        doc.text(formatINR(row.amount), tX + tW - 8, y + 6.5, {
-          align: "right",
-        });
+        doc.text(formatINR(row.amount), tX + tW - 8, y + 6.5, { align: "right" });
         y += rowH;
       });
 
-      // Total row - premium gold accent
+      // Total row
       const totalRowH = 12;
       doc.setFillColor(...DEEP_NAVY);
       doc.roundedRect(tX, y, tW, totalRowH, 2, 2, "F");
@@ -909,9 +907,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
       doc.text("TOTAL", tX + 10, y + 8);
-      doc.text(formatINR(data.total_price), tX + tW - 10, y + 8, {
-        align: "right",
-      });
+      doc.text(formatINR(data.total_price), tX + tW - 10, y + 8, { align: "right" });
       y += totalRowH + 10;
     }
   }
@@ -919,8 +915,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
   // Terms & Conditions
   if (sections.show_terms_conditions) {
     const terms =
-      data.terms_conditions?.length &&
-      data.terms_conditions.some((t) => t.trim())
+      data.terms_conditions?.length && data.terms_conditions.some((t) => t.trim())
         ? data.terms_conditions.filter((t) => t.trim())
         : DEFAULT_TERMS;
 
@@ -949,7 +944,6 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
     const bankLines = data.bank_details.split("\n");
     const bankH = bankLines.length * 5.5 + 10;
 
-    // Elegant card for bank details
     doc.setFillColor(...CREAM);
     doc.roundedRect(MARGIN, y - 2, CONTENT_W, bankH, 3, 3, "F");
     doc.setDrawColor(...GOLD_LIGHT);
@@ -983,13 +977,10 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
   if (sections.show_closing_message) {
     y = checkPage(doc, y, 30, logo, company, showWM);
     y += 8;
-
-    // Decorative divider
     y = goldDivider(doc, y);
     y += 6;
 
-    const closingMsg =
-      data.closing_message || `Thank you for choosing ${company.name}!`;
+    const closingMsg = data.closing_message || `Thank you for choosing ${company.name}!`;
     doc.setTextColor(...NAVY);
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
@@ -1007,7 +998,6 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
     );
     y += 5;
 
-    // Company name flourish
     y += 4;
     doc.setTextColor(...NAVY);
     doc.setFontSize(16);
@@ -1015,7 +1005,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
     doc.text(company.name.toUpperCase(), PAGE_W / 2, y, { align: "center" });
   }
 
-  // ===== Add Footers to all content pages (not cover) =====
+  // ===== Add Footers to all content pages =====
   const pages = doc.getNumberOfPages();
   for (let i = 2; i <= pages; i++) {
     doc.setPage(i);
