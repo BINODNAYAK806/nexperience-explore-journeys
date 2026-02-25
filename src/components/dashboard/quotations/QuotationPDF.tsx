@@ -189,29 +189,47 @@ function drawCoverPage(
   doc.setFillColor(...DEEP_NAVY);
   doc.rect(0, 0, PAGE_W, PAGE_H, "F");
 
-  // Decorative top gold strip
-  doc.setFillColor(...GOLD);
-  doc.rect(0, 0, PAGE_W, 3, "F");
-
-  // Subtle geometric pattern
-  const gState = (doc as any).GState({ opacity: 0.03 });
-  doc.saveGraphicsState();
-  doc.setGState(gState);
-  doc.setDrawColor(255, 255, 255);
-  doc.setLineWidth(0.5);
-  for (let i = -300; i < 600; i += 12) {
-    doc.line(i, 0, i + 300, 300);
+  // Subtle radial gradient effect - concentric soft rectangles
+  const gradientSteps = 6;
+  for (let i = gradientSteps; i >= 1; i--) {
+    const gState = (doc as any).GState({ opacity: 0.015 * i });
+    doc.saveGraphicsState();
+    doc.setGState(gState);
+    doc.setFillColor(255, 255, 255);
+    const inset = 20 + i * 12;
+    doc.roundedRect(inset, inset, PAGE_W - inset * 2, PAGE_H - inset * 2, 8, 8, "F");
+    doc.restoreGraphicsState();
   }
-  doc.restoreGraphicsState();
 
-  // Decorative side borders
-  const sideGState = (doc as any).GState({ opacity: 0.15 });
+  // Elegant double gold border frame
+  doc.setDrawColor(...GOLD);
+  doc.setLineWidth(0.8);
+  doc.rect(10, 10, PAGE_W - 20, PAGE_H - 20, "S");
+  const innerGState = (doc as any).GState({ opacity: 0.4 });
   doc.saveGraphicsState();
-  doc.setGState(sideGState);
+  doc.setGState(innerGState);
   doc.setDrawColor(...GOLD);
   doc.setLineWidth(0.3);
-  doc.rect(8, 8, PAGE_W - 16, PAGE_H - 16, "S");
+  doc.rect(13, 13, PAGE_W - 26, PAGE_H - 26, "S");
   doc.restoreGraphicsState();
+
+  // Corner ornaments (small gold L-shapes at each corner)
+  const cornerLen = 18;
+  const cornerInset = 10;
+  doc.setDrawColor(...GOLD);
+  doc.setLineWidth(1.2);
+  // Top-left
+  doc.line(cornerInset, cornerInset, cornerInset + cornerLen, cornerInset);
+  doc.line(cornerInset, cornerInset, cornerInset, cornerInset + cornerLen);
+  // Top-right
+  doc.line(PAGE_W - cornerInset, cornerInset, PAGE_W - cornerInset - cornerLen, cornerInset);
+  doc.line(PAGE_W - cornerInset, cornerInset, PAGE_W - cornerInset, cornerInset + cornerLen);
+  // Bottom-left
+  doc.line(cornerInset, PAGE_H - cornerInset, cornerInset + cornerLen, PAGE_H - cornerInset);
+  doc.line(cornerInset, PAGE_H - cornerInset, cornerInset, PAGE_H - cornerInset - cornerLen);
+  // Bottom-right
+  doc.line(PAGE_W - cornerInset, PAGE_H - cornerInset, PAGE_W - cornerInset - cornerLen, PAGE_H - cornerInset);
+  doc.line(PAGE_W - cornerInset, PAGE_H - cornerInset, PAGE_W - cornerInset, PAGE_H - cornerInset - cornerLen);
 
   // Logo
   let logoY = 50;
