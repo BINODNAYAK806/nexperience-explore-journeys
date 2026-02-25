@@ -13,7 +13,59 @@ interface HotelItem {
   nights: number;
 }
 
-interface QuotationForPDF {
+export interface CompanyInfo {
+  name: string;
+  tagline: string;
+  address: string;
+  email: string;
+  phone: string;
+  website: string;
+  instagram: string;
+}
+
+export interface PDFSectionToggles {
+  show_brief_itinerary: boolean;
+  show_hotel_details: boolean;
+  show_detailed_itinerary: boolean;
+  show_inclusions: boolean;
+  show_exclusions: boolean;
+  show_pricing_table: boolean;
+  show_terms_conditions: boolean;
+  show_important_notes: boolean;
+  show_bank_details: boolean;
+  show_description: boolean;
+  show_cities: boolean;
+  show_watermark: boolean;
+  show_closing_message: boolean;
+}
+
+export const DEFAULT_COMPANY: CompanyInfo = {
+  name: "NexYatra",
+  tagline: "Premium Travel Experiences",
+  address: "320 Exult Shoppers, Nr. Siddhi Vinayak Temple, Vesu Main Road, Vesu, Surat, Gujarat 395007",
+  email: "info@nexyatra.in",
+  phone: "+91 8347015725",
+  website: "www.nexyatra.in",
+  instagram: "@nexyatra",
+};
+
+export const DEFAULT_SECTION_TOGGLES: PDFSectionToggles = {
+  show_brief_itinerary: true,
+  show_hotel_details: true,
+  show_detailed_itinerary: true,
+  show_inclusions: true,
+  show_exclusions: true,
+  show_pricing_table: true,
+  show_terms_conditions: true,
+  show_important_notes: true,
+  show_bank_details: true,
+  show_description: true,
+  show_cities: true,
+  show_watermark: true,
+  show_closing_message: true,
+};
+
+export interface QuotationForPDF {
   client_name: string;
   client_contact?: string;
   destination_name: string;
@@ -36,6 +88,9 @@ interface QuotationForPDF {
   terms_conditions?: string[];
   important_notes?: string[];
   bank_details?: string;
+  company?: CompanyInfo;
+  sections?: PDFSectionToggles;
+  closing_message?: string;
 }
 
 // ─── Color Palette ───
@@ -56,16 +111,6 @@ const CONTENT_W = PAGE_W - MARGIN * 2;
 const HEADER_H = 46;
 const MINI_HEADER_H = 18;
 const FOOTER_H = 22;
-
-const COMPANY = {
-  name: "NexYatra",
-  tagline: "Premium Travel Experiences",
-  address: "320 Exult Shoppers, Nr. Siddhi Vinayak Temple, Vesu Main Road, Vesu, Surat, Gujarat 395007",
-  email: "info@nexyatra.in",
-  phone: "+91 8347015725",
-  website: "www.nexyatra.in",
-  instagram: "@nexyatra",
-};
 
 const DEFAULT_TERMS = [
   "The tour is Private Tours, means there is no other participant, just only you and your companions.",
@@ -93,8 +138,7 @@ async function loadLogoBase64(): Promise<string | null> {
   }
 }
 
-// ─── Full Header (Page 1 only) ───
-function addFullHeader(doc: jsPDF, logoBase64: string | null) {
+function addFullHeader(doc: jsPDF, logoBase64: string | null, company: CompanyInfo) {
   const headerHeight = 40;
   doc.setFillColor(...NAVY);
   doc.rect(0, 0, PAGE_W, headerHeight, "F");
@@ -109,25 +153,23 @@ function addFullHeader(doc: jsPDF, logoBase64: string | null) {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
-  doc.text(COMPANY.name, textX, 17);
+  doc.text(company.name, textX, 17);
 
   doc.setTextColor(...GOLD);
   doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
-  doc.text(COMPANY.tagline.toUpperCase(), textX, 23);
+  doc.text(company.tagline.toUpperCase(), textX, 23);
 
-  // Address on right side only
   const rightX = PAGE_W - MARGIN;
   doc.setFontSize(6.5);
   doc.setTextColor(200, 205, 220);
-  const addrLines = doc.splitTextToSize(COMPANY.address, 75);
+  const addrLines = doc.splitTextToSize(company.address, 75);
   addrLines.forEach((line: string, i: number) => {
     doc.text(line, rightX, 14 + i * 3.5, { align: "right" });
   });
 }
 
-// ─── Mini Header (Page 2+) ───
-function addMiniHeader(doc: jsPDF, logoBase64: string | null) {
+function addMiniHeader(doc: jsPDF, logoBase64: string | null, company: CompanyInfo) {
   doc.setFillColor(...NAVY);
   doc.rect(0, 0, PAGE_W, MINI_HEADER_H, "F");
   doc.setFillColor(...GOLD);
@@ -141,11 +183,10 @@ function addMiniHeader(doc: jsPDF, logoBase64: string | null) {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
-  doc.text(COMPANY.name, textX, 11);
+  doc.text(company.name, textX, 11);
 }
 
-// ─── Footer with contact info ───
-function addFooter(doc: jsPDF, pageNum: number, totalPages: number) {
+function addFooter(doc: jsPDF, pageNum: number, totalPages: number, company: CompanyInfo) {
   const footerY = PAGE_H - FOOTER_H;
   doc.setFillColor(...GOLD);
   doc.rect(0, footerY, PAGE_W, 0.8, "F");
@@ -159,22 +200,20 @@ function addFooter(doc: jsPDF, pageNum: number, totalPages: number) {
   doc.setTextColor(200, 205, 220);
   doc.setFontSize(6.5);
   doc.setFont("helvetica", "normal");
-  doc.text(`Phone: ${COMPANY.phone}  |  Email: ${COMPANY.email}`, PAGE_W / 2, y1, { align: "center" });
-  doc.text(`Website: ${COMPANY.website}  |  Instagram: ${COMPANY.instagram}`, PAGE_W / 2, y2, { align: "center" });
+  doc.text(`Phone: ${company.phone}  |  Email: ${company.email}`, PAGE_W / 2, y1, { align: "center" });
+  doc.text(`Website: ${company.website}  |  Instagram: ${company.instagram}`, PAGE_W / 2, y2, { align: "center" });
 
   doc.setTextColor(140, 145, 160);
   doc.setFontSize(5.5);
-  doc.text(COMPANY.address, PAGE_W / 2, y3, { align: "center" });
+  doc.text(company.address, PAGE_W / 2, y3, { align: "center" });
 
-  // Page number
   doc.setTextColor(...GOLD);
   doc.setFontSize(7);
   doc.setFont("helvetica", "bold");
   doc.text(`${pageNum} / ${totalPages}`, PAGE_W - MARGIN, y1, { align: "right" });
 }
 
-// ─── Watermark ───
-function addWatermark(doc: jsPDF, logoBase64: string | null) {
+function addWatermark(doc: jsPDF, logoBase64: string | null, company: CompanyInfo) {
   const gState = (doc as any).GState({ opacity: 0.04 });
   doc.saveGraphicsState();
   doc.setGState(gState);
@@ -188,16 +227,15 @@ function addWatermark(doc: jsPDF, logoBase64: string | null) {
   doc.setTextColor(150, 155, 170);
   doc.setFontSize(55);
   doc.setFont("helvetica", "bold");
-  doc.text("NEXYATRA", PAGE_W / 2, PAGE_H / 2, { align: "center", angle: 45 });
+  doc.text(company.name.toUpperCase(), PAGE_W / 2, PAGE_H / 2, { align: "center", angle: 45 });
   doc.restoreGraphicsState();
 }
 
-// ─── Helpers ───
-function checkPage(doc: jsPDF, y: number, needed: number, logo: string | null): number {
+function checkPage(doc: jsPDF, y: number, needed: number, logo: string | null, company: CompanyInfo, showWatermark: boolean): number {
   if (y + needed > PAGE_H - FOOTER_H - 10) {
     doc.addPage();
-    addMiniHeader(doc, logo);
-    addWatermark(doc, logo);
+    addMiniHeader(doc, logo, company);
+    if (showWatermark) addWatermark(doc, logo, company);
     return MINI_HEADER_H + 8;
   }
   return y;
@@ -222,11 +260,11 @@ function goldDivider(doc: jsPDF, y: number): number {
   return y + 6;
 }
 
-function numberedList(doc: jsPDF, items: string[], y: number, logo: string | null, color: [number, number, number] = GOLD): number {
+function numberedList(doc: jsPDF, items: string[], y: number, logo: string | null, company: CompanyInfo, showWatermark: boolean, color: [number, number, number] = GOLD): number {
   doc.setFontSize(7.5);
   items.forEach((note, idx) => {
     if (!note.trim()) return;
-    y = checkPage(doc, y, 8, logo);
+    y = checkPage(doc, y, 8, logo, company, showWatermark);
     doc.setFillColor(...color);
     doc.circle(MARGIN + 4, y - 0.5, 2.5, "F");
     doc.setTextColor(255, 255, 255);
@@ -251,10 +289,13 @@ function numberedList(doc: jsPDF, items: string[], y: number, logo: string | nul
 export async function generateQuotationPDF(data: QuotationForPDF) {
   const logo = await loadLogoBase64();
   const doc = new jsPDF("p", "mm", "a4");
+  const company = data.company || DEFAULT_COMPANY;
+  const sections = data.sections || DEFAULT_SECTION_TOGGLES;
+  const showWM = sections.show_watermark;
 
   // ===== PAGE 1 =====
-  addFullHeader(doc, logo);
-  addWatermark(doc, logo);
+  addFullHeader(doc, logo, company);
+  if (showWM) addWatermark(doc, logo, company);
 
   let y = HEADER_H + 8;
 
@@ -266,7 +307,6 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
   doc.text(destTitle, PAGE_W / 2, y, { align: "center" });
   y += 6;
 
-  // Ornamental lines
   doc.setFontSize(24);
   const tw = Math.min(doc.getTextWidth(destTitle) / 2 + 5, CONTENT_W / 2 - 5);
   doc.setDrawColor(...GOLD);
@@ -284,14 +324,16 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
   y += 8;
 
   // 2) Cities Covered
-  const cities = data.cities_covered?.filter((c) => c.trim()) || [];
-  if (cities.length > 0) {
-    const citiesText = cities.join(" / ");
-    doc.setTextColor(...NAVY);
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text(citiesText, PAGE_W / 2, y, { align: "center" });
-    y += 8;
+  if (sections.show_cities) {
+    const cities = data.cities_covered?.filter((c) => c.trim()) || [];
+    if (cities.length > 0) {
+      const citiesText = cities.join(" / ");
+      doc.setTextColor(...NAVY);
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.text(citiesText, PAGE_W / 2, y, { align: "center" });
+      y += 8;
+    }
   }
 
   // Duration & Pax badge
@@ -364,7 +406,6 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
   const endStr = data.travel_end_date ? ` -- ${format(new Date(data.travel_end_date), "dd MMM yyyy")}` : "";
   doc.text(startStr + endStr, vx, ry);
 
-  // No. of pax on right
   const totalPax = (data.num_persons || 0) + (data.num_children || 0);
   doc.setFontSize(7.5);
   doc.setTextColor(...GRAY);
@@ -381,14 +422,14 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
   y += cardH + 8;
 
   // Description
-  if (data.description) {
-    y = checkPage(doc, y, 15, logo);
+  if (sections.show_description && data.description) {
+    y = checkPage(doc, y, 15, logo, company, showWM);
     doc.setTextColor(...DARK);
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     const dLines = doc.splitTextToSize(data.description, CONTENT_W - 4);
     dLines.forEach((line: string) => {
-      y = checkPage(doc, y, 5, logo);
+      y = checkPage(doc, y, 5, logo, company, showWM);
       doc.text(line, MARGIN + 2, y);
       y += 4.5;
     });
@@ -396,77 +437,80 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
   }
 
   // 4) Brief Itinerary
-  const briefs = data.brief_itinerary?.filter((b) => b.description?.trim()) || [];
-  if (briefs.length > 0) {
-    y = checkPage(doc, y, 22, logo);
-    y = sectionTitle(doc, "Brief Itinerary", y);
+  if (sections.show_brief_itinerary) {
+    const briefs = data.brief_itinerary?.filter((b) => b.description?.trim()) || [];
+    if (briefs.length > 0) {
+      y = checkPage(doc, y, 22, logo, company, showWM);
+      y = sectionTitle(doc, "Brief Itinerary", y);
 
-    briefs.forEach((b, idx) => {
-      y = checkPage(doc, y, 7, logo);
-      if (idx % 2 === 0) {
-        doc.setFillColor(248, 250, 252);
-        doc.rect(MARGIN, y - 3.5, CONTENT_W, 7, "F");
-      }
-      doc.setTextColor(...NAVY);
-      doc.setFontSize(8);
-      doc.setFont("helvetica", "bold");
-      doc.text(`Day ${b.day}`, MARGIN + 4, y);
-      doc.setTextColor(...DARK);
-      doc.setFontSize(8.5);
-      doc.setFont("helvetica", "normal");
-      doc.text(b.description, MARGIN + 22, y);
-      y += 6;
-    });
-    y += 8;
+      briefs.forEach((b, idx) => {
+        y = checkPage(doc, y, 7, logo, company, showWM);
+        if (idx % 2 === 0) {
+          doc.setFillColor(248, 250, 252);
+          doc.rect(MARGIN, y - 3.5, CONTENT_W, 7, "F");
+        }
+        doc.setTextColor(...NAVY);
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "bold");
+        doc.text(`Day ${b.day}`, MARGIN + 4, y);
+        doc.setTextColor(...DARK);
+        doc.setFontSize(8.5);
+        doc.setFont("helvetica", "normal");
+        doc.text(b.description, MARGIN + 22, y);
+        y += 6;
+      });
+      y += 8;
+    }
   }
 
   // 5) Hotel Details
-  const hotels = data.hotel_details?.filter((h) => h.city?.trim() || h.hotel_name?.trim()) || [];
-  if (hotels.length > 0) {
-    y = checkPage(doc, y, 30, logo);
-    y = sectionTitle(doc, "Hotel Details", y);
+  if (sections.show_hotel_details) {
+    const hotels = data.hotel_details?.filter((h) => h.city?.trim() || h.hotel_name?.trim()) || [];
+    if (hotels.length > 0) {
+      y = checkPage(doc, y, 30, logo, company, showWM);
+      y = sectionTitle(doc, "Hotel Details", y);
 
-    const tX = MARGIN;
-    const tW = CONTENT_W;
-    const rowH = 8;
+      const tX = MARGIN;
+      const tW = CONTENT_W;
+      const rowH = 8;
 
-    // Table header
-    doc.setFillColor(...NAVY);
-    doc.roundedRect(tX, y, tW, rowH, 1.5, 1.5, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(7.5);
-    doc.setFont("helvetica", "bold");
-    doc.text("CITY", tX + 4, y + 5.5);
-    doc.text("HOTEL NAME", tX + tW * 0.25, y + 5.5);
-    doc.text("ROOM TYPE", tX + tW * 0.6, y + 5.5);
-    doc.text("NIGHTS", tX + tW - 6, y + 5.5, { align: "right" });
-    y += rowH;
-
-    hotels.forEach((h, idx) => {
-      y = checkPage(doc, y, rowH, logo);
-      const bg = idx % 2 === 0 ? LIGHT_BG : WHITE;
-      doc.setFillColor(...bg);
-      doc.rect(tX, y, tW, rowH, "F");
-      doc.setDrawColor(220, 225, 235);
-      doc.setLineWidth(0.15);
-      doc.rect(tX, y, tW, rowH, "S");
-
-      doc.setTextColor(...DARK);
-      doc.setFontSize(8);
-      doc.setFont("helvetica", "normal");
-      doc.text(h.city || "", tX + 4, y + 5.5);
-      doc.text(h.hotel_name || "", tX + tW * 0.25, y + 5.5);
-      doc.text(h.room_type || "", tX + tW * 0.6, y + 5.5);
+      doc.setFillColor(...NAVY);
+      doc.roundedRect(tX, y, tW, rowH, 1.5, 1.5, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(7.5);
       doc.setFont("helvetica", "bold");
-      doc.text(`${h.nights || 0}`, tX + tW - 6, y + 5.5, { align: "right" });
+      doc.text("CITY", tX + 4, y + 5.5);
+      doc.text("HOTEL NAME", tX + tW * 0.25, y + 5.5);
+      doc.text("ROOM TYPE", tX + tW * 0.6, y + 5.5);
+      doc.text("NIGHTS", tX + tW - 6, y + 5.5, { align: "right" });
       y += rowH;
-    });
-    y += 10;
+
+      hotels.forEach((h, idx) => {
+        y = checkPage(doc, y, rowH, logo, company, showWM);
+        const bg = idx % 2 === 0 ? LIGHT_BG : WHITE;
+        doc.setFillColor(...bg);
+        doc.rect(tX, y, tW, rowH, "F");
+        doc.setDrawColor(220, 225, 235);
+        doc.setLineWidth(0.15);
+        doc.rect(tX, y, tW, rowH, "S");
+
+        doc.setTextColor(...DARK);
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
+        doc.text(h.city || "", tX + 4, y + 5.5);
+        doc.text(h.hotel_name || "", tX + tW * 0.25, y + 5.5);
+        doc.text(h.room_type || "", tX + tW * 0.6, y + 5.5);
+        doc.setFont("helvetica", "bold");
+        doc.text(`${h.nights || 0}`, tX + tW - 6, y + 5.5, { align: "right" });
+        y += rowH;
+      });
+      y += 10;
+    }
   }
 
   // 6) Detailed Itinerary
-  if (data.days.length > 0) {
-    y = checkPage(doc, y, 30, logo);
+  if (sections.show_detailed_itinerary && data.days.length > 0) {
+    y = checkPage(doc, y, 30, logo, company, showWM);
     doc.setTextColor(...NAVY);
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
@@ -476,7 +520,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
     y += 4;
 
     data.days.forEach((day, idx) => {
-      y = checkPage(doc, y, 28, logo);
+      y = checkPage(doc, y, 28, logo, company, showWM);
 
       doc.setFillColor(...GOLD);
       doc.circle(MARGIN + 6, y, 5, "F");
@@ -496,7 +540,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       if (day.description) {
         const dLines = doc.splitTextToSize(day.description, CONTENT_W - 22);
         const dh = dLines.length * 4.5 + 6;
-        y = checkPage(doc, y, dh, logo);
+        y = checkPage(doc, y, dh, logo, company, showWM);
 
         doc.setFillColor(...LIGHT_BG);
         doc.roundedRect(MARGIN + 14, y - 3, CONTENT_W - 14, dh, 1.5, 1.5, "F");
@@ -507,7 +551,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
         doc.setFontSize(8.5);
         doc.setFont("helvetica", "normal");
         dLines.forEach((line: string) => {
-          y = checkPage(doc, y, 5, logo);
+          y = checkPage(doc, y, 5, logo, company, showWM);
           doc.text(line, MARGIN + 19, y + 1);
           y += 4.5;
         });
@@ -529,15 +573,15 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
   }
 
   // 7) Inclusions
-  if (data.inclusions.length > 0 && data.inclusions.some((s) => s.trim())) {
-    y = checkPage(doc, y, 22, logo);
+  if (sections.show_inclusions && data.inclusions.length > 0 && data.inclusions.some((s) => s.trim())) {
+    y = checkPage(doc, y, 22, logo, company, showWM);
     y = sectionTitle(doc, "Inclusions", y);
 
     data.inclusions.forEach((item, idx) => {
       if (!item.trim()) return;
       const lines = doc.splitTextToSize(item, CONTENT_W - 14);
       const bh = lines.length * 4.5 + 2;
-      y = checkPage(doc, y, bh, logo);
+      y = checkPage(doc, y, bh, logo, company, showWM);
 
       if (idx % 2 === 0) {
         doc.setFillColor(248, 250, 252);
@@ -560,15 +604,15 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
   }
 
   // Exclusions
-  if (data.exclusions.length > 0 && data.exclusions.some((s) => s.trim())) {
-    y = checkPage(doc, y, 22, logo);
+  if (sections.show_exclusions && data.exclusions.length > 0 && data.exclusions.some((s) => s.trim())) {
+    y = checkPage(doc, y, 22, logo, company, showWM);
     y = sectionTitle(doc, "Exclusions", y);
 
     data.exclusions.forEach((item, idx) => {
       if (!item.trim()) return;
       const lines = doc.splitTextToSize(item, CONTENT_W - 14);
       const bh = lines.length * 4.5 + 2;
-      y = checkPage(doc, y, bh, logo);
+      y = checkPage(doc, y, bh, logo, company, showWM);
 
       if (idx % 2 === 0) {
         doc.setFillColor(252, 248, 248);
@@ -591,84 +635,90 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
   }
 
   // 8) Total Package Amount
-  const pricingRows: { label: string; rate: number; qty: number; amount: number }[] = [];
-  if (data.price_per_person > 0 && data.num_persons > 0) {
-    pricingRows.push({ label: data.person_label || "Adult", rate: data.price_per_person, qty: data.num_persons, amount: data.price_per_person * data.num_persons });
-  }
-  if ((data.price_per_child || 0) > 0 && (data.num_children || 0) > 0) {
-    pricingRows.push({ label: data.child_label || "Child", rate: data.price_per_child!, qty: data.num_children!, amount: data.price_per_child! * data.num_children! });
-  }
+  if (sections.show_pricing_table) {
+    const pricingRows: { label: string; rate: number; qty: number; amount: number }[] = [];
+    if (data.price_per_person > 0 && data.num_persons > 0) {
+      pricingRows.push({ label: data.person_label || "Adult", rate: data.price_per_person, qty: data.num_persons, amount: data.price_per_person * data.num_persons });
+    }
+    if ((data.price_per_child || 0) > 0 && (data.num_children || 0) > 0) {
+      pricingRows.push({ label: data.child_label || "Child", rate: data.price_per_child!, qty: data.num_children!, amount: data.price_per_child! * data.num_children! });
+    }
 
-  if (pricingRows.length > 0) {
-    y = checkPage(doc, y, 45, logo);
-    y = sectionTitle(doc, "Total Package Amount", y);
+    if (pricingRows.length > 0) {
+      y = checkPage(doc, y, 45, logo, company, showWM);
+      y = sectionTitle(doc, "Total Package Amount", y);
 
-    const tX = MARGIN;
-    const tW = CONTENT_W;
-    const rowH = 9;
+      const tX = MARGIN;
+      const tW = CONTENT_W;
+      const rowH = 9;
 
-    doc.setFillColor(...NAVY);
-    doc.roundedRect(tX, y, tW, rowH, 1.5, 1.5, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(8.5);
-    doc.setFont("helvetica", "bold");
-    doc.text("DESCRIPTION", tX + 6, y + 6);
-    doc.text("RATE", tX + tW * 0.45, y + 6);
-    doc.text("QTY", tX + tW * 0.65, y + 6);
-    doc.text("AMOUNT", tX + tW - 6, y + 6, { align: "right" });
-    y += rowH;
-
-    pricingRows.forEach((row, idx) => {
-      const bg = idx % 2 === 0 ? LIGHT_BG : WHITE;
-      doc.setFillColor(...bg);
-      doc.rect(tX, y, tW, rowH, "F");
-      doc.setDrawColor(220, 225, 235);
-      doc.setLineWidth(0.15);
-      doc.rect(tX, y, tW, rowH, "S");
-
-      doc.setTextColor(...DARK);
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      doc.text(row.label, tX + 6, y + 6);
-      doc.text(formatINR(row.rate), tX + tW * 0.45, y + 6);
-      doc.text(`${row.qty}`, tX + tW * 0.65, y + 6);
+      doc.setFillColor(...NAVY);
+      doc.roundedRect(tX, y, tW, rowH, 1.5, 1.5, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(8.5);
       doc.setFont("helvetica", "bold");
-      doc.text(formatINR(row.amount), tX + tW - 6, y + 6, { align: "right" });
+      doc.text("DESCRIPTION", tX + 6, y + 6);
+      doc.text("RATE", tX + tW * 0.45, y + 6);
+      doc.text("QTY", tX + tW * 0.65, y + 6);
+      doc.text("AMOUNT", tX + tW - 6, y + 6, { align: "right" });
       y += rowH;
-    });
 
-    doc.setFillColor(...NAVY);
-    doc.roundedRect(tX, y, tW, rowH + 1, 1.5, 1.5, "F");
-    doc.setTextColor(...GOLD);
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text("TOTAL", tX + 6, y + 6.5);
-    doc.text(formatINR(data.total_price), tX + tW - 6, y + 6.5, { align: "right" });
-    y += rowH + 10;
+      pricingRows.forEach((row, idx) => {
+        const bg = idx % 2 === 0 ? LIGHT_BG : WHITE;
+        doc.setFillColor(...bg);
+        doc.rect(tX, y, tW, rowH, "F");
+        doc.setDrawColor(220, 225, 235);
+        doc.setLineWidth(0.15);
+        doc.rect(tX, y, tW, rowH, "S");
+
+        doc.setTextColor(...DARK);
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        doc.text(row.label, tX + 6, y + 6);
+        doc.text(formatINR(row.rate), tX + tW * 0.45, y + 6);
+        doc.text(`${row.qty}`, tX + tW * 0.65, y + 6);
+        doc.setFont("helvetica", "bold");
+        doc.text(formatINR(row.amount), tX + tW - 6, y + 6, { align: "right" });
+        y += rowH;
+      });
+
+      doc.setFillColor(...NAVY);
+      doc.roundedRect(tX, y, tW, rowH + 1, 1.5, 1.5, "F");
+      doc.setTextColor(...GOLD);
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.text("TOTAL", tX + 6, y + 6.5);
+      doc.text(formatINR(data.total_price), tX + tW - 6, y + 6.5, { align: "right" });
+      y += rowH + 10;
+    }
   }
 
   // 9) Terms & Conditions
-  const terms = data.terms_conditions?.length && data.terms_conditions.some((t) => t.trim())
-    ? data.terms_conditions.filter((t) => t.trim())
-    : DEFAULT_TERMS;
+  if (sections.show_terms_conditions) {
+    const terms = data.terms_conditions?.length && data.terms_conditions.some((t) => t.trim())
+      ? data.terms_conditions.filter((t) => t.trim())
+      : DEFAULT_TERMS;
 
-  y = checkPage(doc, y, 30, logo);
-  y = sectionTitle(doc, "Terms & Conditions", y);
-  y = numberedList(doc, terms, y, logo, GOLD);
-  y += 6;
-
-  // 10) Important Notes
-  const notes = data.important_notes?.filter((n) => n.trim()) || [];
-  if (notes.length > 0) {
-    y = checkPage(doc, y, 20, logo);
-    y = sectionTitle(doc, "Important Notes", y);
-    y = numberedList(doc, notes, y, logo, NAVY);
+    y = checkPage(doc, y, 30, logo, company, showWM);
+    y = sectionTitle(doc, "Terms & Conditions", y);
+    y = numberedList(doc, terms, y, logo, company, showWM, GOLD);
     y += 6;
   }
 
+  // 10) Important Notes
+  if (sections.show_important_notes) {
+    const notes = data.important_notes?.filter((n) => n.trim()) || [];
+    if (notes.length > 0) {
+      y = checkPage(doc, y, 20, logo, company, showWM);
+      y = sectionTitle(doc, "Important Notes", y);
+      y = numberedList(doc, notes, y, logo, company, showWM, NAVY);
+      y += 6;
+    }
+  }
+
   // 11) Bank Details
-  if (data.bank_details?.trim()) {
-    y = checkPage(doc, y, 30, logo);
+  if (sections.show_bank_details && data.bank_details?.trim()) {
+    y = checkPage(doc, y, 30, logo, company, showWM);
     y = sectionTitle(doc, "Bank Details", y);
 
     doc.setFillColor(...LIGHT_BG);
@@ -688,24 +738,27 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
     y += 10;
   }
 
-  // Thanks line
-  y = checkPage(doc, y, 20, logo);
-  y += 6;
-  doc.setTextColor(...NAVY);
-  doc.setFontSize(13);
-  doc.setFont("helvetica", "bold");
-  doc.text("Thank you for choosing NexYatra!", PAGE_W / 2, y, { align: "center" });
-  y += 6;
-  doc.setTextColor(...GOLD);
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
-  doc.text("We look forward to creating unforgettable memories for you.", PAGE_W / 2, y, { align: "center" });
+  // Closing message
+  if (sections.show_closing_message) {
+    y = checkPage(doc, y, 20, logo, company, showWM);
+    y += 6;
+    const closingMsg = data.closing_message || `Thank you for choosing ${company.name}!`;
+    doc.setTextColor(...NAVY);
+    doc.setFontSize(13);
+    doc.setFont("helvetica", "bold");
+    doc.text(closingMsg, PAGE_W / 2, y, { align: "center" });
+    y += 6;
+    doc.setTextColor(...GOLD);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.text("We look forward to creating unforgettable memories for you.", PAGE_W / 2, y, { align: "center" });
+  }
 
   // ===== Footers =====
   const pages = doc.getNumberOfPages();
   for (let i = 1; i <= pages; i++) {
     doc.setPage(i);
-    addFooter(doc, i, pages);
+    addFooter(doc, i, pages, company);
   }
 
   doc.save(`Quotation_${data.client_name.replace(/\s+/g, "_")}_${data.destination_name.replace(/\s+/g, "_")}.pdf`);
