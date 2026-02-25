@@ -3,10 +3,12 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { LogOutIcon } from "lucide-react";
+import { LogOutIcon, Plus, LayoutDashboard } from "lucide-react";
 import DateRangeFilter from "@/components/dashboard/DateRangeFilter";
 import LeadsTable, { Lead } from "@/components/dashboard/LeadsTable";
 import LeadsChart from "@/components/dashboard/LeadsChart";
+import DashboardStats from "@/components/dashboard/DashboardStats";
+import AddLeadDialog from "@/components/dashboard/AddLeadDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DestinationsManager from "./DestinationsManager";
@@ -21,6 +23,7 @@ const Dashboard: React.FC = () => {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  const [isAddLeadOpen, setIsAddLeadOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "leads";
   const { toast } = useToast();
@@ -64,15 +67,12 @@ const Dashboard: React.FC = () => {
   const applyDateFilter = (data: Lead[], start: Date, end: Date) => {
     const startCopy = new Date(start);
     startCopy.setHours(0, 0, 0, 0);
-    
     const endCopy = new Date(end);
     endCopy.setHours(23, 59, 59, 999);
-    
     const filtered = data.filter((lead) => {
       const leadDate = new Date(lead.created_at);
       return leadDate >= startCopy && leadDate <= endCopy;
     });
-    
     setFilteredLeads(filtered);
   };
 
@@ -83,49 +83,27 @@ const Dashboard: React.FC = () => {
   const handleLogout = async () => {
     try {
       const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        throw error;
-      }
-      
-      toast({
-        title: "Logged out successfully",
-        description: "You have been logged out of the dashboard",
-      });
-      
+      if (error) throw error;
+      toast({ title: "Logged out successfully", description: "You have been logged out of the dashboard" });
       navigate("/admin");
     } catch (error: any) {
       console.error("Logout error:", error);
-      toast({
-        title: "Logout failed",
-        description: error.message || "There was an error logging out.",
-        variant: "destructive",
-      });
+      toast({ title: "Logout failed", description: error.message || "There was an error logging out.", variant: "destructive" });
     }
   };
 
   const handleDataChange = useCallback(() => {
-    console.log("Data change detected, refreshing leads...");
     fetchLeads();
   }, [fetchLeads]);
 
   const handleFilterApply = () => {
     if (!startDate || !endDate) {
-      toast({
-        title: "Missing date range",
-        description: "Please select both start and end dates.",
-        variant: "destructive",
-      });
+      toast({ title: "Missing date range", description: "Please select both start and end dates.", variant: "destructive" });
       return;
     }
-
     if (leads.length > 0) {
       applyDateFilter(leads, startDate, endDate);
-      
-      toast({
-        title: "Filter applied",
-        description: "Showing leads in the selected date range.",
-      });
+      toast({ title: "Filter applied", description: "Showing leads in the selected date range." });
     }
   };
 
@@ -133,39 +111,62 @@ const Dashboard: React.FC = () => {
     setFilteredLeads(leads);
     setStartDate(undefined);
     setEndDate(undefined);
-    
-    toast({
-      title: "Filter cleared",
-      description: "Showing all leads.",
-    });
+    toast({ title: "Filter cleared", description: "Showing all leads." });
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOutIcon className="mr-2 h-4 w-4" />
-            Logout
-          </Button>
+    <div className="min-h-screen bg-muted/30">
+      {/* Header */}
+      <div className="bg-card border-b sticky top-0 z-10">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center">
+                <LayoutDashboard className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-lg font-semibold text-foreground">NexYatra CRM</h1>
+                <p className="text-xs text-muted-foreground hidden sm:block">Manage your leads & bookings</p>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleLogout}>
+              <LogOutIcon className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
+          </div>
         </div>
+      </div>
 
-        <Tabs value={activeTab} onValueChange={(val) => setSearchParams({ tab: val }, { replace: true })} className="mt-8">
-          <TabsList>
+      {/* Content */}
+      <div className="max-w-[1400px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
+        <Tabs value={activeTab} onValueChange={(val) => setSearchParams({ tab: val }, { replace: true })}>
+          <TabsList className="mb-6">
             <TabsTrigger value="leads">Leads</TabsTrigger>
             <TabsTrigger value="destinations">Destinations</TabsTrigger>
             <TabsTrigger value="reviews">Reviews</TabsTrigger>
-            <TabsTrigger value="contacts">Contact Messages</TabsTrigger>
+            <TabsTrigger value="contacts">Messages</TabsTrigger>
             <TabsTrigger value="quotations">Quotations</TabsTrigger>
             <TabsTrigger value="seo">SEO</TabsTrigger>
           </TabsList>
 
           <TabsContent value="leads" className="space-y-6">
+            {/* Stats */}
+            <DashboardStats leads={filteredLeads} />
+
+            {/* Chart */}
             <LeadsChart leads={filteredLeads} />
-            <Separator className="my-8" />
+
+            <Separator />
+
+            {/* Lead Management */}
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold">Lead Management</h2>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <h2 className="text-xl font-semibold">Lead Management</h2>
+                <Button onClick={() => setIsAddLeadOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Lead
+                </Button>
+              </div>
               <DateRangeFilter
                 startDate={startDate}
                 endDate={endDate}
@@ -179,10 +180,7 @@ const Dashboard: React.FC = () => {
                   <p className="text-muted-foreground">Loading leads...</p>
                 </div>
               ) : (
-                <LeadsTable 
-                  leads={filteredLeads} 
-                  onDataChange={handleDataChange} 
-                />
+                <LeadsTable leads={filteredLeads} onDataChange={handleDataChange} />
               )}
             </div>
           </TabsContent>
@@ -216,6 +214,12 @@ const Dashboard: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      <AddLeadDialog
+        isOpen={isAddLeadOpen}
+        onOpenChange={setIsAddLeadOpen}
+        onLeadAdded={handleDataChange}
+      />
     </div>
   );
 };
