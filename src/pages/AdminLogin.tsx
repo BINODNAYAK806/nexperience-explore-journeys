@@ -9,7 +9,7 @@ import { LockIcon, MailIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const AdminLogin: React.FC = () => {
-  const [email, setEmail] = useState("hello@nexyatra.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
