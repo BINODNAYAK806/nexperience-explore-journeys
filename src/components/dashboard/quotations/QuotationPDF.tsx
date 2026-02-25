@@ -124,20 +124,22 @@ function formatINR(amount: number): string {
   return "Rs. " + amount.toLocaleString("en-IN");
 }
 
-/** Calculate total hotel nights from hotel_details array */
 function getTotalNights(data: QuotationForPDF): number {
   const hotels = data.hotel_details?.filter(h => h.city?.trim() || h.hotel_name?.trim()) || [];
   if (hotels.length > 0) {
     const total = hotels.reduce((sum, h) => sum + (h.nights || 0), 0);
     if (total > 0) return total;
   }
-  // Fallback: days - 1
   return Math.max(0, data.days.length - 1);
 }
 
-/** Strip "Day X:" prefix from title to avoid duplication */
 function cleanDayTitle(title: string): string {
   return title.replace(/^Day\s*\d+\s*:\s*/i, "").trim();
+}
+
+/** Pluralize helper */
+function pluralize(n: number, singular: string, plural: string): string {
+  return n === 1 ? `${n} ${singular}` : `${n} ${plural}`;
 }
 
 async function loadLogoBase64(): Promise<string | null> {
@@ -155,18 +157,15 @@ async function loadLogoBase64(): Promise<string | null> {
   }
 }
 
-// ─── Draw a checkmark manually (no unicode) ───
 function drawCheck(doc: jsPDF, cx: number, cy: number, r: number) {
   doc.setFillColor(...SUCCESS_GREEN);
   doc.circle(cx, cy, r, "F");
-  // Draw checkmark as lines
   doc.setDrawColor(255, 255, 255);
   doc.setLineWidth(0.5);
   doc.line(cx - r * 0.4, cy, cx - r * 0.05, cy + r * 0.4);
   doc.line(cx - r * 0.05, cy + r * 0.4, cx + r * 0.45, cy - r * 0.35);
 }
 
-// ─── Draw an X mark manually (no unicode) ───
 function drawCross(doc: jsPDF, cx: number, cy: number, r: number) {
   doc.setFillColor(...DANGER_RED);
   doc.circle(cx, cy, r, "F");
@@ -189,23 +188,13 @@ function drawCoverPage(
   doc.setFillColor(...DEEP_NAVY);
   doc.rect(0, 0, PAGE_W, PAGE_H, "F");
 
-  // Subtle radial gradient effect - concentric soft rectangles
-  const gradientSteps = 6;
-  for (let i = gradientSteps; i >= 1; i--) {
-    const gState = (doc as any).GState({ opacity: 0.015 * i });
-    doc.saveGraphicsState();
-    doc.setGState(gState);
-    doc.setFillColor(255, 255, 255);
-    const inset = 20 + i * 12;
-    doc.roundedRect(inset, inset, PAGE_W - inset * 2, PAGE_H - inset * 2, 8, 8, "F");
-    doc.restoreGraphicsState();
-  }
-
-  // Elegant double gold border frame
+  // Elegant gold border frame
   doc.setDrawColor(...GOLD);
   doc.setLineWidth(0.8);
   doc.rect(10, 10, PAGE_W - 20, PAGE_H - 20, "S");
-  const innerGState = (doc as any).GState({ opacity: 0.4 });
+
+  // Inner subtle border
+  const innerGState = (doc as any).GState({ opacity: 0.3 });
   doc.saveGraphicsState();
   doc.setGState(innerGState);
   doc.setDrawColor(...GOLD);
@@ -213,78 +202,74 @@ function drawCoverPage(
   doc.rect(13, 13, PAGE_W - 26, PAGE_H - 26, "S");
   doc.restoreGraphicsState();
 
-  // Corner ornaments (small gold L-shapes at each corner)
-  const cornerLen = 18;
-  const cornerInset = 10;
+  // Corner ornaments
+  const cLen = 20;
+  const cIn = 10;
   doc.setDrawColor(...GOLD);
-  doc.setLineWidth(1.2);
-  // Top-left
-  doc.line(cornerInset, cornerInset, cornerInset + cornerLen, cornerInset);
-  doc.line(cornerInset, cornerInset, cornerInset, cornerInset + cornerLen);
-  // Top-right
-  doc.line(PAGE_W - cornerInset, cornerInset, PAGE_W - cornerInset - cornerLen, cornerInset);
-  doc.line(PAGE_W - cornerInset, cornerInset, PAGE_W - cornerInset, cornerInset + cornerLen);
-  // Bottom-left
-  doc.line(cornerInset, PAGE_H - cornerInset, cornerInset + cornerLen, PAGE_H - cornerInset);
-  doc.line(cornerInset, PAGE_H - cornerInset, cornerInset, PAGE_H - cornerInset - cornerLen);
-  // Bottom-right
-  doc.line(PAGE_W - cornerInset, PAGE_H - cornerInset, PAGE_W - cornerInset - cornerLen, PAGE_H - cornerInset);
-  doc.line(PAGE_W - cornerInset, PAGE_H - cornerInset, PAGE_W - cornerInset, PAGE_H - cornerInset - cornerLen);
+  doc.setLineWidth(1.5);
+  doc.line(cIn, cIn, cIn + cLen, cIn);
+  doc.line(cIn, cIn, cIn, cIn + cLen);
+  doc.line(PAGE_W - cIn, cIn, PAGE_W - cIn - cLen, cIn);
+  doc.line(PAGE_W - cIn, cIn, PAGE_W - cIn, cIn + cLen);
+  doc.line(cIn, PAGE_H - cIn, cIn + cLen, PAGE_H - cIn);
+  doc.line(cIn, PAGE_H - cIn, cIn, PAGE_H - cIn - cLen);
+  doc.line(PAGE_W - cIn, PAGE_H - cIn, PAGE_W - cIn - cLen, PAGE_H - cIn);
+  doc.line(PAGE_W - cIn, PAGE_H - cIn, PAGE_W - cIn, PAGE_H - cIn - cLen);
 
   // Logo
-  let logoY = 50;
+  let y = 55;
   if (logo) {
     try {
-      doc.addImage(logo, "PNG", PAGE_W / 2 - 22, logoY, 44, 44);
-      logoY += 52;
+      doc.addImage(logo, "PNG", PAGE_W / 2 - 22, y, 44, 44);
+      y += 52;
     } catch {
-      logoY += 10;
+      y += 10;
     }
   }
 
   // Company name
-  logoY += 8;
+  y += 8;
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(28);
   doc.setFont("helvetica", "bold");
-  doc.text(company.name.toUpperCase(), PAGE_W / 2, logoY, { align: "center" });
-  logoY += 8;
+  doc.text(company.name.toUpperCase(), PAGE_W / 2, y, { align: "center" });
+  y += 9;
 
   // Tagline
   doc.setTextColor(...GOLD);
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   const tagLetters = company.tagline.toUpperCase().split("").join("  ");
-  doc.text(tagLetters, PAGE_W / 2, logoY, { align: "center" });
-  logoY += 16;
+  doc.text(tagLetters, PAGE_W / 2, y, { align: "center" });
+  y += 18;
 
   // Gold divider with diamond
   const divW = 80;
   doc.setDrawColor(...GOLD);
   doc.setLineWidth(0.6);
-  doc.line(PAGE_W / 2 - divW / 2, logoY, PAGE_W / 2 - 5, logoY);
-  doc.line(PAGE_W / 2 + 5, logoY, PAGE_W / 2 + divW / 2, logoY);
+  doc.line(PAGE_W / 2 - divW / 2, y, PAGE_W / 2 - 5, y);
+  doc.line(PAGE_W / 2 + 5, y, PAGE_W / 2 + divW / 2, y);
   doc.setFillColor(...GOLD);
-  doc.circle(PAGE_W / 2, logoY, 1.8, "F");
-  logoY += 20;
+  doc.circle(PAGE_W / 2, y, 1.8, "F");
+  y += 22;
 
-  // Destination name - hero text
+  // Destination name
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(30);
   doc.setFont("helvetica", "bold");
   const destLines = doc.splitTextToSize(data.destination_name.toUpperCase(), CONTENT_W + 10);
   destLines.forEach((line: string) => {
-    doc.text(line, PAGE_W / 2, logoY, { align: "center" });
-    logoY += 13;
+    doc.text(line, PAGE_W / 2, y, { align: "center" });
+    y += 13;
   });
-  logoY += 2;
+  y += 3;
 
   // "Tour Package" subtitle
   doc.setTextColor(...GOLD);
   doc.setFontSize(12);
   doc.setFont("helvetica", "normal");
-  doc.text("TOUR PACKAGE", PAGE_W / 2, logoY, { align: "center" });
-  logoY += 14;
+  doc.text("TOUR PACKAGE", PAGE_W / 2, y, { align: "center" });
+  y += 12;
 
   // Cities covered
   if (sections.show_cities) {
@@ -292,35 +277,37 @@ function drawCoverPage(
     if (cities.length > 0) {
       doc.setTextColor(200, 210, 230);
       doc.setFontSize(9);
-      doc.text(cities.join("  •  "), PAGE_W / 2, logoY, { align: "center" });
-      logoY += 12;
+      doc.text(cities.join("  •  "), PAGE_W / 2, y, { align: "center" });
+      y += 12;
     }
   }
 
-  // Duration badge
+  // Duration badge with proper grammar
   if (data.days.length > 0) {
     const nights = getTotalNights(data);
     const totalPax = (data.num_persons || 0) + (data.num_children || 0);
-    const durText = `${data.days.length} Days & ${nights} Nights   |   ${totalPax} Pax`;
+    const dayStr = pluralize(data.days.length, "Day", "Days");
+    const nightStr = pluralize(nights, "Night", "Nights");
+    const durText = `${dayStr} & ${nightStr}   |   ${totalPax} Pax`;
 
     const badgeW = 110;
     const badgeH = 13;
     const badgeX = PAGE_W / 2 - badgeW / 2;
     doc.setDrawColor(...GOLD);
     doc.setLineWidth(0.5);
-    doc.roundedRect(badgeX, logoY - 8.5, badgeW, badgeH, 6, 6, "S");
+    doc.roundedRect(badgeX, y - 8.5, badgeW, badgeH, 6, 6, "S");
     doc.setTextColor(...GOLD);
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
-    doc.text(durText, PAGE_W / 2, logoY - 0.5, { align: "center" });
-    logoY += 20;
+    doc.text(durText, PAGE_W / 2, y - 0.5, { align: "center" });
+    y += 20;
   }
 
-  // Guest Info Card
+  // ─── Guest Info Card (stacked layout to avoid overlaps) ───
   const cardX = MARGIN + 10;
   const cardW = CONTENT_W - 20;
-  const cardH = 44;
-  const cardY = logoY + 2;
+  const cardH = 52;
+  const cardY = y + 2;
 
   // Semi-transparent card bg
   const cardGState = (doc as any).GState({ opacity: 0.12 });
@@ -335,50 +322,53 @@ function drawCoverPage(
   doc.setLineWidth(0.4);
   doc.roundedRect(cardX, cardY, cardW, cardH, 4, 4, "S");
 
-  // Gold top accent on card
+  // Gold top accent
   doc.setFillColor(...GOLD);
   doc.rect(cardX + 15, cardY, cardW - 30, 1.2, "F");
 
-  const lx = cardX + 10;
-  const vx = cardX + 42;
-  const rx = PAGE_W / 2 + 4;
-  const rvx = PAGE_W / 2 + 36;
+  // Layout: 2 columns x 2 rows, properly spaced
+  const colL = cardX + 10;
+  const colR = cardX + cardW / 2 + 5;
+  const valOffsetX = 38;
 
-  let ry = cardY + 13;
+  // Row 1
+  let ry = cardY + 14;
   doc.setFontSize(7);
   doc.setTextColor(...GOLD);
   doc.setFont("helvetica", "bold");
-  doc.text("GUEST NAME", lx, ry);
+  doc.text("GUEST NAME", colL, ry);
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.text(data.client_name, vx, ry);
+  doc.text(data.client_name, colL + valOffsetX, ry);
 
   if (data.client_contact) {
     doc.setFontSize(7);
     doc.setTextColor(...GOLD);
     doc.setFont("helvetica", "bold");
-    doc.text("CONTACT", rx, ry);
+    doc.text("CONTACT", colR, ry);
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text(data.client_contact, rvx, ry);
+    doc.text(data.client_contact, colR + valOffsetX - 5, ry);
   }
 
-  ry += 5;
-  const lineGState = (doc as any).GState({ opacity: 0.2 });
+  // Separator line
+  ry += 6;
+  const sepGState = (doc as any).GState({ opacity: 0.2 });
   doc.saveGraphicsState();
-  doc.setGState(lineGState);
+  doc.setGState(sepGState);
   doc.setDrawColor(255, 255, 255);
   doc.setLineWidth(0.2);
-  doc.line(lx, ry, cardX + cardW - 10, ry);
+  doc.line(colL, ry, cardX + cardW - 10, ry);
   doc.restoreGraphicsState();
 
-  ry += 9;
+  // Row 2
+  ry += 10;
   doc.setFontSize(7);
   doc.setTextColor(...GOLD);
   doc.setFont("helvetica", "bold");
-  doc.text("TRAVEL DATE", lx, ry);
+  doc.text("TRAVEL DATE", colL, ry);
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
@@ -388,12 +378,12 @@ function drawCoverPage(
   const endStr = data.travel_end_date
     ? ` - ${format(new Date(data.travel_end_date), "dd MMM yyyy")}`
     : "";
-  doc.text(startStr + endStr, vx, ry);
+  doc.text(startStr + endStr, colL + valOffsetX, ry);
 
   doc.setFontSize(7);
   doc.setTextColor(...GOLD);
   doc.setFont("helvetica", "bold");
-  doc.text("NO. OF PAX", rx, ry);
+  doc.text("NO. OF PAX", colR, ry);
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
@@ -402,7 +392,7 @@ function drawCoverPage(
     paxParts.push(`${data.num_persons} ${data.person_label || "Adult"}`);
   if ((data.num_children || 0) > 0)
     paxParts.push(`${data.num_children} ${data.child_label || "Child"}`);
-  doc.text(paxParts.join(" + ") || "0", rvx, ry);
+  doc.text(paxParts.join(" + ") || "0", colR + valOffsetX - 5, ry);
 
   // Cover bottom footer
   const footY = PAGE_H - 35;
@@ -430,22 +420,29 @@ function addContentHeader(doc: jsPDF, logo: string | null, company: CompanyInfo)
   doc.setFillColor(...GOLD);
   doc.rect(0, 16, PAGE_W, 0.6, "F");
 
+  let textX = MARGIN;
   if (logo) {
     try {
       doc.addImage(logo, "PNG", MARGIN, 2.5, 11, 11);
+      textX = MARGIN + 14;
     } catch {}
   }
 
-  const textX = logo ? MARGIN + 14 : MARGIN;
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
-  doc.text(company.name, textX, 10);
+  doc.text(company.name, textX, 9);
 
+  // Tagline - positioned after company name with proper spacing
+  const nameWidth = doc.getTextWidth(company.name);
   doc.setTextColor(...GOLD);
   doc.setFontSize(6.5);
   doc.setFont("helvetica", "normal");
-  doc.text(company.tagline, textX + doc.getTextWidth(company.name) + 4, 10);
+  const tagX = textX + nameWidth + 5;
+  // Only show tagline if it fits
+  if (tagX + doc.getTextWidth(company.tagline) < PAGE_W - MARGIN) {
+    doc.text(company.tagline, tagX, 9);
+  }
 }
 
 function addContentFooter(doc: jsPDF, pageNum: number, totalPages: number, company: CompanyInfo) {
@@ -462,7 +459,7 @@ function addContentFooter(doc: jsPDF, pageNum: number, totalPages: number, compa
   doc.setFontSize(6);
   doc.setFont("helvetica", "normal");
   doc.text(
-    `${company.phone}   |   ${company.email}   |   ${company.website}   |   Instagram: ${company.instagram}`,
+    `${company.phone}  |  ${company.email}  |  ${company.website}  |  Instagram: ${company.instagram}`,
     PAGE_W / 2,
     y1,
     { align: "center" }
@@ -525,26 +522,22 @@ function sectionTitle(doc: jsPDF, title: string, y: number): number {
   doc.roundedRect(MARGIN, y, 3, 11, 1.5, 0, "F");
   doc.rect(MARGIN + 1.5, y, 1.5, 11, "F");
 
-  // Small gold circle decoration
-  doc.setFillColor(...GOLD);
-  doc.circle(MARGIN + 9, y + 5.5, 1.5, "F");
-
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(9.5);
   doc.setFont("helvetica", "bold");
-  doc.text(title.toUpperCase(), MARGIN + 14, y + 7.5);
+  doc.text(title.toUpperCase(), MARGIN + 10, y + 7.5);
 
   // Right side decorative line
   doc.setDrawColor(...GOLD);
   doc.setLineWidth(0.3);
   const rightEnd = PAGE_W - MARGIN - 5;
   const textW = doc.getTextWidth(title.toUpperCase());
-  const lineStart = MARGIN + 14 + textW + 6;
+  const lineStart = MARGIN + 10 + textW + 6;
   if (lineStart < rightEnd - 10) {
     doc.line(lineStart, y + 5.5, rightEnd, y + 5.5);
   }
 
-  return y + 17;
+  return y + 16;
 }
 
 function goldDivider(doc: jsPDF, y: number): number {
@@ -555,7 +548,7 @@ function goldDivider(doc: jsPDF, y: number): number {
   doc.line(cx + 3, y, PAGE_W - MARGIN - 15, y);
   doc.setFillColor(...GOLD);
   doc.circle(cx, y, 0.8, "F");
-  return y + 6;
+  return y + 5;
 }
 
 function numberedList(
@@ -572,7 +565,6 @@ function numberedList(
     if (!note.trim()) return;
     y = checkPage(doc, y, 8, logo, company, showWatermark);
 
-    // Numbered circle
     doc.setFillColor(...accentColor);
     doc.circle(MARGIN + 5, y - 0.5, 2.8, "F");
     doc.setTextColor(255, 255, 255);
@@ -588,7 +580,7 @@ function numberedList(
       doc.text(line, MARGIN + 12, y);
       y += 4;
     });
-    y += 3;
+    y += 2.5;
   });
   return y;
 }
@@ -628,7 +620,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       doc.text(line, MARGIN + 8, dy);
       dy += 4.5;
     });
-    y = dy + 6;
+    y = dy + 4;
   }
 
   // Brief Itinerary
@@ -644,7 +636,6 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
           doc.setFillColor(248, 250, 253);
           doc.rect(MARGIN, y - 4, CONTENT_W, 8, "F");
         }
-        // Day badge
         doc.setFillColor(...NAVY);
         doc.roundedRect(MARGIN + 2, y - 3.5, 18, 6.5, 3, 3, "F");
         doc.setTextColor(255, 255, 255);
@@ -661,7 +652,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
         });
         y += Math.max(7, briefLines.length * 4 + 2);
       });
-      y += 8;
+      y += 6;
     }
   }
 
@@ -676,7 +667,6 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       const tW = CONTENT_W;
       const rowH = 9;
 
-      // Header row
       doc.setFillColor(...NAVY);
       doc.roundedRect(tX, y, tW, rowH, 1.5, 1.5, "F");
       doc.setTextColor(255, 255, 255);
@@ -708,7 +698,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
         doc.text(`${h.nights || 0}`, tX + tW - 8, y + 6, { align: "right" });
         y += rowH;
       });
-      y += 10;
+      y += 6;
     }
   }
 
@@ -735,7 +725,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       doc.setFont("helvetica", "bold");
       doc.text(`${day.day}`, MARGIN + 7, y + 2.5, { align: "center" });
 
-      // Title bar - clean the title to avoid "Day 1: Day 1:" duplication
+      // Title bar
       const cleanTitle = cleanDayTitle(day.title);
       doc.setFillColor(...NAVY);
       doc.roundedRect(MARGIN + 15, y - 4, CONTENT_W - 15, 11, 2, 2, "F");
@@ -745,14 +735,13 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       const titleText = cleanTitle ? `Day ${day.day}: ${cleanTitle}` : `Day ${day.day}`;
       const titleLines = doc.splitTextToSize(titleText, CONTENT_W - 22);
       doc.text(titleLines[0], MARGIN + 19, y + 2.5);
-      y += 14;
+      y += 13;
 
       if (day.description) {
         const dLines = doc.splitTextToSize(day.description, CONTENT_W - 24);
         const dh = dLines.length * 4.2 + 8;
         y = checkPage(doc, y, dh, logo, company, showWM);
 
-        // Description box
         doc.setFillColor(...CREAM);
         doc.roundedRect(MARGIN + 15, y - 3, CONTENT_W - 15, dh, 2, 2, "F");
         doc.setFillColor(...GOLD_LIGHT);
@@ -774,17 +763,17 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
         doc.setDrawColor(...GOLD_LIGHT);
         doc.setLineWidth(0.5);
         doc.setLineDashPattern([1.5, 1.5], 0);
-        doc.line(MARGIN + 7, y, MARGIN + 7, y + 6);
+        doc.line(MARGIN + 7, y, MARGIN + 7, y + 5);
         doc.setLineDashPattern([], 0);
-        y += 8;
+        y += 7;
       } else {
-        y += 6;
+        y += 4;
       }
     });
     y += 4;
   }
 
-  // Inclusions - using drawn checkmarks instead of unicode
+  // Inclusions
   if (
     sections.show_inclusions &&
     data.inclusions.length > 0 &&
@@ -804,7 +793,6 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
         doc.rect(MARGIN, y - 3.5, CONTENT_W, bh + 1, "F");
       }
 
-      // Green check circle (drawn manually)
       drawCheck(doc, MARGIN + 5, y - 0.5, 2);
 
       doc.setTextColor(...DARK);
@@ -816,10 +804,10 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       });
       y += 1.5;
     });
-    y += 8;
+    y += 5;
   }
 
-  // Exclusions - using drawn X marks instead of unicode
+  // Exclusions
   if (
     sections.show_exclusions &&
     data.exclusions.length > 0 &&
@@ -839,7 +827,6 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
         doc.rect(MARGIN, y - 3.5, CONTENT_W, bh + 1, "F");
       }
 
-      // Red X circle (drawn manually)
       drawCross(doc, MARGIN + 5, y - 0.5, 2);
 
       doc.setTextColor(...DARK);
@@ -851,7 +838,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       });
       y += 1.5;
     });
-    y += 8;
+    y += 5;
   }
 
   // Pricing Table
@@ -882,7 +869,6 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       const tW = CONTENT_W;
       const rowH = 10;
 
-      // Table header
       doc.setFillColor(...NAVY);
       doc.roundedRect(tX, y, tW, rowH, 2, 2, "F");
       doc.setTextColor(255, 255, 255);
@@ -926,7 +912,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       doc.setFont("helvetica", "bold");
       doc.text("TOTAL", tX + 10, y + 8);
       doc.text(formatINR(data.total_price), tX + tW - 10, y + 8, { align: "right" });
-      y += totalRowH + 10;
+      y += totalRowH + 8;
     }
   }
 
@@ -940,7 +926,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
     y = checkPage(doc, y, 30, logo, company, showWM);
     y = sectionTitle(doc, "Terms & Conditions", y);
     y = numberedList(doc, terms, y, logo, company, showWM, GOLD);
-    y += 6;
+    y += 4;
   }
 
   // Important Notes
@@ -950,7 +936,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       y = checkPage(doc, y, 20, logo, company, showWM);
       y = sectionTitle(doc, "Important Notes", y);
       y = numberedList(doc, notes, y, logo, company, showWM, NAVY);
-      y += 6;
+      y += 4;
     }
   }
 
@@ -988,15 +974,15 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       }
       bankY += 5.5;
     });
-    y = bankY + 8;
+    y = bankY + 6;
   }
 
   // Closing message
   if (sections.show_closing_message) {
     y = checkPage(doc, y, 30, logo, company, showWM);
-    y += 8;
-    y = goldDivider(doc, y);
     y += 6;
+    y = goldDivider(doc, y);
+    y += 5;
 
     const closingMsg = data.closing_message || `Thank you for choosing ${company.name}!`;
     doc.setTextColor(...NAVY);
