@@ -8,13 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import {
   Plus, Trash2, ArrowUp, ArrowDown, Save, FileDown, ChevronDown, ChevronRight,
   User, MapPin, Hotel, Calendar, IndianRupee, FileText, ListChecks, ListX,
-  ScrollText, AlertTriangle, Building2, GripVertical
+  ScrollText, AlertTriangle, Building2, GripVertical, Settings2, Palette, MessageSquare
 } from "lucide-react";
-import { generateQuotationPDF } from "./QuotationPDF";
+import { generateQuotationPDF, DEFAULT_COMPANY, DEFAULT_SECTION_TOGGLES, type CompanyInfo, type PDFSectionToggles } from "./QuotationPDF";
 import { format } from "date-fns";
 
 interface DayItem { day: number; title: string; description: string; }
@@ -116,6 +117,9 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
   const [form, setForm] = useState<QuotationData>(initialData || emptyQuotation);
   const [templates, setTemplates] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo>({ ...DEFAULT_COMPANY });
+  const [sectionToggles, setSectionToggles] = useState<PDFSectionToggles>({ ...DEFAULT_SECTION_TOGGLES });
+  const [closingMessage, setClosingMessage] = useState(`Thank you for choosing ${DEFAULT_COMPANY.name}!`);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -271,6 +275,9 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
       ...form,
       description: injectVariables(form.description),
       days: form.days.map((d) => ({ ...d, title: injectVariables(d.title), description: injectVariables(d.description) })),
+      company: companyInfo,
+      sections: sectionToggles,
+      closing_message: closingMessage,
     };
     await generateQuotationPDF(injected);
   };
@@ -580,6 +587,102 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
       {/* 11. Bank Details */}
       <Section title="Bank Details" icon={<Building2 className="h-4 w-4" />}>
         <Textarea value={form.bank_details} onChange={(e) => updateField("bank_details", e.target.value)} rows={4} placeholder="Bank name, Account No, IFSC, Branch..." className="text-sm font-mono" />
+      </Section>
+
+      {/* 12. PDF Settings - Company Branding */}
+      <Section title="PDF Company Branding" icon={<Palette className="h-4 w-4" />}
+        badge="Customize PDF header/footer">
+        <div className="space-y-4">
+          <p className="text-xs text-muted-foreground">These details appear in the PDF header, footer, and watermark. Changes here only affect the PDF output, not saved data.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Company Name</Label>
+              <Input value={companyInfo.name} onChange={(e) => setCompanyInfo(prev => ({ ...prev, name: e.target.value }))} className="h-9" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Tagline</Label>
+              <Input value={companyInfo.tagline} onChange={(e) => setCompanyInfo(prev => ({ ...prev, tagline: e.target.value }))} className="h-9" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Phone</Label>
+              <Input value={companyInfo.phone} onChange={(e) => setCompanyInfo(prev => ({ ...prev, phone: e.target.value }))} className="h-9" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Email</Label>
+              <Input value={companyInfo.email} onChange={(e) => setCompanyInfo(prev => ({ ...prev, email: e.target.value }))} className="h-9" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Website</Label>
+              <Input value={companyInfo.website} onChange={(e) => setCompanyInfo(prev => ({ ...prev, website: e.target.value }))} className="h-9" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Instagram</Label>
+              <Input value={companyInfo.instagram} onChange={(e) => setCompanyInfo(prev => ({ ...prev, instagram: e.target.value }))} className="h-9" />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Full Address</Label>
+            <Textarea value={companyInfo.address} onChange={(e) => setCompanyInfo(prev => ({ ...prev, address: e.target.value }))} rows={2} className="text-sm" />
+          </div>
+          <Button variant="outline" size="sm" onClick={() => setCompanyInfo({ ...DEFAULT_COMPANY })}>
+            Reset to Default
+          </Button>
+        </div>
+      </Section>
+
+      {/* 13. PDF Section Toggles */}
+      <Section title="PDF Section Controls" icon={<Settings2 className="h-4 w-4" />}
+        badge="Show/hide PDF sections">
+        <div className="space-y-3">
+          <p className="text-xs text-muted-foreground">Toggle which sections appear in the generated PDF. This does not affect saved data.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {([
+              { key: "show_description", label: "Description / Overview" },
+              { key: "show_cities", label: "Cities Covered" },
+              { key: "show_brief_itinerary", label: "Brief Itinerary" },
+              { key: "show_hotel_details", label: "Hotel Details" },
+              { key: "show_detailed_itinerary", label: "Detailed Itinerary" },
+              { key: "show_inclusions", label: "Inclusions" },
+              { key: "show_exclusions", label: "Exclusions" },
+              { key: "show_pricing_table", label: "Pricing Table" },
+              { key: "show_terms_conditions", label: "Terms & Conditions" },
+              { key: "show_important_notes", label: "Important Notes" },
+              { key: "show_bank_details", label: "Bank Details" },
+              { key: "show_watermark", label: "Logo Watermark" },
+              { key: "show_closing_message", label: "Closing Message" },
+            ] as { key: keyof PDFSectionToggles; label: string }[]).map(({ key, label }) => (
+              <div key={key} className="flex items-center justify-between p-2 rounded-md bg-muted/30">
+                <Label className="text-sm cursor-pointer">{label}</Label>
+                <Switch
+                  checked={sectionToggles[key]}
+                  onCheckedChange={(checked) => setSectionToggles(prev => ({ ...prev, [key]: checked }))}
+                />
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setSectionToggles({ ...DEFAULT_SECTION_TOGGLES })}>
+              Show All
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setSectionToggles(
+              Object.fromEntries(Object.keys(sectionToggles).map(k => [k, false])) as unknown as PDFSectionToggles
+            )}>
+              Hide All
+            </Button>
+          </div>
+        </div>
+      </Section>
+
+      {/* 14. Closing Message */}
+      <Section title="Closing Message" icon={<MessageSquare className="h-4 w-4" />}>
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">Custom message shown at the bottom of the PDF.</p>
+          <Input
+            value={closingMessage}
+            onChange={(e) => setClosingMessage(e.target.value)}
+            placeholder="e.g. Thank you for choosing NexYatra!"
+          />
+        </div>
       </Section>
 
       {/* Bottom Action Bar */}
