@@ -676,7 +676,8 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       y += rH;
 
       rows.forEach((r, i) => {
-        doc.setFillColor(i % 2 === 0 ? ...C.white : ...C.bgAlt);
+        const bg2 = i % 2 === 0 ? C.white : C.bgAlt;
+        doc.setFillColor(...bg2);
         doc.rect(M, y, CW, rH, "F");
         doc.setDrawColor(...C.border);
         doc.setLineWidth(0.1);
