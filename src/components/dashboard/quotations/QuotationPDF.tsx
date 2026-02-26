@@ -520,7 +520,8 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
 
       hotels.forEach((h, i) => {
         y = ensurePage(doc, y, rH, logo, co, wm);
-        doc.setFillColor(i % 2 === 0 ? ...C.white : ...C.bgAlt);
+        const bg1 = i % 2 === 0 ? C.white : C.bgAlt;
+        doc.setFillColor(...bg1);
         doc.rect(M, y, CW, rH, "F");
         doc.setDrawColor(...C.border);
         doc.setLineWidth(0.1);
