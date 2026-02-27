@@ -248,14 +248,14 @@ function drawHeader(doc: jsPDF, logo: string | null, co: CompanyInfo) {
     try { doc.addImage(logo, "PNG", M, 1.5, 11, 11); tx = M + 14; } catch {}
   }
   doc.setTextColor(...C.white);
-  doc.setFontSize(10);
+  doc.setFontSize(sz(10));
   doc.setFont("helvetica", "bold");
   doc.text(co.name, tx, 8.5);
 
   const nw = doc.getTextWidth(co.name);
   const tagX = tx + nw + 4;
   doc.setTextColor(...C.goldLight);
-  doc.setFontSize(6);
+  doc.setFontSize(sz(6));
   doc.setFont("helvetica", "normal");
   if (tagX + doc.getTextWidth(co.tagline) < PW - M) {
     doc.text(co.tagline, tagX, 8.5);
