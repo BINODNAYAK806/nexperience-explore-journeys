@@ -270,16 +270,16 @@ function drawFooter(doc: jsPDF, pg: number, total: number, co: CompanyInfo) {
   doc.rect(0, fy, PW, 0.4, "F");
 
   doc.setTextColor(180, 185, 200);
-  doc.setFontSize(5.5);
+  doc.setFontSize(sz(5.5));
   doc.setFont("helvetica", "normal");
   doc.text(`${co.phone}  |  ${co.email}  |  ${co.website}  |  ${co.instagram}`, PW / 2, fy + 5.5, { align: "center" });
 
   doc.setTextColor(130, 135, 150);
-  doc.setFontSize(4.5);
+  doc.setFontSize(sz(4.5));
   doc.text(co.address, PW / 2, fy + 9.5, { align: "center" });
 
   doc.setTextColor(...C.gold);
-  doc.setFontSize(6);
+  doc.setFontSize(sz(6));
   doc.setFont("helvetica", "bold");
   doc.text(`${pg} / ${total}`, PW - M, fy + 5.5, { align: "right" });
 }
