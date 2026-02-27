@@ -292,7 +292,7 @@ function drawWatermark(doc: jsPDF, logo: string | null, co: CompanyInfo) {
     try { doc.addImage(logo, "PNG", PW / 2 - 28, PH / 2 - 28, 56, 56); doc.restoreGraphicsState(); return; } catch {}
   }
   doc.setTextColor(150, 155, 170);
-  doc.setFontSize(48);
+  doc.setFontSize(sz(48));
   doc.setFont("helvetica", "bold");
   doc.text(co.name.toUpperCase(), PW / 2, PH / 2, { align: "center", angle: 45 });
   doc.restoreGraphicsState();
