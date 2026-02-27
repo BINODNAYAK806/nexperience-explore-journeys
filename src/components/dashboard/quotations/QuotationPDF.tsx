@@ -496,6 +496,9 @@ function drawCover(doc: jsPDF, data: QuotationForPDF, logo: string | null, co: C
 
 // ─── Main Export ───
 export async function generateQuotationPDF(data: QuotationForPDF) {
+  // Apply style customization
+  applyStyle(data.style);
+
   const logo = data.custom_logo || (await loadLogo());
   const doc = new jsPDF("p", "mm", "a4");
   const co = data.company || DEFAULT_COMPANY;
