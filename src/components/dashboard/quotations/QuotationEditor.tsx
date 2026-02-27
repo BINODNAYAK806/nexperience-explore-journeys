@@ -282,6 +282,7 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
       sections: sectionToggles,
       closing_message: closingMessage,
       custom_logo: customLogo,
+      style: styleConfig,
     };
     await generateQuotationPDF(injected);
   };
