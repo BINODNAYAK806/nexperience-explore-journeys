@@ -127,8 +127,8 @@ export interface QuotationForPDF {
   style?: PDFStyleConfig;
 }
 
-// ─── Default Colors (used as fallback) ───
-const C = {
+// ─── Mutable Colors (set per PDF generation) ───
+let C = {
   navy: [26, 42, 74] as [number, number, number],
   navyDark: [15, 25, 50] as [number, number, number],
   gold: [193, 160, 80] as [number, number, number],
@@ -143,28 +143,38 @@ const C = {
   border: [215, 220, 230] as [number, number, number],
 };
 
-function resolveColors(style?: PDFStyleConfig) {
-  if (!style) return { ...C };
-  const theme = style.colorTheme === "custom"
-    ? { primary: style.customPrimaryColor || C.navy, primaryDark: style.customPrimaryColor || C.navyDark, accent: style.customAccentColor || C.gold, accentLight: style.customAccentColor ? lightenColor(style.customAccentColor) : C.goldLight }
-    : COLOR_THEMES[style.colorTheme] || COLOR_THEMES.navy_gold;
-  return { ...C, navy: theme.primary, navyDark: theme.primaryDark, gold: theme.accent, goldLight: theme.accentLight };
+let fontScaleMultiplier = 1;
+let useProperCase = false;
+
+function applyStyle(style?: PDFStyleConfig) {
+  const s = style || DEFAULT_STYLE_CONFIG;
+  // Resolve color theme
+  if (s.colorTheme === "custom") {
+    C.navy = s.customPrimaryColor || [26, 42, 74];
+    C.navyDark = s.customPrimaryColor || [15, 25, 50];
+    C.gold = s.customAccentColor || [193, 160, 80];
+    C.goldLight = s.customAccentColor ? lightenColor(s.customAccentColor) : [230, 215, 170];
+  } else {
+    const theme = COLOR_THEMES[s.colorTheme] || COLOR_THEMES.navy_gold;
+    C.navy = theme.primary;
+    C.navyDark = theme.primaryDark;
+    C.gold = theme.accent;
+    C.goldLight = theme.accentLight;
+  }
+  fontScaleMultiplier = FONT_SCALES[s.fontScale || "normal"];
+  useProperCase = s.properCase || false;
 }
 
 function lightenColor(c: [number, number, number]): [number, number, number] {
-  return [
-    Math.min(255, c[0] + 100),
-    Math.min(255, c[1] + 100),
-    Math.min(255, c[2] + 100),
-  ] as [number, number, number];
+  return [Math.min(255, c[0] + 100), Math.min(255, c[1] + 100), Math.min(255, c[2] + 100)];
 }
 
-function fs(base: number, scale?: PDFFontScale): number {
-  return base * (FONT_SCALES[scale || "normal"]);
+function sz(base: number): number {
+  return Math.round(base * fontScaleMultiplier * 10) / 10;
 }
 
-function properCase(text: string, enabled: boolean): string {
-  if (!enabled) return text;
+function pc(text: string): string {
+  if (!useProperCase) return text;
   return text.replace(/\b\w+/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
 }
 
