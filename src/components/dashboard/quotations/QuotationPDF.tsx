@@ -39,6 +39,38 @@ export interface PDFSectionToggles {
   show_closing_message: boolean;
 }
 
+export type PDFColorTheme = "navy_gold" | "modern_blue" | "elegant_green" | "classic_red" | "royal_purple" | "custom";
+export type PDFFontScale = "small" | "normal" | "large" | "extra_large";
+
+export interface PDFStyleConfig {
+  colorTheme: PDFColorTheme;
+  fontScale: PDFFontScale;
+  properCase: boolean; // capitalize words properly
+  customPrimaryColor?: [number, number, number];
+  customAccentColor?: [number, number, number];
+}
+
+export const DEFAULT_STYLE_CONFIG: PDFStyleConfig = {
+  colorTheme: "navy_gold",
+  fontScale: "normal",
+  properCase: false,
+};
+
+export const COLOR_THEMES: Record<string, { primary: [number, number, number]; primaryDark: [number, number, number]; accent: [number, number, number]; accentLight: [number, number, number]; label: string }> = {
+  navy_gold: { primary: [26, 42, 74], primaryDark: [15, 25, 50], accent: [193, 160, 80], accentLight: [230, 215, 170], label: "Navy & Gold" },
+  modern_blue: { primary: [37, 99, 235], primaryDark: [29, 78, 216], accent: [14, 165, 233], accentLight: [186, 230, 253], label: "Modern Blue" },
+  elegant_green: { primary: [22, 101, 52], primaryDark: [20, 83, 45], accent: [34, 197, 94], accentLight: [187, 247, 208], label: "Elegant Green" },
+  classic_red: { primary: [153, 27, 27], primaryDark: [127, 29, 29], accent: [220, 38, 38], accentLight: [254, 202, 202], label: "Classic Red" },
+  royal_purple: { primary: [88, 28, 135], primaryDark: [59, 7, 100], accent: [168, 85, 247], accentLight: [233, 213, 255], label: "Royal Purple" },
+};
+
+const FONT_SCALES: Record<PDFFontScale, number> = {
+  small: 0.85,
+  normal: 1,
+  large: 1.15,
+  extra_large: 1.3,
+};
+
 export const DEFAULT_COMPANY: CompanyInfo = {
   name: "NexYatra",
   tagline: "Premium Travel Experiences",
@@ -92,10 +124,11 @@ export interface QuotationForPDF {
   sections?: PDFSectionToggles;
   closing_message?: string;
   custom_logo?: string | null;
+  style?: PDFStyleConfig;
 }
 
-// ─── Colors ───
-const C = {
+// ─── Mutable Colors (set per PDF generation) ───
+let C = {
   navy: [26, 42, 74] as [number, number, number],
   navyDark: [15, 25, 50] as [number, number, number],
   gold: [193, 160, 80] as [number, number, number],
@@ -109,6 +142,41 @@ const C = {
   red: [185, 50, 50] as [number, number, number],
   border: [215, 220, 230] as [number, number, number],
 };
+
+let fontScaleMultiplier = 1;
+let useProperCase = false;
+
+function applyStyle(style?: PDFStyleConfig) {
+  const s = style || DEFAULT_STYLE_CONFIG;
+  // Resolve color theme
+  if (s.colorTheme === "custom") {
+    C.navy = s.customPrimaryColor || [26, 42, 74];
+    C.navyDark = s.customPrimaryColor || [15, 25, 50];
+    C.gold = s.customAccentColor || [193, 160, 80];
+    C.goldLight = s.customAccentColor ? lightenColor(s.customAccentColor) : [230, 215, 170];
+  } else {
+    const theme = COLOR_THEMES[s.colorTheme] || COLOR_THEMES.navy_gold;
+    C.navy = theme.primary;
+    C.navyDark = theme.primaryDark;
+    C.gold = theme.accent;
+    C.goldLight = theme.accentLight;
+  }
+  fontScaleMultiplier = FONT_SCALES[s.fontScale || "normal"];
+  useProperCase = s.properCase || false;
+}
+
+function lightenColor(c: [number, number, number]): [number, number, number] {
+  return [Math.min(255, c[0] + 100), Math.min(255, c[1] + 100), Math.min(255, c[2] + 100)];
+}
+
+function sz(base: number): number {
+  return Math.round(base * fontScaleMultiplier * 10) / 10;
+}
+
+function pc(text: string): string {
+  if (!useProperCase) return text;
+  return text.replace(/\b\w+/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+}
 
 const PW = 210;
 const PH = 297;
@@ -180,14 +248,14 @@ function drawHeader(doc: jsPDF, logo: string | null, co: CompanyInfo) {
     try { doc.addImage(logo, "PNG", M, 1.5, 11, 11); tx = M + 14; } catch {}
   }
   doc.setTextColor(...C.white);
-  doc.setFontSize(10);
+  doc.setFontSize(sz(10));
   doc.setFont("helvetica", "bold");
   doc.text(co.name, tx, 8.5);
 
   const nw = doc.getTextWidth(co.name);
   const tagX = tx + nw + 4;
   doc.setTextColor(...C.goldLight);
-  doc.setFontSize(6);
+  doc.setFontSize(sz(6));
   doc.setFont("helvetica", "normal");
   if (tagX + doc.getTextWidth(co.tagline) < PW - M) {
     doc.text(co.tagline, tagX, 8.5);
@@ -202,16 +270,16 @@ function drawFooter(doc: jsPDF, pg: number, total: number, co: CompanyInfo) {
   doc.rect(0, fy, PW, 0.4, "F");
 
   doc.setTextColor(180, 185, 200);
-  doc.setFontSize(5.5);
+  doc.setFontSize(sz(5.5));
   doc.setFont("helvetica", "normal");
   doc.text(`${co.phone}  |  ${co.email}  |  ${co.website}  |  ${co.instagram}`, PW / 2, fy + 5.5, { align: "center" });
 
   doc.setTextColor(130, 135, 150);
-  doc.setFontSize(4.5);
+  doc.setFontSize(sz(4.5));
   doc.text(co.address, PW / 2, fy + 9.5, { align: "center" });
 
   doc.setTextColor(...C.gold);
-  doc.setFontSize(6);
+  doc.setFontSize(sz(6));
   doc.setFont("helvetica", "bold");
   doc.text(`${pg} / ${total}`, PW - M, fy + 5.5, { align: "right" });
 }
@@ -224,7 +292,7 @@ function drawWatermark(doc: jsPDF, logo: string | null, co: CompanyInfo) {
     try { doc.addImage(logo, "PNG", PW / 2 - 28, PH / 2 - 28, 56, 56); doc.restoreGraphicsState(); return; } catch {}
   }
   doc.setTextColor(150, 155, 170);
-  doc.setFontSize(48);
+  doc.setFontSize(sz(48));
   doc.setFont("helvetica", "bold");
   doc.text(co.name.toUpperCase(), PW / 2, PH / 2, { align: "center", angle: 45 });
   doc.restoreGraphicsState();
@@ -235,7 +303,7 @@ function sectionHeading(doc: jsPDF, title: string, y: number): number {
   doc.setFillColor(...C.gold);
   doc.rect(M, y, 3, 8, "F");
   doc.setTextColor(...C.navy);
-  doc.setFontSize(11);
+  doc.setFontSize(sz(11));
   doc.setFont("helvetica", "bold");
   doc.text(title.toUpperCase(), M + 7, y + 6);
 
@@ -285,14 +353,14 @@ function drawCover(doc: jsPDF, data: QuotationForPDF, logo: string | null, co: C
   // Company name
   y += 5;
   doc.setTextColor(...C.white);
-  doc.setFontSize(26);
+  doc.setFontSize(sz(26));
   doc.setFont("helvetica", "bold");
   doc.text(co.name.toUpperCase(), PW / 2, y, { align: "center" });
   y += 8;
 
   // Tagline
   doc.setTextColor(...C.gold);
-  doc.setFontSize(9);
+  doc.setFontSize(sz(9));
   doc.setFont("helvetica", "normal");
   doc.text(co.tagline.toUpperCase(), PW / 2, y, { align: "center" });
   y += 20;
@@ -305,9 +373,9 @@ function drawCover(doc: jsPDF, data: QuotationForPDF, logo: string | null, co: C
 
   // Destination
   doc.setTextColor(...C.white);
-  doc.setFontSize(28);
+  doc.setFontSize(sz(28));
   doc.setFont("helvetica", "bold");
-  const destLines = doc.splitTextToSize(data.destination_name.toUpperCase(), CW);
+  const destLines = doc.splitTextToSize(pc(data.destination_name.toUpperCase()), CW);
   destLines.forEach((line: string) => {
     doc.text(line, PW / 2, y, { align: "center" });
     y += 12;
@@ -316,7 +384,7 @@ function drawCover(doc: jsPDF, data: QuotationForPDF, logo: string | null, co: C
 
   // Tour Package label
   doc.setTextColor(...C.gold);
-  doc.setFontSize(10);
+  doc.setFontSize(sz(10));
   doc.setFont("helvetica", "normal");
   doc.text("TOUR PACKAGE", PW / 2, y, { align: "center" });
   y += 10;
@@ -326,8 +394,8 @@ function drawCover(doc: jsPDF, data: QuotationForPDF, logo: string | null, co: C
     const cities = data.cities_covered?.filter(c => c.trim()) || [];
     if (cities.length > 0) {
       doc.setTextColor(180, 190, 210);
-      doc.setFontSize(8);
-      doc.text(cities.join("  \u2022  "), PW / 2, y, { align: "center" });
+      doc.setFontSize(sz(8));
+      doc.text(cities.map(c => pc(c)).join("  \u2022  "), PW / 2, y, { align: "center" });
       y += 10;
     }
   }
@@ -342,7 +410,7 @@ function drawCover(doc: jsPDF, data: QuotationForPDF, logo: string | null, co: C
     const bw = 100;
     doc.roundedRect(PW / 2 - bw / 2, y - 5, bw, 12, 6, 6, "S");
     doc.setTextColor(...C.gold);
-    doc.setFontSize(9);
+    doc.setFontSize(sz(9));
     doc.setFont("helvetica", "bold");
     doc.text(txt, PW / 2, y + 2, { align: "center" });
     y += 22;
@@ -370,21 +438,21 @@ function drawCover(doc: jsPDF, data: QuotationForPDF, logo: string | null, co: C
   const col2 = cardX + cardW / 2 + 4;
   let ry = y + 12;
 
-  doc.setFontSize(6);
+  doc.setFontSize(sz(6));
   doc.setTextColor(...C.gold);
   doc.setFont("helvetica", "bold");
   doc.text("GUEST", col1, ry);
-  doc.setFontSize(9);
+  doc.setFontSize(sz(9));
   doc.setTextColor(...C.white);
   doc.setFont("helvetica", "normal");
-  doc.text(data.client_name, col1, ry + 5);
+  doc.text(pc(data.client_name), col1, ry + 5);
 
   if (data.client_contact) {
-    doc.setFontSize(6);
+    doc.setFontSize(sz(6));
     doc.setTextColor(...C.gold);
     doc.setFont("helvetica", "bold");
     doc.text("CONTACT", col2, ry);
-    doc.setFontSize(9);
+    doc.setFontSize(sz(9));
     doc.setTextColor(...C.white);
     doc.setFont("helvetica", "normal");
     doc.text(data.client_contact, col2, ry + 5);
@@ -392,25 +460,25 @@ function drawCover(doc: jsPDF, data: QuotationForPDF, logo: string | null, co: C
 
   // Row 2: Travel Date | Pax
   ry += 16;
-  doc.setFontSize(6);
+  doc.setFontSize(sz(6));
   doc.setTextColor(...C.gold);
   doc.setFont("helvetica", "bold");
   doc.text("TRAVEL DATE", col1, ry);
   const sd = data.travel_start_date ? format(new Date(data.travel_start_date), "dd MMM yyyy") : "TBD";
   const ed = data.travel_end_date ? ` - ${format(new Date(data.travel_end_date), "dd MMM yyyy")}` : "";
-  doc.setFontSize(9);
+  doc.setFontSize(sz(9));
   doc.setTextColor(...C.white);
   doc.setFont("helvetica", "normal");
   doc.text(sd + ed, col1, ry + 5);
 
-  doc.setFontSize(6);
+  doc.setFontSize(sz(6));
   doc.setTextColor(...C.gold);
   doc.setFont("helvetica", "bold");
   doc.text("PAX", col2, ry);
   const pp: string[] = [];
   if (data.num_persons > 0) pp.push(`${data.num_persons} ${data.person_label || "Adult"}`);
   if ((data.num_children || 0) > 0) pp.push(`${data.num_children} ${data.child_label || "Child"}`);
-  doc.setFontSize(9);
+  doc.setFontSize(sz(9));
   doc.setTextColor(...C.white);
   doc.setFont("helvetica", "normal");
   doc.text(pp.join(" + ") || "0", col2, ry + 5);
@@ -418,16 +486,19 @@ function drawCover(doc: jsPDF, data: QuotationForPDF, logo: string | null, co: C
   // Bottom contact strip
   const by = PH - 30;
   doc.setTextColor(...C.gold);
-  doc.setFontSize(7);
+  doc.setFontSize(sz(7));
   doc.setFont("helvetica", "normal");
   doc.text(`${co.phone}  |  ${co.email}  |  ${co.website}`, PW / 2, by, { align: "center" });
   doc.setTextColor(130, 140, 160);
-  doc.setFontSize(5.5);
+  doc.setFontSize(sz(5.5));
   doc.text(co.address, PW / 2, by + 6, { align: "center" });
 }
 
 // ─── Main Export ───
 export async function generateQuotationPDF(data: QuotationForPDF) {
+  // Apply style customization
+  applyStyle(data.style);
+
   const logo = data.custom_logo || (await loadLogo());
   const doc = new jsPDF("p", "mm", "a4");
   const co = data.company || DEFAULT_COMPANY;
@@ -448,7 +519,8 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
   // Description
   if (sec.show_description && data.description) {
     y = ensurePage(doc, y, 15, logo, co, wm);
-    const dl = doc.splitTextToSize(data.description, CW - 14);
+    const descText = pc(data.description);
+    const dl = doc.splitTextToSize(descText, CW - 14);
     const dh = dl.length * 4.5 + 8;
     doc.setFillColor(...C.white);
     doc.roundedRect(M, y, CW, dh, 2, 2, "F");
@@ -459,7 +531,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
     doc.rect(M, y, 2.5, dh, "F");
 
     doc.setTextColor(...C.text);
-    doc.setFontSize(8);
+    doc.setFontSize(sz(8));
     doc.setFont("helvetica", "italic");
     let dy = y + 5;
     dl.forEach((l: string) => { doc.text(l, M + 8, dy); dy += 4.5; });
@@ -483,14 +555,14 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
         doc.setFillColor(...C.navy);
         doc.roundedRect(M + 2, y - 3, 16, 6, 3, 3, "F");
         doc.setTextColor(...C.white);
-        doc.setFontSize(6.5);
+        doc.setFontSize(sz(6.5));
         doc.setFont("helvetica", "bold");
         doc.text(`Day ${b.day}`, M + 10, y + 0.5, { align: "center" });
 
         doc.setTextColor(...C.text);
-        doc.setFontSize(8);
+        doc.setFontSize(sz(8));
         doc.setFont("helvetica", "normal");
-        const bl = doc.splitTextToSize(b.description, CW - 26);
+        const bl = doc.splitTextToSize(pc(b.description), CW - 26);
         bl.forEach((l: string, li: number) => { doc.text(l, M + 22, y + li * 4); });
         y += Math.max(7, bl.length * 4 + 2);
       });
@@ -510,7 +582,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       doc.setFillColor(...C.navy);
       doc.rect(M, y, CW, rH, "F");
       doc.setTextColor(...C.white);
-      doc.setFontSize(7);
+      doc.setFontSize(sz(7));
       doc.setFont("helvetica", "bold");
       doc.text("CITY", M + 4, y + 5.5);
       doc.text("HOTEL", M + CW * 0.25, y + 5.5);
@@ -528,11 +600,11 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
         doc.line(M, y + rH, M + CW, y + rH);
 
         doc.setTextColor(...C.text);
-        doc.setFontSize(7.5);
+        doc.setFontSize(sz(7.5));
         doc.setFont("helvetica", "normal");
-        doc.text(h.city || "", M + 4, y + 5.5);
-        doc.text(h.hotel_name || "", M + CW * 0.25, y + 5.5);
-        doc.text(h.room_type || "", M + CW * 0.55, y + 5.5);
+        doc.text(pc(h.city || ""), M + 4, y + 5.5);
+        doc.text(pc(h.hotel_name || ""), M + CW * 0.25, y + 5.5);
+        doc.text(pc(h.room_type || ""), M + CW * 0.55, y + 5.5);
         doc.setFont("helvetica", "bold");
         doc.setTextColor(...C.navy);
         doc.text(`${h.nights || 0}`, M + CW - 5, y + 5.5, { align: "right" });
@@ -554,7 +626,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       doc.setFillColor(...C.gold);
       doc.roundedRect(M, y - 3, 22, 9, 2, 2, "F");
       doc.setTextColor(...C.navyDark);
-      doc.setFontSize(8);
+      doc.setFontSize(sz(8));
       doc.setFont("helvetica", "bold");
       doc.text(`DAY ${day.day}`, M + 11, y + 2.5, { align: "center" });
 
@@ -562,15 +634,16 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       const ct = cleanTitle(day.title);
       if (ct) {
         doc.setTextColor(...C.navy);
-        doc.setFontSize(9.5);
+        doc.setFontSize(sz(9.5));
         doc.setFont("helvetica", "bold");
-        doc.text(ct, M + 26, y + 2.5);
+        doc.text(pc(ct), M + 26, y + 2.5);
       }
       y += 10;
 
       // Description
       if (day.description) {
-        const dl = doc.splitTextToSize(day.description, CW - 10);
+        const descText = pc(day.description);
+        const dl = doc.splitTextToSize(descText, CW - 10);
         const dh = dl.length * 4 + 6;
         y = ensurePage(doc, y, dh, logo, co, wm);
 
@@ -581,7 +654,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
         doc.roundedRect(M + 2, y - 2, CW - 4, dh, 2, 2, "S");
 
         doc.setTextColor(...C.text);
-        doc.setFontSize(7.5);
+        doc.setFontSize(sz(7.5));
         doc.setFont("helvetica", "normal");
         let ty = y + 3;
         dl.forEach((l: string) => { doc.text(l, M + 6, ty); ty += 4; });
@@ -607,7 +680,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
 
     data.inclusions.forEach((item, i) => {
       if (!item.trim()) return;
-      const lines = doc.splitTextToSize(item, CW - 14);
+      const lines = doc.splitTextToSize(pc(item), CW - 14);
       y = ensurePage(doc, y, lines.length * 4 + 3, logo, co, wm);
 
       if (i % 2 === 0) {
@@ -616,7 +689,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       }
       drawCheck(doc, M + 4, y - 0.5);
       doc.setTextColor(...C.text);
-      doc.setFontSize(8);
+      doc.setFontSize(sz(8));
       doc.setFont("helvetica", "normal");
       lines.forEach((l: string) => { doc.text(l, M + 10, y); y += 4; });
       y += 1.5;
@@ -631,7 +704,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
 
     data.exclusions.forEach((item, i) => {
       if (!item.trim()) return;
-      const lines = doc.splitTextToSize(item, CW - 14);
+      const lines = doc.splitTextToSize(pc(item), CW - 14);
       y = ensurePage(doc, y, lines.length * 4 + 3, logo, co, wm);
 
       if (i % 2 === 0) {
@@ -640,7 +713,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       }
       drawCross(doc, M + 4, y - 0.5);
       doc.setTextColor(...C.text);
-      doc.setFontSize(8);
+      doc.setFontSize(sz(8));
       doc.setFont("helvetica", "normal");
       lines.forEach((l: string) => { doc.text(l, M + 10, y); y += 4; });
       y += 1.5;
@@ -667,7 +740,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       doc.setFillColor(...C.navy);
       doc.rect(M, y, CW, rH, "F");
       doc.setTextColor(...C.white);
-      doc.setFontSize(7.5);
+      doc.setFontSize(sz(7.5));
       doc.setFont("helvetica", "bold");
       doc.text("DESCRIPTION", M + 6, y + 6);
       doc.text("RATE", M + CW * 0.4, y + 6);
@@ -683,9 +756,9 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
         doc.setLineWidth(0.1);
         doc.line(M, y + rH, M + CW, y + rH);
         doc.setTextColor(...C.text);
-        doc.setFontSize(8);
+        doc.setFontSize(sz(8));
         doc.setFont("helvetica", "normal");
-        doc.text(r.label, M + 6, y + 6);
+        doc.text(pc(r.label), M + 6, y + 6);
         doc.text(inr(r.rate), M + CW * 0.4, y + 6);
         doc.text(`${r.qty}`, M + CW * 0.6, y + 6);
         doc.setFont("helvetica", "bold");
@@ -698,7 +771,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       doc.setFillColor(...C.navyDark);
       doc.rect(M, y, CW, tH, "F");
       doc.setTextColor(...C.gold);
-      doc.setFontSize(10);
+      doc.setFontSize(sz(10));
       doc.setFont("helvetica", "bold");
       doc.text("TOTAL", M + 6, y + 7.5);
       doc.text(inr(data.total_price), M + CW - 6, y + 7.5, { align: "right" });
@@ -717,19 +790,19 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
 
     terms.forEach((t, i) => {
       if (!t.trim()) return;
-      const lines = doc.splitTextToSize(t, CW - 14);
+      const lines = doc.splitTextToSize(pc(t), CW - 14);
       y = ensurePage(doc, y, lines.length * 4 + 4, logo, co, wm);
 
       // Number circle
       doc.setFillColor(...C.gold);
       doc.circle(M + 4, y - 0.5, 2.5, "F");
       doc.setTextColor(...C.white);
-      doc.setFontSize(6);
+      doc.setFontSize(sz(6));
       doc.setFont("helvetica", "bold");
       doc.text(`${i + 1}`, M + 4, y + 0.5, { align: "center" });
 
       doc.setTextColor(...C.text);
-      doc.setFontSize(7.5);
+      doc.setFontSize(sz(7.5));
       doc.setFont("helvetica", "normal");
       lines.forEach((l: string) => { doc.text(l, M + 10, y); y += 4; });
       y += 2.5;
@@ -746,18 +819,18 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
 
       notes.forEach((n, i) => {
         if (!n.trim()) return;
-        const lines = doc.splitTextToSize(n, CW - 14);
+        const lines = doc.splitTextToSize(pc(n), CW - 14);
         y = ensurePage(doc, y, lines.length * 4 + 4, logo, co, wm);
 
         doc.setFillColor(...C.navy);
         doc.circle(M + 4, y - 0.5, 2.5, "F");
         doc.setTextColor(...C.white);
-        doc.setFontSize(6);
+        doc.setFontSize(sz(6));
         doc.setFont("helvetica", "bold");
         doc.text(`${i + 1}`, M + 4, y + 0.5, { align: "center" });
 
         doc.setTextColor(...C.text);
-        doc.setFontSize(7.5);
+        doc.setFontSize(sz(7.5));
         doc.setFont("helvetica", "normal");
         lines.forEach((l: string) => { doc.text(l, M + 10, y); y += 4; });
         y += 2.5;
@@ -783,7 +856,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
     doc.rect(M, y, 2.5, bh, "F");
 
     let by = y + 5;
-    doc.setFontSize(8);
+    doc.setFontSize(sz(8));
     blines.forEach(line => {
       const parts = line.split(":");
       if (parts.length >= 2) {
@@ -816,19 +889,19 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
 
     const msg = data.closing_message || `Thank you for choosing ${co.name}!`;
     doc.setTextColor(...C.navy);
-    doc.setFontSize(13);
+    doc.setFontSize(sz(13));
     doc.setFont("helvetica", "bold");
-    doc.text(msg, PW / 2, y, { align: "center" });
+    doc.text(pc(msg), PW / 2, y, { align: "center" });
     y += 7;
 
     doc.setTextColor(...C.textLight);
-    doc.setFontSize(8);
+    doc.setFontSize(sz(8));
     doc.setFont("helvetica", "italic");
     doc.text("We look forward to creating unforgettable memories for you.", PW / 2, y, { align: "center" });
     y += 8;
 
     doc.setTextColor(...C.navy);
-    doc.setFontSize(14);
+    doc.setFontSize(sz(14));
     doc.setFont("helvetica", "bold");
     doc.text(co.name.toUpperCase(), PW / 2, y, { align: "center" });
   }
