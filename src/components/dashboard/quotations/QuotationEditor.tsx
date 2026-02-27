@@ -120,6 +120,7 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
   const [saving, setSaving] = useState(false);
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo>({ ...DEFAULT_COMPANY });
   const [sectionToggles, setSectionToggles] = useState<PDFSectionToggles>({ ...DEFAULT_SECTION_TOGGLES });
+  const [styleConfig, setStyleConfig] = useState<PDFStyleConfig>({ ...DEFAULT_STYLE_CONFIG });
   const [closingMessage, setClosingMessage] = useState(`Thank you for choosing ${DEFAULT_COMPANY.name}!`);
   const [customLogo, setCustomLogo] = useState<string | null>(null);
   const { toast } = useToast();
