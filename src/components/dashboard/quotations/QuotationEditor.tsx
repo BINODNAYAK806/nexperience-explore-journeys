@@ -666,6 +666,87 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
         </div>
       </Section>
 
+      {/* 12b. PDF Style Customization */}
+      <Section title="PDF Style & Formatting" icon={<Palette className="h-4 w-4" />}
+        badge="Colors, Fonts, Formatting">
+        <div className="space-y-5">
+          <p className="text-xs text-muted-foreground">Customize the look & feel of your PDF — color theme, text size, and proper word formatting.</p>
+          
+          {/* Color Theme */}
+          <div className="space-y-2">
+            <Label className="text-xs font-medium">Color Theme</Label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {Object.entries(COLOR_THEMES).map(([key, theme]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setStyleConfig(prev => ({ ...prev, colorTheme: key as PDFColorTheme }))}
+                  className={`flex items-center gap-2 p-3 rounded-lg border-2 transition-all ${
+                    styleConfig.colorTheme === key
+                      ? "border-primary bg-primary/5 shadow-sm"
+                      : "border-border hover:border-muted-foreground/30"
+                  }`}
+                >
+                  <div className="flex gap-1">
+                    <div className="w-4 h-4 rounded-full" style={{ backgroundColor: `rgb(${theme.primary.join(",")})` }} />
+                    <div className="w-4 h-4 rounded-full" style={{ backgroundColor: `rgb(${theme.accent.join(",")})` }} />
+                  </div>
+                  <span className="text-xs font-medium">{theme.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Font Size Scale */}
+          <div className="space-y-2">
+            <Label className="text-xs font-medium">Text Size</Label>
+            <div className="grid grid-cols-4 gap-2">
+              {([
+                { key: "small", label: "Small", preview: "Aa" },
+                { key: "normal", label: "Normal", preview: "Aa" },
+                { key: "large", label: "Large", preview: "Aa" },
+                { key: "extra_large", label: "Extra Large", preview: "Aa" },
+              ] as { key: PDFFontScale; label: string; preview: string }[]).map(({ key, label, preview }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setStyleConfig(prev => ({ ...prev, fontScale: key }))}
+                  className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all ${
+                    styleConfig.fontScale === key
+                      ? "border-primary bg-primary/5 shadow-sm"
+                      : "border-border hover:border-muted-foreground/30"
+                  }`}
+                >
+                  <span className={`font-bold ${
+                    key === "small" ? "text-xs" : key === "normal" ? "text-sm" : key === "large" ? "text-base" : "text-lg"
+                  }`}>{preview}</span>
+                  <span className="text-[10px] text-muted-foreground">{label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Proper Case Toggle */}
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+            <div>
+              <Label className="text-sm font-medium cursor-pointer">Proper Word Formatting</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Capitalize the first letter of each word (e.g., "deluxe room" → "Deluxe Room")
+              </p>
+            </div>
+            <Switch
+              checked={styleConfig.properCase}
+              onCheckedChange={(checked) => setStyleConfig(prev => ({ ...prev, properCase: checked }))}
+            />
+          </div>
+
+          {/* Reset */}
+          <Button variant="outline" size="sm" onClick={() => setStyleConfig({ ...DEFAULT_STYLE_CONFIG })}>
+            Reset to Default Style
+          </Button>
+        </div>
+      </Section>
+
       {/* 13. PDF Section Toggles */}
       <Section title="PDF Section Controls" icon={<Settings2 className="h-4 w-4" />}
         badge="Show/hide PDF sections">
