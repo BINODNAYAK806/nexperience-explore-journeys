@@ -16,7 +16,7 @@ import {
   ScrollText, AlertTriangle, Building2, GripVertical, Settings2, Palette, MessageSquare,
   ImagePlus, X
 } from "lucide-react";
-import { generateQuotationPDF, DEFAULT_COMPANY, DEFAULT_SECTION_TOGGLES, type CompanyInfo, type PDFSectionToggles } from "./QuotationPDF";
+import { generateQuotationPDF, DEFAULT_COMPANY, DEFAULT_SECTION_TOGGLES, DEFAULT_STYLE_CONFIG, COLOR_THEMES, type CompanyInfo, type PDFSectionToggles, type PDFStyleConfig, type PDFColorTheme, type PDFFontScale } from "./QuotationPDF";
 import { format } from "date-fns";
 
 interface DayItem { day: number; title: string; description: string; }
