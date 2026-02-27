@@ -303,7 +303,7 @@ function sectionHeading(doc: jsPDF, title: string, y: number): number {
   doc.setFillColor(...C.gold);
   doc.rect(M, y, 3, 8, "F");
   doc.setTextColor(...C.navy);
-  doc.setFontSize(11);
+  doc.setFontSize(sz(11));
   doc.setFont("helvetica", "bold");
   doc.text(title.toUpperCase(), M + 7, y + 6);
 
