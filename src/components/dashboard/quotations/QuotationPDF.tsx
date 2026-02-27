@@ -353,14 +353,14 @@ function drawCover(doc: jsPDF, data: QuotationForPDF, logo: string | null, co: C
   // Company name
   y += 5;
   doc.setTextColor(...C.white);
-  doc.setFontSize(26);
+  doc.setFontSize(sz(26));
   doc.setFont("helvetica", "bold");
   doc.text(co.name.toUpperCase(), PW / 2, y, { align: "center" });
   y += 8;
 
   // Tagline
   doc.setTextColor(...C.gold);
-  doc.setFontSize(9);
+  doc.setFontSize(sz(9));
   doc.setFont("helvetica", "normal");
   doc.text(co.tagline.toUpperCase(), PW / 2, y, { align: "center" });
   y += 20;
@@ -373,9 +373,9 @@ function drawCover(doc: jsPDF, data: QuotationForPDF, logo: string | null, co: C
 
   // Destination
   doc.setTextColor(...C.white);
-  doc.setFontSize(28);
+  doc.setFontSize(sz(28));
   doc.setFont("helvetica", "bold");
-  const destLines = doc.splitTextToSize(data.destination_name.toUpperCase(), CW);
+  const destLines = doc.splitTextToSize(pc(data.destination_name.toUpperCase()), CW);
   destLines.forEach((line: string) => {
     doc.text(line, PW / 2, y, { align: "center" });
     y += 12;
@@ -384,7 +384,7 @@ function drawCover(doc: jsPDF, data: QuotationForPDF, logo: string | null, co: C
 
   // Tour Package label
   doc.setTextColor(...C.gold);
-  doc.setFontSize(10);
+  doc.setFontSize(sz(10));
   doc.setFont("helvetica", "normal");
   doc.text("TOUR PACKAGE", PW / 2, y, { align: "center" });
   y += 10;
@@ -394,8 +394,8 @@ function drawCover(doc: jsPDF, data: QuotationForPDF, logo: string | null, co: C
     const cities = data.cities_covered?.filter(c => c.trim()) || [];
     if (cities.length > 0) {
       doc.setTextColor(180, 190, 210);
-      doc.setFontSize(8);
-      doc.text(cities.join("  \u2022  "), PW / 2, y, { align: "center" });
+      doc.setFontSize(sz(8));
+      doc.text(cities.map(c => pc(c)).join("  \u2022  "), PW / 2, y, { align: "center" });
       y += 10;
     }
   }
@@ -410,7 +410,7 @@ function drawCover(doc: jsPDF, data: QuotationForPDF, logo: string | null, co: C
     const bw = 100;
     doc.roundedRect(PW / 2 - bw / 2, y - 5, bw, 12, 6, 6, "S");
     doc.setTextColor(...C.gold);
-    doc.setFontSize(9);
+    doc.setFontSize(sz(9));
     doc.setFont("helvetica", "bold");
     doc.text(txt, PW / 2, y + 2, { align: "center" });
     y += 22;
@@ -438,21 +438,21 @@ function drawCover(doc: jsPDF, data: QuotationForPDF, logo: string | null, co: C
   const col2 = cardX + cardW / 2 + 4;
   let ry = y + 12;
 
-  doc.setFontSize(6);
+  doc.setFontSize(sz(6));
   doc.setTextColor(...C.gold);
   doc.setFont("helvetica", "bold");
   doc.text("GUEST", col1, ry);
-  doc.setFontSize(9);
+  doc.setFontSize(sz(9));
   doc.setTextColor(...C.white);
   doc.setFont("helvetica", "normal");
-  doc.text(data.client_name, col1, ry + 5);
+  doc.text(pc(data.client_name), col1, ry + 5);
 
   if (data.client_contact) {
-    doc.setFontSize(6);
+    doc.setFontSize(sz(6));
     doc.setTextColor(...C.gold);
     doc.setFont("helvetica", "bold");
     doc.text("CONTACT", col2, ry);
-    doc.setFontSize(9);
+    doc.setFontSize(sz(9));
     doc.setTextColor(...C.white);
     doc.setFont("helvetica", "normal");
     doc.text(data.client_contact, col2, ry + 5);
@@ -460,25 +460,25 @@ function drawCover(doc: jsPDF, data: QuotationForPDF, logo: string | null, co: C
 
   // Row 2: Travel Date | Pax
   ry += 16;
-  doc.setFontSize(6);
+  doc.setFontSize(sz(6));
   doc.setTextColor(...C.gold);
   doc.setFont("helvetica", "bold");
   doc.text("TRAVEL DATE", col1, ry);
   const sd = data.travel_start_date ? format(new Date(data.travel_start_date), "dd MMM yyyy") : "TBD";
   const ed = data.travel_end_date ? ` - ${format(new Date(data.travel_end_date), "dd MMM yyyy")}` : "";
-  doc.setFontSize(9);
+  doc.setFontSize(sz(9));
   doc.setTextColor(...C.white);
   doc.setFont("helvetica", "normal");
   doc.text(sd + ed, col1, ry + 5);
 
-  doc.setFontSize(6);
+  doc.setFontSize(sz(6));
   doc.setTextColor(...C.gold);
   doc.setFont("helvetica", "bold");
   doc.text("PAX", col2, ry);
   const pp: string[] = [];
   if (data.num_persons > 0) pp.push(`${data.num_persons} ${data.person_label || "Adult"}`);
   if ((data.num_children || 0) > 0) pp.push(`${data.num_children} ${data.child_label || "Child"}`);
-  doc.setFontSize(9);
+  doc.setFontSize(sz(9));
   doc.setTextColor(...C.white);
   doc.setFont("helvetica", "normal");
   doc.text(pp.join(" + ") || "0", col2, ry + 5);
@@ -486,11 +486,11 @@ function drawCover(doc: jsPDF, data: QuotationForPDF, logo: string | null, co: C
   // Bottom contact strip
   const by = PH - 30;
   doc.setTextColor(...C.gold);
-  doc.setFontSize(7);
+  doc.setFontSize(sz(7));
   doc.setFont("helvetica", "normal");
   doc.text(`${co.phone}  |  ${co.email}  |  ${co.website}`, PW / 2, by, { align: "center" });
   doc.setTextColor(130, 140, 160);
-  doc.setFontSize(5.5);
+  doc.setFontSize(sz(5.5));
   doc.text(co.address, PW / 2, by + 6, { align: "center" });
 }
 
