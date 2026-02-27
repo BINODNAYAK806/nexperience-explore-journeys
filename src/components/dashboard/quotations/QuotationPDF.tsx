@@ -39,6 +39,38 @@ export interface PDFSectionToggles {
   show_closing_message: boolean;
 }
 
+export type PDFColorTheme = "navy_gold" | "modern_blue" | "elegant_green" | "classic_red" | "royal_purple" | "custom";
+export type PDFFontScale = "small" | "normal" | "large" | "extra_large";
+
+export interface PDFStyleConfig {
+  colorTheme: PDFColorTheme;
+  fontScale: PDFFontScale;
+  properCase: boolean; // capitalize words properly
+  customPrimaryColor?: [number, number, number];
+  customAccentColor?: [number, number, number];
+}
+
+export const DEFAULT_STYLE_CONFIG: PDFStyleConfig = {
+  colorTheme: "navy_gold",
+  fontScale: "normal",
+  properCase: false,
+};
+
+export const COLOR_THEMES: Record<string, { primary: [number, number, number]; primaryDark: [number, number, number]; accent: [number, number, number]; accentLight: [number, number, number]; label: string }> = {
+  navy_gold: { primary: [26, 42, 74], primaryDark: [15, 25, 50], accent: [193, 160, 80], accentLight: [230, 215, 170], label: "Navy & Gold" },
+  modern_blue: { primary: [37, 99, 235], primaryDark: [29, 78, 216], accent: [14, 165, 233], accentLight: [186, 230, 253], label: "Modern Blue" },
+  elegant_green: { primary: [22, 101, 52], primaryDark: [20, 83, 45], accent: [34, 197, 94], accentLight: [187, 247, 208], label: "Elegant Green" },
+  classic_red: { primary: [153, 27, 27], primaryDark: [127, 29, 29], accent: [220, 38, 38], accentLight: [254, 202, 202], label: "Classic Red" },
+  royal_purple: { primary: [88, 28, 135], primaryDark: [59, 7, 100], accent: [168, 85, 247], accentLight: [233, 213, 255], label: "Royal Purple" },
+};
+
+const FONT_SCALES: Record<PDFFontScale, number> = {
+  small: 0.85,
+  normal: 1,
+  large: 1.15,
+  extra_large: 1.3,
+};
+
 export const DEFAULT_COMPANY: CompanyInfo = {
   name: "NexYatra",
   tagline: "Premium Travel Experiences",
