@@ -124,6 +124,7 @@ export interface QuotationForPDF {
   sections?: PDFSectionToggles;
   closing_message?: string;
   custom_logo?: string | null;
+  style?: PDFStyleConfig;
 }
 
 // ─── Colors ───
