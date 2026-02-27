@@ -519,7 +519,8 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
   // Description
   if (sec.show_description && data.description) {
     y = ensurePage(doc, y, 15, logo, co, wm);
-    const dl = doc.splitTextToSize(data.description, CW - 14);
+    const descText = pc(data.description);
+    const dl = doc.splitTextToSize(descText, CW - 14);
     const dh = dl.length * 4.5 + 8;
     doc.setFillColor(...C.white);
     doc.roundedRect(M, y, CW, dh, 2, 2, "F");
@@ -530,7 +531,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
     doc.rect(M, y, 2.5, dh, "F");
 
     doc.setTextColor(...C.text);
-    doc.setFontSize(8);
+    doc.setFontSize(sz(8));
     doc.setFont("helvetica", "italic");
     let dy = y + 5;
     dl.forEach((l: string) => { doc.text(l, M + 8, dy); dy += 4.5; });
@@ -554,14 +555,14 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
         doc.setFillColor(...C.navy);
         doc.roundedRect(M + 2, y - 3, 16, 6, 3, 3, "F");
         doc.setTextColor(...C.white);
-        doc.setFontSize(6.5);
+        doc.setFontSize(sz(6.5));
         doc.setFont("helvetica", "bold");
         doc.text(`Day ${b.day}`, M + 10, y + 0.5, { align: "center" });
 
         doc.setTextColor(...C.text);
-        doc.setFontSize(8);
+        doc.setFontSize(sz(8));
         doc.setFont("helvetica", "normal");
-        const bl = doc.splitTextToSize(b.description, CW - 26);
+        const bl = doc.splitTextToSize(pc(b.description), CW - 26);
         bl.forEach((l: string, li: number) => { doc.text(l, M + 22, y + li * 4); });
         y += Math.max(7, bl.length * 4 + 2);
       });
@@ -581,7 +582,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       doc.setFillColor(...C.navy);
       doc.rect(M, y, CW, rH, "F");
       doc.setTextColor(...C.white);
-      doc.setFontSize(7);
+      doc.setFontSize(sz(7));
       doc.setFont("helvetica", "bold");
       doc.text("CITY", M + 4, y + 5.5);
       doc.text("HOTEL", M + CW * 0.25, y + 5.5);
@@ -599,11 +600,11 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
         doc.line(M, y + rH, M + CW, y + rH);
 
         doc.setTextColor(...C.text);
-        doc.setFontSize(7.5);
+        doc.setFontSize(sz(7.5));
         doc.setFont("helvetica", "normal");
-        doc.text(h.city || "", M + 4, y + 5.5);
-        doc.text(h.hotel_name || "", M + CW * 0.25, y + 5.5);
-        doc.text(h.room_type || "", M + CW * 0.55, y + 5.5);
+        doc.text(pc(h.city || ""), M + 4, y + 5.5);
+        doc.text(pc(h.hotel_name || ""), M + CW * 0.25, y + 5.5);
+        doc.text(pc(h.room_type || ""), M + CW * 0.55, y + 5.5);
         doc.setFont("helvetica", "bold");
         doc.setTextColor(...C.navy);
         doc.text(`${h.nights || 0}`, M + CW - 5, y + 5.5, { align: "right" });
@@ -625,7 +626,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       doc.setFillColor(...C.gold);
       doc.roundedRect(M, y - 3, 22, 9, 2, 2, "F");
       doc.setTextColor(...C.navyDark);
-      doc.setFontSize(8);
+      doc.setFontSize(sz(8));
       doc.setFont("helvetica", "bold");
       doc.text(`DAY ${day.day}`, M + 11, y + 2.5, { align: "center" });
 
@@ -633,15 +634,16 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       const ct = cleanTitle(day.title);
       if (ct) {
         doc.setTextColor(...C.navy);
-        doc.setFontSize(9.5);
+        doc.setFontSize(sz(9.5));
         doc.setFont("helvetica", "bold");
-        doc.text(ct, M + 26, y + 2.5);
+        doc.text(pc(ct), M + 26, y + 2.5);
       }
       y += 10;
 
       // Description
       if (day.description) {
-        const dl = doc.splitTextToSize(day.description, CW - 10);
+        const descText = pc(day.description);
+        const dl = doc.splitTextToSize(descText, CW - 10);
         const dh = dl.length * 4 + 6;
         y = ensurePage(doc, y, dh, logo, co, wm);
 
@@ -652,7 +654,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
         doc.roundedRect(M + 2, y - 2, CW - 4, dh, 2, 2, "S");
 
         doc.setTextColor(...C.text);
-        doc.setFontSize(7.5);
+        doc.setFontSize(sz(7.5));
         doc.setFont("helvetica", "normal");
         let ty = y + 3;
         dl.forEach((l: string) => { doc.text(l, M + 6, ty); ty += 4; });
@@ -678,7 +680,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
 
     data.inclusions.forEach((item, i) => {
       if (!item.trim()) return;
-      const lines = doc.splitTextToSize(item, CW - 14);
+      const lines = doc.splitTextToSize(pc(item), CW - 14);
       y = ensurePage(doc, y, lines.length * 4 + 3, logo, co, wm);
 
       if (i % 2 === 0) {
@@ -687,7 +689,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       }
       drawCheck(doc, M + 4, y - 0.5);
       doc.setTextColor(...C.text);
-      doc.setFontSize(8);
+      doc.setFontSize(sz(8));
       doc.setFont("helvetica", "normal");
       lines.forEach((l: string) => { doc.text(l, M + 10, y); y += 4; });
       y += 1.5;
@@ -702,7 +704,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
 
     data.exclusions.forEach((item, i) => {
       if (!item.trim()) return;
-      const lines = doc.splitTextToSize(item, CW - 14);
+      const lines = doc.splitTextToSize(pc(item), CW - 14);
       y = ensurePage(doc, y, lines.length * 4 + 3, logo, co, wm);
 
       if (i % 2 === 0) {
@@ -711,7 +713,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       }
       drawCross(doc, M + 4, y - 0.5);
       doc.setTextColor(...C.text);
-      doc.setFontSize(8);
+      doc.setFontSize(sz(8));
       doc.setFont("helvetica", "normal");
       lines.forEach((l: string) => { doc.text(l, M + 10, y); y += 4; });
       y += 1.5;
@@ -738,7 +740,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       doc.setFillColor(...C.navy);
       doc.rect(M, y, CW, rH, "F");
       doc.setTextColor(...C.white);
-      doc.setFontSize(7.5);
+      doc.setFontSize(sz(7.5));
       doc.setFont("helvetica", "bold");
       doc.text("DESCRIPTION", M + 6, y + 6);
       doc.text("RATE", M + CW * 0.4, y + 6);
@@ -754,9 +756,9 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
         doc.setLineWidth(0.1);
         doc.line(M, y + rH, M + CW, y + rH);
         doc.setTextColor(...C.text);
-        doc.setFontSize(8);
+        doc.setFontSize(sz(8));
         doc.setFont("helvetica", "normal");
-        doc.text(r.label, M + 6, y + 6);
+        doc.text(pc(r.label), M + 6, y + 6);
         doc.text(inr(r.rate), M + CW * 0.4, y + 6);
         doc.text(`${r.qty}`, M + CW * 0.6, y + 6);
         doc.setFont("helvetica", "bold");
@@ -769,7 +771,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       doc.setFillColor(...C.navyDark);
       doc.rect(M, y, CW, tH, "F");
       doc.setTextColor(...C.gold);
-      doc.setFontSize(10);
+      doc.setFontSize(sz(10));
       doc.setFont("helvetica", "bold");
       doc.text("TOTAL", M + 6, y + 7.5);
       doc.text(inr(data.total_price), M + CW - 6, y + 7.5, { align: "right" });
@@ -788,19 +790,19 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
 
     terms.forEach((t, i) => {
       if (!t.trim()) return;
-      const lines = doc.splitTextToSize(t, CW - 14);
+      const lines = doc.splitTextToSize(pc(t), CW - 14);
       y = ensurePage(doc, y, lines.length * 4 + 4, logo, co, wm);
 
       // Number circle
       doc.setFillColor(...C.gold);
       doc.circle(M + 4, y - 0.5, 2.5, "F");
       doc.setTextColor(...C.white);
-      doc.setFontSize(6);
+      doc.setFontSize(sz(6));
       doc.setFont("helvetica", "bold");
       doc.text(`${i + 1}`, M + 4, y + 0.5, { align: "center" });
 
       doc.setTextColor(...C.text);
-      doc.setFontSize(7.5);
+      doc.setFontSize(sz(7.5));
       doc.setFont("helvetica", "normal");
       lines.forEach((l: string) => { doc.text(l, M + 10, y); y += 4; });
       y += 2.5;
@@ -817,18 +819,18 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
 
       notes.forEach((n, i) => {
         if (!n.trim()) return;
-        const lines = doc.splitTextToSize(n, CW - 14);
+        const lines = doc.splitTextToSize(pc(n), CW - 14);
         y = ensurePage(doc, y, lines.length * 4 + 4, logo, co, wm);
 
         doc.setFillColor(...C.navy);
         doc.circle(M + 4, y - 0.5, 2.5, "F");
         doc.setTextColor(...C.white);
-        doc.setFontSize(6);
+        doc.setFontSize(sz(6));
         doc.setFont("helvetica", "bold");
         doc.text(`${i + 1}`, M + 4, y + 0.5, { align: "center" });
 
         doc.setTextColor(...C.text);
-        doc.setFontSize(7.5);
+        doc.setFontSize(sz(7.5));
         doc.setFont("helvetica", "normal");
         lines.forEach((l: string) => { doc.text(l, M + 10, y); y += 4; });
         y += 2.5;
@@ -854,7 +856,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
     doc.rect(M, y, 2.5, bh, "F");
 
     let by = y + 5;
-    doc.setFontSize(8);
+    doc.setFontSize(sz(8));
     blines.forEach(line => {
       const parts = line.split(":");
       if (parts.length >= 2) {
@@ -887,19 +889,19 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
 
     const msg = data.closing_message || `Thank you for choosing ${co.name}!`;
     doc.setTextColor(...C.navy);
-    doc.setFontSize(13);
+    doc.setFontSize(sz(13));
     doc.setFont("helvetica", "bold");
-    doc.text(msg, PW / 2, y, { align: "center" });
+    doc.text(pc(msg), PW / 2, y, { align: "center" });
     y += 7;
 
     doc.setTextColor(...C.textLight);
-    doc.setFontSize(8);
+    doc.setFontSize(sz(8));
     doc.setFont("helvetica", "italic");
     doc.text("We look forward to creating unforgettable memories for you.", PW / 2, y, { align: "center" });
     y += 8;
 
     doc.setTextColor(...C.navy);
-    doc.setFontSize(14);
+    doc.setFontSize(sz(14));
     doc.setFont("helvetica", "bold");
     doc.text(co.name.toUpperCase(), PW / 2, y, { align: "center" });
   }
