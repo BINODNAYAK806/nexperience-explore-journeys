@@ -195,13 +195,25 @@ function inr(n: number): string {
   return "Rs. " + n.toLocaleString("en-IN");
 }
 
-function nights(data: QuotationForPDF): number {
-  const h = data.hotel_details?.filter(h => h.city?.trim() || h.hotel_name?.trim()) || [];
-  if (h.length > 0) {
-    const t = h.reduce((s, x) => s + (x.nights || 0), 0);
-    if (t > 0) return t;
+function tripDuration(data: QuotationForPDF): { days: number; nights: number } {
+  // Prefer travel start/end dates as the source of truth for X Days & Y Nights.
+  if (data.travel_start_date && data.travel_end_date) {
+    const start = new Date(data.travel_start_date);
+    const end = new Date(data.travel_end_date);
+    if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+      const ms = end.setHours(0, 0, 0, 0) - start.setHours(0, 0, 0, 0);
+      const nightsCount = Math.max(0, Math.round(ms / 86400000));
+      const daysCount = nightsCount + 1;
+      if (daysCount > 0) return { days: daysCount, nights: nightsCount };
+    }
   }
-  return Math.max(0, data.days.length - 1);
+  // Fallback: use itinerary day cards
+  const d = Math.max(1, data.days.length);
+  return { days: d, nights: Math.max(0, d - 1) };
+}
+
+function nights(data: QuotationForPDF): number {
+  return tripDuration(data).nights;
 }
 
 function cleanTitle(t: string): string {
@@ -402,9 +414,9 @@ function drawCover(doc: jsPDF, data: QuotationForPDF, logo: string | null, co: C
 
   // Duration badge
   if (data.days.length > 0) {
-    const n = nights(data);
+    const { days: d, nights: n } = tripDuration(data);
     const pax = (data.num_persons || 0) + (data.num_children || 0);
-    const txt = `${pl(data.days.length, "Day", "Days")} & ${pl(n, "Night", "Nights")}  |  ${pax} Pax`;
+    const txt = `${pl(d, "Day", "Days")} & ${pl(n, "Night", "Nights")}  |  ${pax} Pax`;
     doc.setDrawColor(...C.gold);
     doc.setLineWidth(0.4);
     const bw = 100;
