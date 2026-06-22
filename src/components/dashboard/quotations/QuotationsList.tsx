@@ -53,7 +53,24 @@ const QuotationsList: React.FC<QuotationsListProps> = ({ onEdit, refreshKey }) =
     }
   };
 
-  const handleDownload = async (q: any) => {
+  const handleCopy = async (q: any) => {
+    const { id, created_at, updated_at, status, ...copyData } = q;
+    const { data, error } = await supabase
+      .from("quotations")
+      .insert({
+        ...copyData,
+        client_name: `Copy of ${copyData.client_name}`,
+        status: "draft",
+      })
+      .select()
+      .single();
+    if (error) {
+      toast({ title: "Error copying quotation", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Quotation copied", description: `Created "${data.client_name}"` });
+      fetchQuotations();
+    }
+  };
     await generateQuotationPDF({
       client_name: q.client_name,
       client_contact: q.client_contact,
@@ -156,6 +173,9 @@ const QuotationsList: React.FC<QuotationsListProps> = ({ onEdit, refreshKey }) =
 
                     {/* Right: Actions */}
                     <div className="flex gap-1 shrink-0">
+                      <Button variant="outline" size="sm" onClick={() => handleCopy(q)} title="Copy quotation">
+                        <Copy className="h-4 w-4" />
+                      </Button>
                       <Button variant="outline" size="sm" onClick={() => handleDownload(q)} title="Download PDF">
                         <FileDown className="h-4 w-4" />
                       </Button>
