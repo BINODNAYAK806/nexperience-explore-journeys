@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Edit, Trash2, FileDown, Search, User, MapPin, IndianRupee, Calendar } from "lucide-react";
+import { Edit, Trash2, FileDown, Search, User, MapPin, IndianRupee, Calendar, Copy } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { generateQuotationPDF } from "./QuotationPDF";
 import { format } from "date-fns";
@@ -49,6 +49,25 @@ const QuotationsList: React.FC<QuotationsListProps> = ({ onEdit, refreshKey }) =
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Quotation deleted" });
+      fetchQuotations();
+    }
+  };
+
+  const handleCopy = async (q: any) => {
+    const { id, created_at, updated_at, status, ...copyData } = q;
+    const { data, error } = await supabase
+      .from("quotations")
+      .insert({
+        ...copyData,
+        client_name: `Copy of ${copyData.client_name}`,
+        status: "draft",
+      })
+      .select()
+      .single();
+    if (error) {
+      toast({ title: "Error copying quotation", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Quotation copied", description: `Created "${data.client_name}"` });
       fetchQuotations();
     }
   };
@@ -156,6 +175,9 @@ const QuotationsList: React.FC<QuotationsListProps> = ({ onEdit, refreshKey }) =
 
                     {/* Right: Actions */}
                     <div className="flex gap-1 shrink-0">
+                      <Button variant="outline" size="sm" onClick={() => handleCopy(q)} title="Copy quotation">
+                        <Copy className="h-4 w-4" />
+                      </Button>
                       <Button variant="outline" size="sm" onClick={() => handleDownload(q)} title="Download PDF">
                         <FileDown className="h-4 w-4" />
                       </Button>
