@@ -605,7 +605,23 @@ const QuotationEditor: React.FC<QuotationEditorProps> = ({ initialData, preloadT
 
       {/* 11. Bank Details */}
       <Section title="Bank Details" icon={<Building2 className="h-4 w-4" />}>
-        <Textarea value={form.bank_details} onChange={(e) => updateField("bank_details", e.target.value)} rows={4} placeholder="Bank name, Account No, IFSC, Branch..." className="text-sm font-mono" />
+        <div className="space-y-2">
+          <Textarea value={form.bank_details} onChange={(e) => updateField("bank_details", e.target.value)} rows={6} placeholder="Bank name, Account No, IFSC, Branch..." className="text-sm font-mono" />
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => {
+              localStorage.setItem(BANK_STORAGE_KEY, form.bank_details || "");
+              toast({ title: "Default bank details saved", description: "Will be used for new quotations." });
+            }}>Save as default</Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => {
+              updateField("bank_details", getDefaultBank());
+            }}>Load default</Button>
+            <Button type="button" variant="ghost" size="sm" onClick={() => {
+              localStorage.removeItem(BANK_STORAGE_KEY);
+              toast({ title: "Default reset" });
+            }}>Reset default</Button>
+          </div>
+          <p className="text-xs text-muted-foreground">"Save as default" stores these details in your browser and uses them for every new quotation.</p>
+        </div>
       </Section>
 
       {/* 12. PDF Settings - Company Branding */}
