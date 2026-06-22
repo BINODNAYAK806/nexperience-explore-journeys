@@ -575,7 +575,10 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
   if (sec.show_description && data.description) {
     y = ensurePage(doc, y, 15, logo, co, wm);
     const descText = pc(data.description);
-    const dl = doc.splitTextToSize(descText, CW - 18);
+    // Set font BEFORE splitting so wrap width is measured with italic glyphs
+    doc.setFontSize(sz(8));
+    doc.setFont("helvetica", "italic");
+    const dl = doc.splitTextToSize(descText, CW - 16);
     const dh = dl.length * 4.5 + 8;
     doc.setFillColor(...C.white);
     doc.roundedRect(M, y, CW, dh, 2, 2, "F");
@@ -586,8 +589,6 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
     doc.rect(M, y, 2.5, dh, "F");
 
     doc.setTextColor(...C.text);
-    doc.setFontSize(sz(8));
-    doc.setFont("helvetica", "italic");
     let dy = y + 5;
     dl.forEach((l: string) => { doc.text(l, M + 8, dy); dy += 4.5; });
     y = dy + 4;
