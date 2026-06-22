@@ -224,6 +224,49 @@ function pl(n: number, s: string, p: string): string {
   return n === 1 ? `${n} ${s}` : `${n} ${p}`;
 }
 
+// ─── Auto-fit Text Helpers ───
+/**
+ * Returns the largest font size (<= base) at which `text` fits inside `maxWidth`
+ * on a single line. Will not shrink below `min`.
+ */
+function fitFontSize(doc: jsPDF, text: string, maxWidth: number, base: number, min = 5): number {
+  if (!text) return base;
+  const original = doc.getFontSize();
+  let size = base;
+  doc.setFontSize(size);
+  while (doc.getTextWidth(text) > maxWidth && size > min) {
+    size = Math.max(min, size - 0.3);
+    doc.setFontSize(size);
+  }
+  doc.setFontSize(original);
+  return Math.round(size * 10) / 10;
+}
+
+/**
+ * Wraps text into the given width, auto-shrinking font size so the result
+ * uses at most `maxLines`. Returns the final lines + chosen font size.
+ */
+function fitWrappedText(
+  doc: jsPDF,
+  text: string,
+  maxWidth: number,
+  base: number,
+  maxLines = 2,
+  min = 5,
+): { lines: string[]; size: number } {
+  const original = doc.getFontSize();
+  let size = base;
+  doc.setFontSize(size);
+  let lines = doc.splitTextToSize(text || "", maxWidth) as string[];
+  while (lines.length > maxLines && size > min) {
+    size = Math.max(min, size - 0.3);
+    doc.setFontSize(size);
+    lines = doc.splitTextToSize(text || "", maxWidth) as string[];
+  }
+  doc.setFontSize(original);
+  return { lines, size: Math.round(size * 10) / 10 };
+}
+
 async function loadLogo(): Promise<string | null> {
   try {
     const r = await fetch("/lovable-uploads/2b127b7a-f8e2-4ed9-b75a-f14f4e215484.png");
