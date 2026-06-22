@@ -65,7 +65,13 @@ const DEFAULT_TERMS = [
   "Use the contact form provided to send us a message, ask for information or make a tour booking request.",
 ];
 
-const DEFAULT_BANK = `Bank Name: HDFC Bank\nAccount Name: NexYatra\nAccount No: XXXXXXXXXXXX\nIFSC: HDFC0XXXXXX\nBranch: Vesu, Surat`;
+const FALLBACK_BANK = `Bank Name: HDFC Bank\nAccount Name: NexYatra\nAccount No: XXXXXXXXXXXX\nIFSC: HDFC0XXXXXX\nBranch: Vesu, Surat`;
+const BANK_STORAGE_KEY = "nexyatra_default_bank_details";
+const getDefaultBank = () => {
+  if (typeof window === "undefined") return FALLBACK_BANK;
+  return localStorage.getItem(BANK_STORAGE_KEY) || FALLBACK_BANK;
+};
+const DEFAULT_BANK = getDefaultBank();
 
 const emptyQuotation: QuotationData = {
   client_name: "", client_contact: "", destination_name: "",
