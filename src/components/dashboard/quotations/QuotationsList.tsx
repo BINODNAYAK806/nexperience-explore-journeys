@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Edit, Trash2, FileDown, Search, User, MapPin, IndianRupee, Calendar } from "lucide-react";
+import { Edit, Trash2, FileDown, Search, User, MapPin, IndianRupee, Calendar, Copy } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { generateQuotationPDF } from "./QuotationPDF";
 import { format } from "date-fns";
