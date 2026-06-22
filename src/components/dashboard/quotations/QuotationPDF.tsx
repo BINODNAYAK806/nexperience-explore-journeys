@@ -532,7 +532,7 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
   if (sec.show_description && data.description) {
     y = ensurePage(doc, y, 15, logo, co, wm);
     const descText = pc(data.description);
-    const dl = doc.splitTextToSize(descText, CW - 14);
+    const dl = doc.splitTextToSize(descText, CW - 18);
     const dh = dl.length * 4.5 + 8;
     doc.setFillColor(...C.white);
     doc.roundedRect(M, y, CW, dh, 2, 2, "F");
@@ -589,38 +589,56 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       y = ensurePage(doc, y, 28, logo, co, wm);
       y = sectionHeading(doc, "Hotel Details", y);
 
-      const rH = 8;
+      // Column layout (x offsets and widths relative to M)
+      const colCityX = 4;
+      const colHotelX = CW * 0.22;
+      const colRoomX = CW * 0.60;
+      const colNightsRightX = CW - 5;
+      const colCityW = CW * 0.22 - 6;
+      const colHotelW = CW * 0.38 - 4;
+      const colRoomW = CW * 0.30 - 4;
+
+      const headerH = 8;
       // Header row
       doc.setFillColor(...C.navy);
-      doc.rect(M, y, CW, rH, "F");
+      doc.rect(M, y, CW, headerH, "F");
       doc.setTextColor(...C.white);
       doc.setFontSize(sz(7));
       doc.setFont("helvetica", "bold");
-      doc.text("CITY", M + 4, y + 5.5);
-      doc.text("HOTEL", M + CW * 0.25, y + 5.5);
-      doc.text("ROOM TYPE", M + CW * 0.55, y + 5.5);
-      doc.text("NIGHTS", M + CW - 5, y + 5.5, { align: "right" });
-      y += rH;
+      doc.text("CITY", M + colCityX, y + 5.5);
+      doc.text("HOTEL", M + colHotelX, y + 5.5);
+      doc.text("ROOM TYPE", M + colRoomX, y + 5.5);
+      doc.text("NIGHTS", M + colNightsRightX, y + 5.5, { align: "right" });
+      y += headerH;
 
       hotels.forEach((h, i) => {
-        y = ensurePage(doc, y, rH, logo, co, wm);
-        const bg1 = i % 2 === 0 ? C.white : C.bgAlt;
-        doc.setFillColor(...bg1);
-        doc.rect(M, y, CW, rH, "F");
-        doc.setDrawColor(...C.border);
-        doc.setLineWidth(0.1);
-        doc.line(M, y + rH, M + CW, y + rH);
-
-        doc.setTextColor(...C.text);
+        // Wrap each column independently and use tallest as row height
         doc.setFontSize(sz(7.5));
         doc.setFont("helvetica", "normal");
-        doc.text(pc(h.city || ""), M + 4, y + 5.5);
-        doc.text(pc(h.hotel_name || ""), M + CW * 0.25, y + 5.5);
-        doc.text(pc(h.room_type || ""), M + CW * 0.55, y + 5.5);
+        const cityLines = doc.splitTextToSize(pc(h.city || ""), colCityW);
+        const hotelLines = doc.splitTextToSize(pc(h.hotel_name || ""), colHotelW);
+        const roomLines = doc.splitTextToSize(pc(h.room_type || ""), colRoomW);
+        const lineH = 4;
+        const maxLines = Math.max(cityLines.length, hotelLines.length, roomLines.length, 1);
+        const rowH = Math.max(8, maxLines * lineH + 4);
+
+        y = ensurePage(doc, y, rowH, logo, co, wm);
+        const bg1 = i % 2 === 0 ? C.white : C.bgAlt;
+        doc.setFillColor(...bg1);
+        doc.rect(M, y, CW, rowH, "F");
+        doc.setDrawColor(...C.border);
+        doc.setLineWidth(0.1);
+        doc.line(M, y + rowH, M + CW, y + rowH);
+
+        doc.setTextColor(...C.text);
+        const ty = y + 4;
+        cityLines.forEach((l: string, li: number) => doc.text(l, M + colCityX, ty + li * lineH));
+        hotelLines.forEach((l: string, li: number) => doc.text(l, M + colHotelX, ty + li * lineH));
+        roomLines.forEach((l: string, li: number) => doc.text(l, M + colRoomX, ty + li * lineH));
         doc.setFont("helvetica", "bold");
         doc.setTextColor(...C.navy);
-        doc.text(`${h.nights || 0}`, M + CW - 5, y + 5.5, { align: "right" });
-        y += rH;
+        doc.text(`${h.nights || 0}`, M + colNightsRightX, ty, { align: "right" });
+        y += rowH;
       });
       y += 6;
     }
