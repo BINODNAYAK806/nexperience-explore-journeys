@@ -224,6 +224,49 @@ function pl(n: number, s: string, p: string): string {
   return n === 1 ? `${n} ${s}` : `${n} ${p}`;
 }
 
+// ─── Auto-fit Text Helpers ───
+/**
+ * Returns the largest font size (<= base) at which `text` fits inside `maxWidth`
+ * on a single line. Will not shrink below `min`.
+ */
+function fitFontSize(doc: jsPDF, text: string, maxWidth: number, base: number, min = 5): number {
+  if (!text) return base;
+  const original = doc.getFontSize();
+  let size = base;
+  doc.setFontSize(size);
+  while (doc.getTextWidth(text) > maxWidth && size > min) {
+    size = Math.max(min, size - 0.3);
+    doc.setFontSize(size);
+  }
+  doc.setFontSize(original);
+  return Math.round(size * 10) / 10;
+}
+
+/**
+ * Wraps text into the given width, auto-shrinking font size so the result
+ * uses at most `maxLines`. Returns the final lines + chosen font size.
+ */
+function fitWrappedText(
+  doc: jsPDF,
+  text: string,
+  maxWidth: number,
+  base: number,
+  maxLines = 2,
+  min = 5,
+): { lines: string[]; size: number } {
+  const original = doc.getFontSize();
+  let size = base;
+  doc.setFontSize(size);
+  let lines = doc.splitTextToSize(text || "", maxWidth) as string[];
+  while (lines.length > maxLines && size > min) {
+    size = Math.max(min, size - 0.3);
+    doc.setFontSize(size);
+    lines = doc.splitTextToSize(text || "", maxWidth) as string[];
+  }
+  doc.setFontSize(original);
+  return { lines, size: Math.round(size * 10) / 10 };
+}
+
 async function loadLogo(): Promise<string | null> {
   try {
     const r = await fetch("/lovable-uploads/2b127b7a-f8e2-4ed9-b75a-f14f4e215484.png");
@@ -612,14 +655,14 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       y += headerH;
 
       hotels.forEach((h, i) => {
-        // Wrap each column independently and use tallest as row height
-        doc.setFontSize(sz(7.5));
+        // Dynamic font sizing: wrap to at most 2 lines per cell, shrinking font as needed.
         doc.setFont("helvetica", "normal");
-        const cityLines = doc.splitTextToSize(pc(h.city || ""), colCityW);
-        const hotelLines = doc.splitTextToSize(pc(h.hotel_name || ""), colHotelW);
-        const roomLines = doc.splitTextToSize(pc(h.room_type || ""), colRoomW);
+        const baseSize = sz(7.5);
+        const city = fitWrappedText(doc, pc(h.city || ""), colCityW, baseSize, 2, sz(5.5));
+        const hotel = fitWrappedText(doc, pc(h.hotel_name || ""), colHotelW, baseSize, 2, sz(5.5));
+        const room = fitWrappedText(doc, pc(h.room_type || ""), colRoomW, baseSize, 2, sz(5.5));
         const lineH = 4;
-        const maxLines = Math.max(cityLines.length, hotelLines.length, roomLines.length, 1);
+        const maxLines = Math.max(city.lines.length, hotel.lines.length, room.lines.length, 1);
         const rowH = Math.max(8, maxLines * lineH + 4);
 
         y = ensurePage(doc, y, rowH, logo, co, wm);
@@ -632,11 +675,15 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
 
         doc.setTextColor(...C.text);
         const ty = y + 4;
-        cityLines.forEach((l: string, li: number) => doc.text(l, M + colCityX, ty + li * lineH));
-        hotelLines.forEach((l: string, li: number) => doc.text(l, M + colHotelX, ty + li * lineH));
-        roomLines.forEach((l: string, li: number) => doc.text(l, M + colRoomX, ty + li * lineH));
+        doc.setFontSize(city.size);
+        city.lines.forEach((l: string, li: number) => doc.text(l, M + colCityX, ty + li * lineH));
+        doc.setFontSize(hotel.size);
+        hotel.lines.forEach((l: string, li: number) => doc.text(l, M + colHotelX, ty + li * lineH));
+        doc.setFontSize(room.size);
+        room.lines.forEach((l: string, li: number) => doc.text(l, M + colRoomX, ty + li * lineH));
         doc.setFont("helvetica", "bold");
         doc.setTextColor(...C.navy);
+        doc.setFontSize(baseSize);
         doc.text(`${h.nights || 0}`, M + colNightsRightX, ty, { align: "right" });
         y += rowH;
       });
@@ -786,13 +833,26 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
         doc.setLineWidth(0.1);
         doc.line(M, y + rH, M + CW, y + rH);
         doc.setTextColor(...C.text);
-        doc.setFontSize(sz(8));
         doc.setFont("helvetica", "normal");
-        doc.text(pc(r.label), M + 6, y + 6);
-        doc.text(inr(r.rate), M + CW * 0.4, y + 6);
-        doc.text(`${r.qty}`, M + CW * 0.6, y + 6);
+        const baseP = sz(8);
+        // Column widths (avoid overlap with the next column)
+        const wLabel = CW * 0.4 - 8;
+        const wRate = CW * 0.2 - 4;
+        const wQty = CW * 0.2 - 4;
+        const wAmount = CW * 0.4 - 8;
+        const labelTxt = pc(r.label);
+        const rateTxt = inr(r.rate);
+        const qtyTxt = `${r.qty}`;
+        const amountTxt = inr(r.amount);
+        doc.setFontSize(fitFontSize(doc, labelTxt, wLabel, baseP, sz(5.5)));
+        doc.text(labelTxt, M + 6, y + 6);
+        doc.setFontSize(fitFontSize(doc, rateTxt, wRate, baseP, sz(5.5)));
+        doc.text(rateTxt, M + CW * 0.4, y + 6);
+        doc.setFontSize(fitFontSize(doc, qtyTxt, wQty, baseP, sz(5.5)));
+        doc.text(qtyTxt, M + CW * 0.6, y + 6);
         doc.setFont("helvetica", "bold");
-        doc.text(inr(r.amount), M + CW - 6, y + 6, { align: "right" });
+        doc.setFontSize(fitFontSize(doc, amountTxt, wAmount, baseP, sz(5.5)));
+        doc.text(amountTxt, M + CW - 6, y + 6, { align: "right" });
         y += rH;
       });
 
@@ -801,10 +861,13 @@ export async function generateQuotationPDF(data: QuotationForPDF) {
       doc.setFillColor(...C.navyDark);
       doc.rect(M, y, CW, tH, "F");
       doc.setTextColor(...C.gold);
-      doc.setFontSize(sz(10));
       doc.setFont("helvetica", "bold");
+      const totalTxt = inr(data.total_price);
+      const baseT = sz(10);
+      doc.setFontSize(baseT);
       doc.text("TOTAL", M + 6, y + 7.5);
-      doc.text(inr(data.total_price), M + CW - 6, y + 7.5, { align: "right" });
+      doc.setFontSize(fitFontSize(doc, totalTxt, CW * 0.55, baseT, sz(7)));
+      doc.text(totalTxt, M + CW - 6, y + 7.5, { align: "right" });
       y += tH + 8;
     }
   }
